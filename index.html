@@ -48,18 +48,7 @@
                 </div>
                 <div class="panel-content">
                     <ul class="snippet-list">
-                        <li class="snippet-item">
-                            <div class="snippet-name">2025-10-13_14-23-45</div>
-                            <div class="snippet-date">Oct 13, 2:23 PM</div>
-                        </li>
-                        <li class="snippet-item">
-                            <div class="snippet-name">2025-10-12_09-15-30</div>
-                            <div class="snippet-date">Oct 12, 9:15 AM</div>
-                        </li>
-                        <li class="snippet-item">
-                            <div class="snippet-name">2025-10-11_16-42-18</div>
-                            <div class="snippet-date">Oct 11, 4:42 PM</div>
-                        </li>
+                        <!-- Dynamically populated by renderSnippetList() -->
                     </ul>
                     <div class="placeholder">
                         Click to select a snippet
@@ -96,6 +85,7 @@
     </div>
 
     <script src="src/js/config.js"></script>
+    <script src="src/js/snippet-manager.js"></script>
     <script src="src/js/panel-manager.js"></script>
     <script src="src/js/editor.js"></script>
     <script src="src/js/app.js"></script>
@@ -103,6 +93,10 @@
     <script>
 
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize snippet storage and render list
+            initializeSnippetsStorage();
+            renderSnippetList();
+
             // Load saved layout
             loadLayoutFromStorage();
 
@@ -168,14 +162,7 @@
                 });
             });
 
-            // Basic snippet selection
-            const snippetItems = document.querySelectorAll('.snippet-item');
-            snippetItems.forEach(item => {
-                item.addEventListener('click', function () {
-                    snippetItems.forEach(i => i.classList.remove('selected'));
-                    this.classList.add('selected');
-                });
-            });
+            // Snippet selection is now handled by snippet-manager.js
 
             // Header link handlers (placeholder)
             const headerLinks = document.querySelectorAll('.header-link');
