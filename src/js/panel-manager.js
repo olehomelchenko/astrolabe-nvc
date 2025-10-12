@@ -18,7 +18,6 @@ function updatePanelMemory() {
 
 
 function togglePanel(panelId) {
-    console.log('🔘 Toggle clicked for:', panelId);
 
     // Fix ID mapping - buttons use plural, panels use singular
     const panelIdMap = {
@@ -31,19 +30,12 @@ function togglePanel(panelId) {
     const panel = document.getElementById(actualPanelId);
     const button = document.getElementById('toggle-' + panelId);
 
-    console.log('🔍 Looking for panel:', actualPanelId, 'Found:', !!panel);
-    console.log('🔍 Looking for button:', 'toggle-' + panelId, 'Found:', !!button);
 
     if (!panel || !button) {
-        console.error('❌ Panel or button not found!');
         return;
     }
 
-    console.log('📏 BEFORE toggle - Panel widths:');
-    logCurrentWidths();
-
     if (panel.style.display === 'none') {
-        console.log('👁️ SHOWING panel:', panelId);
         // Show panel
         panel.style.display = 'flex';
         button.classList.add('active');
@@ -51,7 +43,6 @@ function togglePanel(panelId) {
         // Restore from memory and redistribute
         redistributePanelWidths();
     } else {
-        console.log('🙈 HIDING panel:', panelId);
         // Hide panel - DON'T update memory, just hide
         panel.style.display = 'none';
         button.classList.remove('active');
@@ -60,15 +51,10 @@ function togglePanel(panelId) {
         redistributePanelWidths();
     }
 
-    console.log('📏 AFTER toggle - Panel widths:');
-    logCurrentWidths();
-    console.log('💾 Panel memory:', panelMemory);
-
     saveLayoutToStorage();
 }
 
 function redistributePanelWidths() {
-    console.log('🔄 Redistributing panel widths...');
 
     const snippetPanel = document.getElementById('snippet-panel');
     const editorPanel = document.getElementById('editor-panel');
@@ -81,50 +67,21 @@ function redistributePanelWidths() {
     ];
 
     const visiblePanels = panels.filter(panel => panel.element.style.display !== 'none');
-    console.log('👁️ Visible panels:', visiblePanels.map(p => p.id));
 
     if (visiblePanels.length === 0) return;
 
     // Get total desired width from memory
     let totalMemoryWidth = 0;
-    console.log('📊 Memory widths:');
     visiblePanels.forEach(panel => {
         const width = parseFloat(panelMemory[panel.memoryKey]);
-        console.log(`  ${panel.id}: ${panelMemory[panel.memoryKey]} → ${width}`);
         totalMemoryWidth += width;
     });
-    console.log('📊 Total memory width:', totalMemoryWidth);
 
     // Redistribute proportionally to fill 100%
-    console.log('🧮 Calculating new widths:');
     visiblePanels.forEach(panel => {
         const memoryWidth = parseFloat(panelMemory[panel.memoryKey]);
         const newWidth = (memoryWidth / totalMemoryWidth) * 100;
-        console.log(`  ${panel.id}: ${memoryWidth}/${totalMemoryWidth} * 100 = ${newWidth}%`);
         panel.element.style.width = `${newWidth}%`;
-    });
-}
-
-
-function logCurrentWidths() {
-    const snippetPanel = document.getElementById('snippet-panel');
-    const editorPanel = document.getElementById('editor-panel');
-    const previewPanel = document.getElementById('preview-panel');
-
-    console.log('  Snippets:', {
-        width: snippetPanel.style.width || 'default',
-        display: snippetPanel.style.display || 'default',
-        visible: snippetPanel.style.display !== 'none'
-    });
-    console.log('  Editor:', {
-        width: editorPanel.style.width || 'default',
-        display: editorPanel.style.display || 'default',
-        visible: editorPanel.style.display !== 'none'
-    });
-    console.log('  Preview:', {
-        width: previewPanel.style.width || 'default',
-        display: previewPanel.style.display || 'default',
-        visible: previewPanel.style.display !== 'none'
     });
 }
 
@@ -247,7 +204,6 @@ function initializeResize() {
 
             // Update memory ONLY after manual resize
             updatePanelMemory();
-            console.log('🎯 Manual resize completed - Updated memory:', panelMemory);
 
             saveLayoutToStorage();
         }
