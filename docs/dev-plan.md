@@ -72,16 +72,32 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 2: Resizable Panels**
+### **Phase 2: Resizable Panels** ✅ **COMPLETE**
 **Goal**: Make panels draggable to resize
 
-- [ ] Add resize handles/dividers between panels
-- [ ] Implement vanilla JS drag handlers for horizontal resizing
-- [ ] Store panel widths in localStorage (restore on load)
-- [ ] Implement toggle button logic to show/hide each panel
-- [ ] Handle edge cases (minimum widths, hiding panels)
+- [x] Add resize handles/dividers between panels
+- [x] Implement vanilla JS drag handlers for horizontal resizing
+- [x] Store panel widths in localStorage (restore on load)
+- [x] Implement toggle button logic to show/hide each panel
+- [x] Handle edge cases (minimum widths, hiding panels)
 
 **Deliverable**: Fully interactive layout with resizable and toggleable panels
+
+**Key Achievements**:
+- Added 4px retro-styled resize handles between panels with hover/drag feedback
+- Implemented smooth mouse-based dragging with real-time width updates
+- Added 200px minimum width constraints to prevent unusable panels
+- Created intelligent toggle system with proportional space redistribution
+- Implemented panel memory system that preserves preferred sizes across hide/show cycles
+- Added comprehensive localStorage persistence for panel sizes, visibility, and memory
+- Fixed CSS flex properties to allow dynamic width changes (flex: 0 1 auto)
+- Enhanced toggle buttons with proper state management and visual feedback
+
+**Advanced Features**:
+- **Smart Memory**: Panels remember their preferred sizes even when hidden
+- **Proportional Expansion**: Remaining visible panels expand proportionally when others are hidden
+- **Stable Proportions**: Toggle hide/show cycles maintain original size relationships
+- **Manual Resize Memory**: Dragging resize handles updates the memory for future toggle operations
 
 ---
 
@@ -286,3 +302,5 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 **Current Phase**: Phase 5 - Data Model + LocalStorage
 **Status**: Ready to begin implementation
+
+**Note**: Phase 2 (Resizable Panels) was completed after Phase 4 to fill the gap
