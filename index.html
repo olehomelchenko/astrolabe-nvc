@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astrolabe - Vega-Lite Snippet Manager</title>
+    <link rel="stylesheet" href="src/styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <span class="header-icon">🔭</span>
+            <span class="header-title">Astrolabe</span>
+        </div>
+        <div class="header-links">
+            <span class="header-link">New</span>
+            <span class="header-link">Import</span>
+            <span class="header-link">Export</span>
+            <span class="header-link">Help</span>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Toggle Button Strip -->
+        <div class="toggle-strip">
+            <button class="toggle-btn active" id="toggle-snippets" title="Toggle Snippets Panel">
+                📄
+            </button>
+            <button class="toggle-btn active" id="toggle-editor" title="Toggle Editor Panel">
+                ✏️
+            </button>
+            <button class="toggle-btn active" id="toggle-preview" title="Toggle Preview Panel">
+                👁️
+            </button>
+        </div>
+
+        <div class="main-panels">
+            <!-- Snippet Library Panel -->
+            <div class="panel snippet-panel" id="snippet-panel">
+                <div class="panel-header">
+                    Snippets
+                </div>
+                <div class="panel-content">
+                    <ul class="snippet-list">
+                        <li class="snippet-item">
+                            <div class="snippet-name">2025-10-13_14-23-45</div>
+                            <div class="snippet-date">Oct 13, 2:23 PM</div>
+                        </li>
+                        <li class="snippet-item">
+                            <div class="snippet-name">2025-10-12_09-15-30</div>
+                            <div class="snippet-date">Oct 12, 9:15 AM</div>
+                        </li>
+                        <li class="snippet-item">
+                            <div class="snippet-name">2025-10-11_16-42-18</div>
+                            <div class="snippet-date">Oct 11, 4:42 PM</div>
+                        </li>
+                    </ul>
+                    <div class="placeholder">
+                        Click to select a snippet
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Panel -->
+            <div class="panel editor-panel" id="editor-panel">
+                <div class="panel-header">
+                    Editor
+                </div>
+                <div class="panel-content">
+                    <div class="editor-placeholder">
+                        <div class="placeholder">
+                            Monaco Editor will load here
+                        </div>
+                        <div style="margin-top: 8px; font-size: 12px; color: #adb5bd;">
+                            JSON schema validation • Autocomplete • Syntax highlighting
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="panel preview-panel" id="preview-panel">
+                <div class="panel-header">
+                    Preview
+                </div>
+                <div class="panel-content">
+                    <div class="preview-placeholder">
+                        <div class="placeholder">
+                            Vega-Lite visualization will render here
+                        </div>
+                        <div style="margin-top: 8px; font-size: 12px; color: #adb5bd;">
+                            Live preview • Auto-refresh • Error display
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Basic toggle functionality (placeholder)
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleButtons = document.querySelectorAll('.toggle-btn');
+            const panels = {
+                'toggle-snippets': document.getElementById('snippet-panel'),
+                'toggle-editor': document.getElementById('editor-panel'),
+                'toggle-preview': document.getElementById('preview-panel')
+            };
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const panelId = this.id;
+                    const panel = panels[panelId];
+
+                    if (panel.style.display === 'none') {
+                        panel.style.display = 'flex';
+                        this.classList.add('active');
+                    } else {
+                        panel.style.display = 'none';
+                        this.classList.remove('active');
+                    }
+                });
+            });
+
+            // Basic snippet selection
+            const snippetItems = document.querySelectorAll('.snippet-item');
+            snippetItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    snippetItems.forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+
+            // Header link handlers (placeholder)
+            const headerLinks = document.querySelectorAll('.header-link');
+            headerLinks.forEach(link => {
+                link.addEventListener('click', function () {
+                    console.log('Header link clicked:', this.textContent);
+                    // TODO: Implement actual functionality in future phases
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
