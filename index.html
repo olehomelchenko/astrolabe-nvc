@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astrolabe - Vega-Lite Snippet Manager</title>
     <link rel="stylesheet" href="src/styles.css">
+
+    <!-- Monaco Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.47.0/min/vs/loader.js"></script>
 </head>
 
 <body>
@@ -70,14 +73,7 @@
                     Editor
                 </div>
                 <div class="panel-content">
-                    <div class="editor-placeholder">
-                        <div class="placeholder">
-                            Monaco Editor will load here
-                        </div>
-                        <div style="margin-top: 8px; font-size: 12px; color: #adb5bd;">
-                            JSON schema validation • Autocomplete • Syntax highlighting
-                        </div>
-                    </div>
+                    <div id="monaco-editor" style="height: 100%; width: 100%;"></div>
                 </div>
             </div>
 
@@ -101,8 +97,76 @@
     </div>
 
     <script>
-        // Basic toggle functionality (placeholder)
+        let editor; // Global editor instance
+
+        // Sample Vega-Lite specification
+        const sampleSpec = {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "description": "A simple bar chart with embedded data.",
+            "data": {
+                "values": [
+                    {"category": "A", "value": 28},
+                    {"category": "B", "value": 55},
+                    {"category": "C", "value": 43},
+                    {"category": "D", "value": 91},
+                    {"category": "E", "value": 81},
+                    {"category": "F", "value": 53},
+                    {"category": "G", "value": 19},
+                    {"category": "H", "value": 87}
+                ]
+            },
+            "mark": "bar",
+            "encoding": {
+                "x": {"field": "category", "type": "nominal", "axis": {"labelAngle": 0}},
+                "y": {"field": "value", "type": "quantitative"}
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Monaco Editor
+            require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.47.0/min/vs' } });
+            require(['vs/editor/editor.main'], async function () {
+                // Fetch actual Vega-Lite schema JSON for better validation
+                let vegaLiteSchema;
+                try {
+                    const response = await fetch('https://vega.github.io/schema/vega-lite/v5.json');
+                    vegaLiteSchema = await response.json();
+                    console.log('Vega-Lite schema loaded successfully');
+                } catch (error) {
+                    console.error('Failed to load Vega-Lite schema:', error);
+                    vegaLiteSchema = null;
+                }
+
+                // Configure JSON language with actual schema
+                if (vegaLiteSchema) {
+                    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+                        validate: true,
+                        schemas: [{
+                            uri: "https://vega.github.io/schema/vega-lite/v5.json",
+                            fileMatch: ["*"], // Associate with all files
+                            schema: vegaLiteSchema
+                        }]
+                    });
+                }
+
+                // Create the editor with improved configuration
+                editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                    value: JSON.stringify(sampleSpec, null, 2),
+                    language: 'json',
+                    theme: 'vs-light',
+                    fontSize: 12,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    wordWrap: 'on',
+                    formatOnPaste: true,
+                    formatOnType: true
+                });
+
+                console.log('Monaco Editor initialized with enhanced Vega-Lite schema support');
+            });
+
+            // Basic toggle functionality
             const toggleButtons = document.querySelectorAll('.toggle-btn');
             const panels = {
                 'toggle-snippets': document.getElementById('snippet-panel'),

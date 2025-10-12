@@ -85,16 +85,23 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 3: Monaco Editor Integration**
+### **Phase 3: Monaco Editor Integration** ✅ **COMPLETE**
 **Goal**: Working code editor with Vega-Lite schema
 
-- [ ] Load Monaco Editor from CDN
-- [ ] Initialize Monaco in the middle panel
-- [ ] Configure JSON mode with Vega-Lite schema URL for autocomplete
-- [ ] Add a test Vega-Lite spec as default content
-- [ ] Verify schema validation and autocomplete works
+- [x] Load Monaco Editor from CDN
+- [x] Initialize Monaco in the middle panel
+- [x] Configure JSON mode with Vega-Lite schema for autocomplete
+- [x] Add a test Vega-Lite spec as default content
+- [x] Verify schema validation and autocomplete works
 
 **Deliverable**: Working editor with intellisense for Vega-Lite
+
+**Enhancements Made**:
+- Used specific Monaco version (0.47.0) for consistency
+- Fetch actual Vega-Lite schema JSON for better validation
+- Added formatOnPaste and formatOnType for better UX
+- Implemented proper error handling for schema loading
+- Sample bar chart spec loads by default
 
 ---
 
@@ -268,5 +275,5 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-**Current Phase**: Phase 2 - Resizable Panels
+**Current Phase**: Phase 4 - Vega-Lite Rendering
 **Status**: Ready to begin implementation
