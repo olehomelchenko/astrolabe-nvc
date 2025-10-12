@@ -286,10 +286,28 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 ## Technical Stack
 
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
-- **Editor**: Monaco Editor (via CDN)
-- **Visualization**: Vega-Embed (includes Vega & Vega-Lite)
+- **Editor**: Monaco Editor v0.47.0 (via CDN)
+- **Visualization**: Vega-Embed v6 (includes Vega v5 & Vega-Lite v5)
 - **Storage**: LocalStorage → IndexedDB (when needed)
+- **Architecture**: Modular script organization with simple file separation
 - **Backend** _(future)_: TBD (minimal REST API)
+
+## Current Project Structure
+
+```
+/
+├── index.html                 # Main application entry point & initialization
+├── src/
+│   ├── styles.css            # Retro Windows 2000 aesthetic styling
+│   └── js/                   # Modular JavaScript organization
+│       ├── config.js         # Global variables & sample data
+│       ├── panel-manager.js  # Panel resize, toggle & memory system
+│       ├── editor.js         # Monaco Editor & Vega-Lite rendering
+│       └── app.js           # Event handlers & coordination
+└── docs/
+    ├── dev-plan.md          # This development roadmap
+    └── storage-examples.md  # Data model specifications
+```
 
 ## Development Principles
 
@@ -297,10 +315,21 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Lean**: No frameworks, no build step, minimal dependencies
 - **Data-first**: Storage schema designed upfront for extensibility
 - **User-focused**: Auto-save, clear state, forgiving UX
+- **Maintainable**: Clean code organization with logical separation of concerns
+
+## Code Organization Strategy
+
+- **index.html**: Main application flow, initialization, and event coordination
+- **Modular JS files**: Function declarations organized by domain (panels, editor, config)
+- **Simple separation**: No over-engineering - just logical file organization
+- **Clear dependencies**: Load order matters (config → modules → app initialization)
 
 ---
 
 **Current Phase**: Phase 5 - Data Model + LocalStorage
 **Status**: Ready to begin implementation
 
-**Note**: Phase 2 (Resizable Panels) was completed after Phase 4 to fill the gap
+**Completion Status**:
+- ✅ Phases 0, 1, 2, 3, 4 complete
+- ✅ Code organization and cleanup complete
+- 🎯 Ready for snippet management implementation
