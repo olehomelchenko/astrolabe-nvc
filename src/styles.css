@@ -108,15 +108,15 @@ body {
 
 /* Panel sizing */
 .snippet-panel {
-    flex: 0 0 25%;
+    flex: 0 0 20%;
 }
 
 .editor-panel {
-    flex: 0 0 50%;
+    flex: 0 0 30%;
 }
 
 .preview-panel {
-    flex: 0 0 25%;
+    flex: 0 0 50%;
 }
 
 /* Toggle buttons */
