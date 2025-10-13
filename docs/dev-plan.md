@@ -140,18 +140,19 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 7: Draft/Published Workflow**
+### **Phase 7: Draft/Published Workflow** ✅ **COMPLETE**
 **Goal**: Safe experimentation without losing working versions
 
-- [ ] Add "Published" badge/indicator to snippet list items
-- [ ] Add "Publish" button in editor UI
-- [ ] Toggle between viewing draft vs published version
-- [ ] On publish: copy `draftSpec` → `spec`, update `published` timestamp
-- [ ] Visual indicator in editor showing draft vs published state
-- [ ] Option to revert draft to last published version
-- [ ] Prevent accidental data loss with clear state indication
-
-**Deliverable**: Git-like draft/staged workflow for specs
+**Deliverables**:
+- Draft/Published toggle buttons in editor header (merged visual design)
+- Status indicator lights on snippets (🟢 green = no changes, 🟡 yellow = has draft)
+- Publish button (green, copies draftSpec → spec)
+- Revert button (orange, copies spec → draftSpec with confirmation)
+- Context-aware button visibility (only shown in draft mode)
+- Read-only published view when draft exists
+- Auto-draft creation when editing published view without draft
+- Auto-select first snippet on page load
+- Instant status light updates after auto-save
 
 ---
 
@@ -303,15 +304,15 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ## Current Status
 
-**Completed**: Phases 0-6 (Storage, UI, editor, rendering, persistence, CRUD, organization)
-**Active**: Phase 7 - Draft/Published Workflow
+**Completed**: Phases 0-7 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow)
+**Active**: Phase 8 - Storage Monitoring
 **See**: `CLAUDE.md` for concise current state summary
 
 ---
 
 ## Implemented Features
 
-### Core Capabilities (Phases 0-6)
+### Core Capabilities (Phases 0-7)
 - Three-panel resizable layout with memory and persistence
 - Monaco Editor v0.47.0 with Vega-Lite v5 schema validation
 - Live Vega-Lite rendering with debounced updates and error display
@@ -320,11 +321,17 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - Real-time search across snippet name, comment, and spec content
 - Auto-save system (1s debounce) for specs and metadata
 - Ghost card interface for snippet creation
+- Draft/Published workflow with version control
+- Status indicator lights (green/yellow) showing draft state
+- Context-aware Publish/Revert buttons with color coding
 - Retro Windows 2000 aesthetic throughout
 
 ### Technical Implementation
 - **State Management**: Synchronous `isUpdatingEditor` flag prevents unwanted auto-saves
+- **View Modes**: `currentViewMode` tracks draft vs published state
+- **Read-only Logic**: Monaco editor locked in published view when draft exists
+- **Auto-draft Creation**: Editing published without draft auto-switches to draft mode
 - **Debouncing**: 1.5s render, 1s auto-save, 300ms search
 - **AMD Resolution**: Temporary `window.define` disabling for Vega library loading
 - **Panel Memory**: localStorage persistence for sizes and visibility across sessions
-- **Data Model**: Phase 0 schema with `spec` and `draftSpec` fields ready for versioning
+- **Data Model**: Phase 0 schema with `spec` (published) and `draftSpec` (working) fields

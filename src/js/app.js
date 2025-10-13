@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     renderSnippetList();
 
+    // Auto-select first snippet on page load
+    const firstSnippet = SnippetStorage.listSnippets()[0];
+    if (firstSnippet) {
+        selectSnippet(firstSnippet.id);
+    }
+
     // Load saved layout
     loadLayoutFromStorage();
 
@@ -86,4 +92,17 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Coming soon in a future phase!');
         });
     });
+
+    // View mode toggle buttons
+    document.getElementById('view-draft').addEventListener('click', () => {
+        switchViewMode('draft');
+    });
+
+    document.getElementById('view-published').addEventListener('click', () => {
+        switchViewMode('published');
+    });
+
+    // Publish and Revert buttons
+    document.getElementById('publish-btn').addEventListener('click', publishDraft);
+    document.getElementById('revert-btn').addEventListener('click', revertDraft);
 });

@@ -103,7 +103,16 @@
             <!-- Editor Panel -->
             <div class="panel editor-panel" id="editor-panel">
                 <div class="panel-header">
-                    Editor
+                    <span>Editor</span>
+                    <div class="editor-controls">
+                        <button class="action-btn publish-btn" id="publish-btn">Publish</button>
+                        <button class="action-btn revert-btn" id="revert-btn">Revert</button>
+                        <span class="view-label">View:</span>
+                        <div class="view-toggle-group">
+                            <button class="view-toggle-btn active" id="view-draft">Draft</button>
+                            <button class="view-toggle-btn" id="view-published">Published</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="panel-content">
                     <div id="monaco-editor" style="height: 100%; width: 100%;"></div>

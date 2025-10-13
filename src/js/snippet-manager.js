@@ -234,10 +234,17 @@ function renderSnippetList(searchQuery = null) {
             dateText = formatSnippetDate(snippet.modified);
         }
 
+        // Determine status: green if no draft changes, yellow if has draft
+        const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
+        const statusClass = hasDraft ? 'draft' : 'published';
+
         return `
             <li class="snippet-item" data-snippet-id="${snippet.id}">
-                <div class="snippet-name">${snippet.name}</div>
-                <div class="snippet-date">${dateText}</div>
+                <div class="snippet-info">
+                    <div class="snippet-name">${snippet.name}</div>
+                    <div class="snippet-date">${dateText}</div>
+                </div>
+                <div class="snippet-status ${statusClass}"></div>
             </li>
         `;
     }).join('');
@@ -441,12 +448,9 @@ function selectSnippet(snippetId) {
     });
     document.querySelector(`[data-snippet-id="${snippetId}"]`).classList.add('selected');
 
-    // Load draft spec into editor (prevent auto-save during update)
-    if (editor) {
-        window.isUpdatingEditor = true;
-        editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
-        window.isUpdatingEditor = false;
-    }
+    // Load spec based on current view mode
+    loadSnippetIntoEditor(snippet);
+    updateViewModeUI(snippet);
 
     // Show and populate meta fields
     const metaSection = document.getElementById('snippet-meta');
@@ -484,6 +488,9 @@ window.isUpdatingEditor = false; // Global flag to prevent auto-save/debounce du
 function autoSaveDraft() {
     if (!window.currentSnippetId || !editor) return;
 
+    // Only save to draft if we're in draft mode
+    if (currentViewMode !== 'draft') return;
+
     try {
         const currentSpec = JSON.parse(editor.getValue());
         const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
@@ -491,6 +498,15 @@ function autoSaveDraft() {
         if (snippet) {
             snippet.draftSpec = currentSpec;
             SnippetStorage.saveSnippet(snippet);
+
+            // Refresh snippet list to update status light
+            renderSnippetList();
+            // Restore selection
+            const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+            if (selectedItem) selectedItem.classList.add('selected');
+
+            // Update button states
+            updateViewModeUI(snippet);
         }
     } catch (error) {
         // Ignore JSON parse errors during editing
@@ -501,6 +517,20 @@ function autoSaveDraft() {
 function debouncedAutoSave() {
     // Don't auto-save if we're programmatically updating the editor
     if (window.isUpdatingEditor) return;
+
+    // If viewing published and no draft exists, create draft automatically
+    if (currentViewMode === 'published' && window.currentSnippetId) {
+        const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+        if (snippet) {
+            const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
+            if (!hasDraft) {
+                // No draft exists, automatically switch to draft mode
+                currentViewMode = 'draft';
+                updateViewModeUI(snippet);
+                editor.updateOptions({ readOnly: false });
+            }
+        }
+    }
 
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(autoSaveDraft, 1000); // 1 second delay
@@ -657,5 +687,114 @@ function renameSnippet(snippetId, newName) {
     }
 
     return true;
+}
+
+// Load snippet into editor based on view mode
+function loadSnippetIntoEditor(snippet) {
+    if (!editor) return;
+
+    window.isUpdatingEditor = true;
+
+    const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
+
+    if (currentViewMode === 'draft') {
+        editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
+        editor.updateOptions({ readOnly: false });
+    } else {
+        // Published view - always read-only if draft exists
+        editor.setValue(JSON.stringify(snippet.spec, null, 2));
+        editor.updateOptions({ readOnly: hasDraft });
+    }
+
+    window.isUpdatingEditor = false;
+}
+
+// Update view mode UI (buttons and editor state)
+function updateViewModeUI(snippet) {
+    const draftBtn = document.getElementById('view-draft');
+    const publishedBtn = document.getElementById('view-published');
+    const publishBtn = document.getElementById('publish-btn');
+    const revertBtn = document.getElementById('revert-btn');
+
+    // Update toggle button states
+    if (currentViewMode === 'draft') {
+        draftBtn.classList.add('active');
+        publishedBtn.classList.remove('active');
+    } else {
+        draftBtn.classList.remove('active');
+        publishedBtn.classList.add('active');
+    }
+
+    // Show/hide and enable/disable action buttons based on mode
+    const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
+
+    if (currentViewMode === 'draft') {
+        // In draft mode: show both buttons, enable based on draft existence
+        publishBtn.classList.add('visible');
+        revertBtn.classList.add('visible');
+        publishBtn.disabled = !hasDraft;
+        revertBtn.disabled = !hasDraft;
+    } else {
+        // In published mode: hide both buttons
+        publishBtn.classList.remove('visible');
+        revertBtn.classList.remove('visible');
+    }
+}
+
+// Switch view mode
+function switchViewMode(mode) {
+    if (!window.currentSnippetId) return;
+
+    currentViewMode = mode;
+    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    if (snippet) {
+        loadSnippetIntoEditor(snippet);
+        updateViewModeUI(snippet);
+    }
+}
+
+// Publish draft to spec
+function publishDraft() {
+    if (!window.currentSnippetId) return;
+
+    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    if (!snippet) return;
+
+    // Copy draftSpec to spec
+    snippet.spec = JSON.parse(JSON.stringify(snippet.draftSpec));
+    SnippetStorage.saveSnippet(snippet);
+
+    // Refresh UI
+    renderSnippetList();
+    const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+    if (selectedItem) selectedItem.classList.add('selected');
+
+    updateViewModeUI(snippet);
+}
+
+// Revert draft to published spec
+function revertDraft() {
+    if (!window.currentSnippetId) return;
+
+    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    if (!snippet) return;
+
+    if (confirm('Revert all draft changes to last published version? This cannot be undone.')) {
+        // Copy spec to draftSpec
+        snippet.draftSpec = JSON.parse(JSON.stringify(snippet.spec));
+        SnippetStorage.saveSnippet(snippet);
+
+        // Reload editor if in draft view
+        if (currentViewMode === 'draft') {
+            loadSnippetIntoEditor(snippet);
+        }
+
+        // Refresh UI
+        renderSnippetList();
+        const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+        if (selectedItem) selectedItem.classList.add('selected');
+
+        updateViewModeUI(snippet);
+    }
 }
 
