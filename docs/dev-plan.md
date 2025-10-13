@@ -167,19 +167,29 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 6: Snippet Selection & Basic CRUD**
+### **Phase 6: Snippet Selection & Basic CRUD** ✅ **COMPLETE**
 **Goal**: Core snippet management
 
-- [ ] Click snippet in list → load into editor + render
-- [ ] Highlight selected snippet in list
-- [ ] **Create**: "New Snippet" button → generates datetime name
-- [ ] **Duplicate**: Duplicate button creates copy with timestamp suffix
-- [ ] **Delete**: Delete button per snippet (with confirmation)
-- [ ] **Rename**: Inline or modal rename functionality
-- [ ] Auto-save draft on editor change (debounced)
-- [ ] Add comment/meta text field (below snippet list or in sidebar)
+- [x] Click snippet in list → load into editor + render
+- [x] Highlight selected snippet in list
+- [x] **Create**: "New Snippet" button → generates datetime name
+- [x] **Duplicate**: Duplicate button creates copy with timestamp suffix
+- [x] **Delete**: Delete button per snippet (with confirmation)
+- [x] **Rename**: Inline or modal rename functionality
+- [x] Auto-save draft on editor change (debounced)
+- [x] Add comment/meta text field (below snippet list or in sidebar)
 
 **Deliverable**: Complete basic CRUD with auto-saving drafts
+
+**Key Achievements**:
+- Implemented comprehensive snippet selection with visual highlighting
+- Connected "New" header button to `createNewSnippet()` function for easy snippet creation
+- Added right-click context menu for snippet operations (Rename, Duplicate, Delete)
+- Implemented auto-save functionality for both spec changes and comment field edits
+- Added comment field that appears when a snippet is selected and auto-saves changes
+- Created intuitive UX with proper state management (hiding/showing comment field)
+- Added confirmation dialogs for destructive operations like delete
+- Maintained consistent retro styling for all new UI elements
 
 ---
 
@@ -338,11 +348,12 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-**Current Phase**: Phase 6 - Snippet Selection & Basic CRUD
+**Current Phase**: Phase 7 - Draft/Published Workflow
 **Status**: Ready to begin implementation
 
 **Completion Status**:
-- ✅ Phases 0, 1, 2, 3, 4, 5 complete
+- ✅ Phases 0, 1, 2, 3, 4, 5, 6 complete
 - ✅ Code organization and cleanup complete
 - ✅ Snippet storage infrastructure complete
-- 🎯 Ready for auto-save and CRUD operations
+- ✅ Complete CRUD operations with auto-save functionality
+- 🎯 Ready for draft/published workflow implementation

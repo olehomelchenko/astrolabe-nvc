@@ -92,10 +92,66 @@ const SnippetStorage = {
         return this.saveSnippets(filteredSnippets);
     },
 
-    // Get all snippets sorted by modified date (newest first)
-    listSnippets() {
-        const snippets = this.loadSnippets();
-        return snippets.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+    // Get all snippets with sorting and filtering
+    listSnippets(sortBy = null, sortOrder = null, searchQuery = null) {
+        let snippets = this.loadSnippets();
+
+        // Apply search filter if provided
+        if (searchQuery && searchQuery.trim()) {
+            snippets = this.filterSnippets(snippets, searchQuery.trim());
+        }
+
+        // Use provided sort options or fall back to settings
+        const actualSortBy = sortBy || AppSettings.get('sortBy') || 'modified';
+        const actualSortOrder = sortOrder || AppSettings.get('sortOrder') || 'desc';
+
+        return snippets.sort((a, b) => {
+            let comparison = 0;
+
+            switch (actualSortBy) {
+                case 'name':
+                    comparison = a.name.localeCompare(b.name);
+                    break;
+                case 'created':
+                    comparison = new Date(a.created) - new Date(b.created);
+                    break;
+                case 'modified':
+                default:
+                    comparison = new Date(a.modified) - new Date(b.modified);
+                    break;
+            }
+
+            return actualSortOrder === 'desc' ? -comparison : comparison;
+        });
+    },
+
+    // Filter snippets based on search query
+    filterSnippets(snippets, query) {
+        const searchTerm = query.toLowerCase();
+
+        return snippets.filter(snippet => {
+            // Search in name
+            if (snippet.name.toLowerCase().includes(searchTerm)) {
+                return true;
+            }
+
+            // Search in comment
+            if (snippet.comment && snippet.comment.toLowerCase().includes(searchTerm)) {
+                return true;
+            }
+
+            // Search in spec content (JSON stringified)
+            try {
+                const specText = JSON.stringify(snippet.draftSpec || snippet.spec).toLowerCase();
+                if (specText.includes(searchTerm)) {
+                    return true;
+                }
+            } catch (error) {
+                // Ignore JSON stringify errors
+            }
+
+            return false;
+        });
     }
 };
 
@@ -133,36 +189,217 @@ function formatSnippetDate(isoString) {
     }
 }
 
+// Format full date/time for display in meta info
+function formatFullDate(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleString([], {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+}
+
 // Render snippet list in the UI
-function renderSnippetList() {
-    const snippets = SnippetStorage.listSnippets();
+function renderSnippetList(searchQuery = null) {
+    // Get search query from input if not provided
+    if (searchQuery === null) {
+        const searchInput = document.getElementById('snippet-search');
+        searchQuery = searchInput ? searchInput.value : '';
+    }
+
+    const snippets = SnippetStorage.listSnippets(null, null, searchQuery);
     const snippetList = document.querySelector('.snippet-list');
     const placeholder = document.querySelector('.placeholder');
 
     if (snippets.length === 0) {
         snippetList.innerHTML = '';
         placeholder.style.display = 'block';
-        placeholder.textContent = 'No snippets found';
+
+        // Show different message for search vs empty state
+        if (searchQuery && searchQuery.trim()) {
+            placeholder.textContent = 'No snippets match your search';
+        } else {
+            placeholder.textContent = 'No snippets found';
+        }
         return;
     }
 
     placeholder.style.display = 'none';
 
-    snippetList.innerHTML = snippets.map(snippet => `
-        <li class="snippet-item" data-snippet-id="${snippet.id}">
-            <div class="snippet-name">${snippet.name}</div>
-            <div class="snippet-date">${formatSnippetDate(snippet.modified)}</div>
+    const ghostCard = `
+        <li class="snippet-item ghost-card" id="new-snippet-card">
+            <div class="snippet-name">+ Create New Snippet</div>
+            <div class="snippet-date">Click to create</div>
         </li>
-    `).join('');
+    `;
+
+    const currentSort = AppSettings.get('sortBy');
+    const snippetItems = snippets.map(snippet => {
+        // Show appropriate date based on current sort
+        let dateText;
+        if (currentSort === 'created') {
+            dateText = formatSnippetDate(snippet.created);
+        } else {
+            dateText = formatSnippetDate(snippet.modified);
+        }
+
+        return `
+            <li class="snippet-item" data-snippet-id="${snippet.id}">
+                <div class="snippet-name">${snippet.name}</div>
+                <div class="snippet-date">${dateText}</div>
+            </li>
+        `;
+    }).join('');
+
+    snippetList.innerHTML = ghostCard + snippetItems;
 
     // Re-attach event listeners for snippet selection
     attachSnippetEventListeners();
+}
+
+// Initialize sort controls
+function initializeSortControls() {
+    const sortButtons = document.querySelectorAll('.sort-btn');
+    const currentSort = AppSettings.get('sortBy');
+
+    // Update active button based on settings
+    sortButtons.forEach(button => {
+        button.classList.remove('active');
+        if (button.dataset.sort === currentSort) {
+            button.classList.add('active');
+        }
+
+        // Add click handler
+        button.addEventListener('click', function() {
+            const newSort = this.dataset.sort;
+            changeSortBy(newSort);
+        });
+    });
+}
+
+// Change sort method
+function changeSortBy(sortBy) {
+    // Save to settings
+    AppSettings.set('sortBy', sortBy);
+
+    // Update button states
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.sort === sortBy) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Re-render list
+    renderSnippetList();
+
+    // Restore selection if there was one
+    if (window.currentSnippetId) {
+        const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+        if (selectedItem) {
+            selectedItem.classList.add('selected');
+        }
+    }
+}
+
+// Initialize search controls
+function initializeSearchControls() {
+    const searchInput = document.getElementById('snippet-search');
+    const clearButton = document.getElementById('search-clear');
+
+    if (searchInput) {
+        // Debounced search on input
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch();
+            }, 300); // 300ms debounce
+        });
+
+        // Update clear button state
+        searchInput.addEventListener('input', updateClearButton);
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener('click', clearSearch);
+        // Initialize clear button state
+        updateClearButton();
+    }
+}
+
+// Perform search and update display
+function performSearch() {
+    const searchInput = document.getElementById('snippet-search');
+    if (!searchInput) return;
+
+    renderSnippetList(searchInput.value);
+
+    // Clear selection if current snippet is no longer visible
+    if (window.currentSnippetId) {
+        const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+        if (!selectedItem) {
+            clearSelection();
+        } else {
+            selectedItem.classList.add('selected');
+        }
+    }
+}
+
+// Clear search
+function clearSearch() {
+    const searchInput = document.getElementById('snippet-search');
+    if (searchInput) {
+        searchInput.value = '';
+        performSearch();
+        updateClearButton();
+        searchInput.focus();
+    }
+}
+
+// Update clear button state
+function updateClearButton() {
+    const searchInput = document.getElementById('snippet-search');
+    const clearButton = document.getElementById('search-clear');
+
+    if (clearButton && searchInput) {
+        clearButton.disabled = !searchInput.value.trim();
+    }
+}
+
+// Clear current selection and hide meta panel
+function clearSelection() {
+    window.currentSnippetId = null;
+    document.querySelectorAll('.snippet-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+
+    // Hide meta panel and show placeholder
+    const metaSection = document.getElementById('snippet-meta');
+    const placeholder = document.querySelector('.placeholder');
+    if (metaSection) metaSection.style.display = 'none';
+    if (placeholder) {
+        placeholder.style.display = 'block';
+        placeholder.textContent = 'Click to select a snippet';
+    }
 }
 
 // Attach event listeners to snippet items
 function attachSnippetEventListeners() {
     const snippetItems = document.querySelectorAll('.snippet-item');
     snippetItems.forEach(item => {
+        // Handle ghost card for new snippet creation
+        if (item.id === 'new-snippet-card') {
+            item.addEventListener('click', function () {
+                createNewSnippet();
+            });
+            return;
+        }
+
+        // Left click to select
         item.addEventListener('click', function () {
             const snippetId = parseFloat(this.dataset.snippetId);
             selectSnippet(snippetId);
@@ -186,6 +423,224 @@ function selectSnippet(snippetId) {
         editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
     }
 
+    // Show and populate meta fields
+    const metaSection = document.getElementById('snippet-meta');
+    const nameField = document.getElementById('snippet-name');
+    const commentField = document.getElementById('snippet-comment');
+    const createdField = document.getElementById('snippet-created');
+    const modifiedField = document.getElementById('snippet-modified');
+    const placeholder = document.querySelector('.placeholder');
+
+    if (metaSection && nameField && commentField) {
+        metaSection.style.display = 'block';
+        nameField.value = snippet.name || '';
+        commentField.value = snippet.comment || '';
+
+        // Format and display dates
+        if (createdField) {
+            createdField.textContent = formatFullDate(snippet.created);
+        }
+        if (modifiedField) {
+            modifiedField.textContent = formatFullDate(snippet.modified);
+        }
+
+        placeholder.style.display = 'none';
+    }
+
     // Store currently selected snippet ID globally
     window.currentSnippetId = snippetId;
 }
+
+// Auto-save functionality
+let autoSaveTimeout;
+
+// Save current editor content as draft for the selected snippet
+function autoSaveDraft() {
+    if (!window.currentSnippetId || !editor) return;
+
+    try {
+        const currentSpec = JSON.parse(editor.getValue());
+        const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+
+        if (snippet) {
+            snippet.draftSpec = currentSpec;
+            SnippetStorage.saveSnippet(snippet);
+        }
+    } catch (error) {
+        // Ignore JSON parse errors during editing
+    }
+}
+
+// Debounced auto-save (triggered on editor changes)
+function debouncedAutoSave() {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(autoSaveDraft, 1000); // 1 second delay
+}
+
+// Initialize auto-save on editor changes
+function initializeAutoSave() {
+    if (editor) {
+        editor.onDidChangeModelContent(() => {
+            debouncedAutoSave();
+        });
+    }
+
+    // Initialize meta fields auto-save
+    const nameField = document.getElementById('snippet-name');
+    const commentField = document.getElementById('snippet-comment');
+
+    if (nameField) {
+        nameField.addEventListener('input', () => {
+            debouncedAutoSaveMeta();
+        });
+    }
+
+    if (commentField) {
+        commentField.addEventListener('input', () => {
+            debouncedAutoSaveMeta();
+        });
+    }
+
+    // Initialize button event listeners
+    const duplicateBtn = document.getElementById('duplicate-btn');
+    const deleteBtn = document.getElementById('delete-btn');
+
+    if (duplicateBtn) {
+        duplicateBtn.addEventListener('click', () => {
+            if (window.currentSnippetId) {
+                duplicateSnippet(window.currentSnippetId);
+            }
+        });
+    }
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            if (window.currentSnippetId) {
+                deleteSnippet(window.currentSnippetId);
+            }
+        });
+    }
+}
+
+// Save meta fields (name and comment) for the selected snippet
+function autoSaveMeta() {
+    if (!window.currentSnippetId) return;
+
+    const nameField = document.getElementById('snippet-name');
+    const commentField = document.getElementById('snippet-comment');
+    if (!nameField || !commentField) return;
+
+    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    if (snippet) {
+        snippet.name = nameField.value.trim() || generateSnippetName();
+        snippet.comment = commentField.value;
+        SnippetStorage.saveSnippet(snippet);
+
+        // Update the snippet list display to reflect the new name
+        renderSnippetList();
+
+        // Restore selection after re-render
+        const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+        if (selectedItem) {
+            selectedItem.classList.add('selected');
+        }
+    }
+}
+
+// Debounced meta auto-save
+let metaAutoSaveTimeout;
+function debouncedAutoSaveMeta() {
+    clearTimeout(metaAutoSaveTimeout);
+    metaAutoSaveTimeout = setTimeout(autoSaveMeta, 1000);
+}
+
+// CRUD Operations
+
+// Create new snippet
+function createNewSnippet() {
+    const emptySpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "data": {"values": []},
+        "mark": "point",
+        "encoding": {}
+    };
+
+    const newSnippet = createSnippet(emptySpec);
+    SnippetStorage.saveSnippet(newSnippet);
+
+    // Refresh the list and select the new snippet
+    renderSnippetList();
+    selectSnippet(newSnippet.id);
+
+    return newSnippet;
+}
+
+// Duplicate existing snippet
+function duplicateSnippet(snippetId) {
+    const originalSnippet = SnippetStorage.getSnippet(snippetId);
+    if (!originalSnippet) return;
+
+    const duplicateSpec = JSON.parse(JSON.stringify(originalSnippet.draftSpec));
+    const duplicateName = `${originalSnippet.name}_copy`;
+
+    const newSnippet = createSnippet(duplicateSpec, duplicateName);
+    newSnippet.comment = originalSnippet.comment;
+    newSnippet.tags = [...originalSnippet.tags];
+
+    SnippetStorage.saveSnippet(newSnippet);
+
+    // Refresh the list and select the new snippet
+    renderSnippetList();
+    selectSnippet(newSnippet.id);
+
+    return newSnippet;
+}
+
+// Delete snippet with confirmation
+function deleteSnippet(snippetId) {
+    const snippet = SnippetStorage.getSnippet(snippetId);
+    if (!snippet) return;
+
+    if (confirm(`Delete snippet "${snippet.name}"? This action cannot be undone.`)) {
+        SnippetStorage.deleteSnippet(snippetId);
+
+        // If we deleted the currently selected snippet, clear selection
+        if (window.currentSnippetId === snippetId) {
+            window.currentSnippetId = null;
+            if (editor) {
+                editor.setValue('{}');
+            }
+            // Hide comment field and show placeholder
+            const metaSection = document.getElementById('snippet-meta');
+            const placeholder = document.querySelector('.placeholder');
+            if (metaSection) metaSection.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
+        }
+
+        // Refresh the list
+        renderSnippetList();
+        return true;
+    }
+
+    return false;
+}
+
+// Rename snippet
+function renameSnippet(snippetId, newName) {
+    const snippet = SnippetStorage.getSnippet(snippetId);
+    if (!snippet) return false;
+
+    snippet.name = newName.trim() || generateSnippetName();
+    SnippetStorage.saveSnippet(snippet);
+
+    // Refresh the list to show new name
+    renderSnippetList();
+
+    // Restore selection if this was the selected snippet
+    if (window.currentSnippetId === snippetId) {
+        document.querySelector(`[data-snippet-id="${snippetId}"]`).classList.add('selected');
+    }
+
+    return true;
+}
+

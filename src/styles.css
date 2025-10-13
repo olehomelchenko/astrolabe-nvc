@@ -110,10 +110,98 @@ body {
 .panel-header {
     padding: 8px 12px;
     background: #c0c0c0;
-    border-bottom: 2px solid #808080;
+    border-bottom: 1px solid #808080;
     font-weight: normal;
     font-size: 12px;
     color: #000000;
+}
+
+/* Sort controls */
+.sort-controls {
+    padding: 6px 12px;
+    background: #d4d0c8;
+    border-bottom: 2px solid #808080;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+
+.sort-label {
+    color: #000000;
+    font-size: 10px;
+    margin-right: 4px;
+}
+
+.sort-btn {
+    background: #c0c0c0;
+    border: 1px outset #c0c0c0;
+    color: #000000;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+}
+
+.sort-btn:hover {
+    background: #d4d0c8;
+}
+
+.sort-btn:active {
+    border: 1px inset #c0c0c0;
+}
+
+.sort-btn.active {
+    background: #316ac5;
+    color: #ffffff;
+    border: 1px inset #316ac5;
+}
+
+/* Search controls */
+.search-controls {
+    padding: 6px 12px;
+    background: #d4d0c8;
+    border-bottom: 2px solid #808080;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#snippet-search {
+    flex: 1;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-size: 11px;
+    border: 2px inset #c0c0c0;
+    padding: 3px 6px;
+    height: 20px;
+}
+
+.search-clear-btn {
+    background: #c0c0c0;
+    border: 1px outset #c0c0c0;
+    color: #000000;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.search-clear-btn:hover {
+    background: #d4d0c8;
+}
+
+.search-clear-btn:active {
+    border: 1px inset #c0c0c0;
+}
+
+.search-clear-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
 }
 
 .panel-content {
@@ -230,4 +318,130 @@ body {
     justify-content: center;
     flex-direction: column;
     margin: 8px;
+}
+
+/* Snippet meta section */
+.snippet-meta {
+    margin-top: 12px;
+    padding: 8px;
+    border-top: 1px solid #808080;
+    background: #f0f0f0;
+    border: 1px inset #c0c0c0;
+    margin-left: -8px;
+    margin-right: -8px;
+    margin-bottom: -8px;
+}
+
+.meta-header {
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #000000;
+}
+
+#snippet-comment, #snippet-name {
+    width: 100%;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-size: 11px;
+    border: 2px inset #c0c0c0;
+    padding: 4px;
+    margin-bottom: 8px;
+}
+
+#snippet-comment {
+    resize: vertical;
+    min-height: 40px;
+}
+
+#snippet-name {
+    height: 20px;
+}
+
+/* Meta info section */
+.meta-info {
+    margin: 8px 0;
+    padding: 6px;
+    background: #e0e0e0;
+    border: 1px inset #c0c0c0;
+    font-size: 10px;
+}
+
+.meta-info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.meta-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.meta-info-label {
+    font-weight: bold;
+    color: #000000;
+}
+
+.meta-info-value {
+    color: #606060;
+}
+
+/* Meta action buttons */
+.meta-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.meta-btn {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    color: #000000;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    flex: 1;
+}
+
+.meta-btn:hover {
+    background: #d4d0c8;
+}
+
+.meta-btn:active {
+    border: 2px inset #c0c0c0;
+}
+
+.delete-btn {
+    background: #ff8080;
+    border: 2px outset #ff8080;
+}
+
+.delete-btn:hover {
+    background: #ff9999;
+}
+
+.delete-btn:active {
+    border: 2px inset #ff8080;
+}
+
+/* Ghost card for new snippet creation */
+.ghost-card {
+    border: 2px dashed #808080 !important;
+    background: #f0f0f0 !important;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.ghost-card:hover {
+    background: #e0e0e0 !important;
+    border-color: #606060 !important;
+    opacity: 1;
+}
+
+.ghost-card .snippet-name {
+    color: #606060;
+}
+
+.ghost-card .snippet-date {
+    color: #808080;
 }

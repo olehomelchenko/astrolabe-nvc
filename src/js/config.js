@@ -15,6 +15,54 @@ let panelMemory = {
     previewWidth: '25%'
 };
 
+// Settings storage
+const AppSettings = {
+    STORAGE_KEY: 'astrolabe-settings',
+
+    // Default settings
+    defaults: {
+        sortBy: 'modified',
+        sortOrder: 'desc'
+    },
+
+    // Load settings from localStorage
+    load() {
+        try {
+            const stored = localStorage.getItem(this.STORAGE_KEY);
+            return stored ? { ...this.defaults, ...JSON.parse(stored) } : this.defaults;
+        } catch (error) {
+            console.error('Failed to load settings:', error);
+            return this.defaults;
+        }
+    },
+
+    // Save settings to localStorage
+    save(settings) {
+        try {
+            const currentSettings = this.load();
+            const updatedSettings = { ...currentSettings, ...settings };
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updatedSettings));
+            return true;
+        } catch (error) {
+            console.error('Failed to save settings:', error);
+            return false;
+        }
+    },
+
+    // Get specific setting
+    get(key) {
+        const settings = this.load();
+        return settings[key];
+    },
+
+    // Set specific setting
+    set(key, value) {
+        const update = {};
+        update[key] = value;
+        return this.save(update);
+    }
+};
+
 // Sample Vega-Lite specification
 const sampleSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",

@@ -19,7 +19,6 @@
             <span class="header-title">Astrolabe</span>
         </div>
         <div class="header-links">
-            <span class="header-link">New</span>
             <span class="header-link">Import</span>
             <span class="header-link">Export</span>
             <span class="header-link">Help</span>
@@ -46,12 +45,45 @@
                 <div class="panel-header">
                     Snippets
                 </div>
+                <div class="sort-controls">
+                    <span class="sort-label">Sort by:</span>
+                    <button class="sort-btn active" data-sort="modified">Modified</button>
+                    <button class="sort-btn" data-sort="created">Created</button>
+                    <button class="sort-btn" data-sort="name">Name</button>
+                </div>
+                <div class="search-controls">
+                    <input type="text" id="snippet-search" placeholder="Search snippets..." />
+                    <button class="search-clear-btn" id="search-clear" title="Clear search">×</button>
+                </div>
                 <div class="panel-content">
                     <ul class="snippet-list">
                         <!-- Dynamically populated by renderSnippetList() -->
                     </ul>
                     <div class="placeholder">
                         Click to select a snippet
+                    </div>
+                    <div class="snippet-meta" id="snippet-meta" style="display: none;">
+                        <div class="meta-header">Name</div>
+                        <input type="text" id="snippet-name" placeholder="Snippet name..." />
+
+                        <div class="meta-header">Comment</div>
+                        <textarea id="snippet-comment" placeholder="Add a comment..." rows="3"></textarea>
+
+                        <div class="meta-info">
+                            <div class="meta-info-item">
+                                <span class="meta-info-label">Created:</span>
+                                <span id="snippet-created"></span>
+                            </div>
+                            <div class="meta-info-item">
+                                <span class="meta-info-label">Modified:</span>
+                                <span id="snippet-modified"></span>
+                            </div>
+                        </div>
+
+                        <div class="meta-actions">
+                            <button class="meta-btn" id="duplicate-btn">Duplicate</button>
+                            <button class="meta-btn delete-btn" id="delete-btn">Delete</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -95,6 +127,13 @@
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize snippet storage and render list
             initializeSnippetsStorage();
+
+            // Initialize sort controls
+            initializeSortControls();
+
+            // Initialize search controls
+            initializeSearchControls();
+
             renderSnippetList();
 
             // Load saved layout
@@ -151,6 +190,9 @@
 
                 // Initial render
                 renderVisualization();
+
+                // Initialize auto-save functionality
+                initializeAutoSave();
             });
 
             // Enhanced toggle functionality with memory and expansion
@@ -164,11 +206,18 @@
 
             // Snippet selection is now handled by snippet-manager.js
 
-            // Header link handlers (placeholder)
+            // Header link handlers
             const headerLinks = document.querySelectorAll('.header-link');
             headerLinks.forEach(link => {
                 link.addEventListener('click', function () {
-                    // TODO: Implement actual functionality in future phases
+                    const linkText = this.textContent.trim();
+                    switch (linkText) {
+                        case 'Import':
+                        case 'Export':
+                        case 'Help':
+                            // TODO: Implement in future phases
+                            break;
+                    }
                 });
             });
         });
