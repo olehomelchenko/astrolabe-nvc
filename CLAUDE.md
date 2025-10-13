@@ -15,7 +15,7 @@ Instructions for Claude Code when working on this project.
 
 ## Current Status
 
-**Completed**: Phases 0-8 (All core functionality including storage monitoring)
-**Next**: Phase 9 - Export/Import
+**Completed**: Phases 0-9 (All core functionality including import/export)
+**Next**: Phase 10 - Dataset Management
 
 See `docs/dev-plan.md` for complete roadmap and technical details.

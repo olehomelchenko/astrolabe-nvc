@@ -89,12 +89,33 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Header links - show placeholder
-    document.querySelectorAll('.header-link').forEach(link => {
-        link.addEventListener('click', function () {
+    // Header links
+    const importLink = document.getElementById('import-link');
+    const exportLink = document.getElementById('export-link');
+    const helpLink = document.getElementById('help-link');
+    const importFileInput = document.getElementById('import-file-input');
+
+    if (importLink && importFileInput) {
+        importLink.addEventListener('click', function () {
+            importFileInput.click();
+        });
+
+        importFileInput.addEventListener('change', function () {
+            importSnippets(this);
+        });
+    }
+
+    if (exportLink) {
+        exportLink.addEventListener('click', function () {
+            exportSnippets();
+        });
+    }
+
+    if (helpLink) {
+        helpLink.addEventListener('click', function () {
             alert('Coming soon in a future phase!');
         });
-    });
+    }
 
     // View mode toggle buttons
     document.getElementById('view-draft').addEventListener('click', () => {

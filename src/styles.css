@@ -458,6 +458,14 @@ body {
     margin-top: 1px;
 }
 
+.snippet-size {
+    font-size: 10px;
+    color: #808080;
+    margin-left: auto;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
 .editor-placeholder {
     background: #ffffff;
     border: 2px inset #c0c0c0;

@@ -239,6 +239,11 @@ function renderSnippetList(searchQuery = null) {
             dateText = formatSnippetDate(snippet.modified);
         }
 
+        // Calculate snippet size
+        const snippetSize = new Blob([JSON.stringify(snippet)]).size;
+        const sizeKB = snippetSize / 1024;
+        const sizeHTML = sizeKB >= 1 ? `<span class="snippet-size">${sizeKB.toFixed(0)} KB</span>` : '';
+
         // Determine status: green if no draft changes, yellow if has draft
         const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
         const statusClass = hasDraft ? 'draft' : 'published';
@@ -249,6 +254,7 @@ function renderSnippetList(searchQuery = null) {
                     <div class="snippet-name">${snippet.name}</div>
                     <div class="snippet-date">${dateText}</div>
                 </div>
+                ${sizeHTML}
                 <div class="snippet-status ${statusClass}"></div>
             </li>
         `;
@@ -844,5 +850,127 @@ function updateStorageMonitor() {
             storageFill.classList.add('warning');
         }
     }
+}
+
+// Export all snippets to JSON file
+function exportSnippets() {
+    const snippets = SnippetStorage.loadSnippets();
+
+    if (snippets.length === 0) {
+        alert('No snippets to export');
+        return;
+    }
+
+    // Create JSON blob
+    const jsonString = JSON.stringify(snippets, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `astrolabe-snippets-${new Date().toISOString().slice(0, 10)}.json`;
+
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Normalize external snippet format to Astrolabe format
+function normalizeSnippet(externalSnippet) {
+    // Check if already in Astrolabe format (has 'created' field as ISO string)
+    const isAstrolabeFormat = externalSnippet.created &&
+                             typeof externalSnippet.created === 'string' &&
+                             externalSnippet.created.includes('T');
+
+    if (isAstrolabeFormat) {
+        // Already in correct format, just ensure all fields exist
+        return {
+            id: externalSnippet.id || generateSnippetId(),
+            name: externalSnippet.name || generateSnippetName(),
+            created: externalSnippet.created,
+            modified: externalSnippet.modified || externalSnippet.created,
+            spec: externalSnippet.spec || {},
+            draftSpec: externalSnippet.draftSpec || externalSnippet.spec || {},
+            comment: externalSnippet.comment || "",
+            tags: externalSnippet.tags || [],
+            datasetRefs: externalSnippet.datasetRefs || [],
+            meta: externalSnippet.meta || {}
+        };
+    }
+
+    // External format - map fields
+    const createdDate = externalSnippet.createdAt ?
+                       new Date(externalSnippet.createdAt).toISOString() :
+                       new Date().toISOString();
+
+    return {
+        id: generateSnippetId(), // Generate new ID to avoid conflicts
+        name: externalSnippet.name || generateSnippetName(),
+        created: createdDate,
+        modified: createdDate,
+        spec: externalSnippet.content || externalSnippet.spec || {},
+        draftSpec: externalSnippet.draft || externalSnippet.draftSpec || externalSnippet.content || externalSnippet.spec || {},
+        comment: externalSnippet.comment || "",
+        tags: ["imported"], // Add 'imported' tag
+        datasetRefs: [],
+        meta: {}
+    };
+}
+
+// Import snippets from JSON file
+function importSnippets(fileInput) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+
+            // Handle both single snippet and array of snippets
+            const snippetsToImport = Array.isArray(importedData) ? importedData : [importedData];
+
+            if (snippetsToImport.length === 0) {
+                alert('No snippets found in file');
+                return;
+            }
+
+            // Normalize and merge with existing snippets
+            const existingSnippets = SnippetStorage.loadSnippets();
+            const existingIds = new Set(existingSnippets.map(s => s.id));
+
+            let importedCount = 0;
+            snippetsToImport.forEach(snippet => {
+                const normalized = normalizeSnippet(snippet);
+
+                // Ensure no ID conflicts
+                while (existingIds.has(normalized.id)) {
+                    normalized.id = generateSnippetId();
+                }
+
+                existingSnippets.push(normalized);
+                existingIds.add(normalized.id);
+                importedCount++;
+            });
+
+            // Save all snippets
+            if (SnippetStorage.saveSnippets(existingSnippets)) {
+                alert(`Successfully imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''}`);
+                renderSnippetList();
+            }
+
+        } catch (error) {
+            console.error('Import error:', error);
+            alert('Failed to import snippets. Please check that the file is valid JSON.');
+        }
+
+        // Clear file input
+        fileInput.value = '';
+    };
+
+    reader.readAsText(file);
 }
 

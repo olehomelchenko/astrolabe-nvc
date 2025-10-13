@@ -170,16 +170,22 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 9: Export/Import**
+### **Phase 9: Export/Import** ✅ **COMPLETE**
 **Goal**: Portability and backup
 
-- [ ] Export single snippet as JSON file (include metadata)
-- [ ] Export all snippets as JSON bundle
-- [ ] Import snippets from JSON (with conflict resolution)
-- [ ] Drag-and-drop import
-- [ ] Export published vs draft options
+**Deliverables**:
+- Export all snippets to JSON file with auto-generated filename (astrolabe-snippets-YYYY-MM-DD.json)
+- Import snippets from JSON with automatic format detection
+- Support for both Astrolabe native format and external formats
+- Automatic field mapping and normalization (createdAt → created, content → spec, draft → draftSpec)
+- "imported" tag automatically added to externally imported snippets
+- ID conflict resolution with automatic regeneration
+- Additive import (merges with existing snippets, no overwrites)
+- Success/error feedback with import count
+- File picker integration with header Import/Export links
+- Snippet size display in list (shows KB for snippets ≥ 1 KB, right-aligned)
 
-**Deliverable**: Full backup/restore capability
+**Note**: Drag-and-drop import and selective export options deferred to future phases
 
 ---
 
@@ -305,15 +311,15 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ## Current Status
 
-**Completed**: Phases 0-8 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring)
-**Next**: Phase 9 - Export/Import
+**Completed**: Phases 0-9 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export)
+**Next**: Phase 10 - Dataset Management
 **See**: `CLAUDE.md` for concise current state summary
 
 ---
 
 ## Implemented Features
 
-### Core Capabilities (Phases 0-8)
+### Core Capabilities (Phases 0-9)
 - Three-panel resizable layout with memory and persistence
 - Monaco Editor v0.47.0 with Vega-Lite v5 schema validation
 - Live Vega-Lite rendering with debounced updates and error display
@@ -326,6 +332,8 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - Status indicator lights (green/yellow) showing draft state
 - Context-aware Publish/Revert buttons with color coding
 - Storage monitoring with visual progress bar and warning states
+- Export/Import functionality with format auto-detection
+- Snippet size display (right-aligned, shown for ≥ 1 KB)
 - Retro Windows 2000 aesthetic throughout
 
 ### Technical Implementation
@@ -339,3 +347,5 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Data Model**: Phase 0 schema with `spec` (published) and `draftSpec` (working) fields
 - **Storage Calculation**: Blob API for accurate byte counting of snippet data
 - **Flexbox Layout**: Scrollable snippet list with fixed metadata and storage monitor at bottom
+- **Import/Export**: Format detection, field normalization, ID conflict resolution, additive merging
+- **Size Display**: Per-snippet size calculation with conditional rendering (≥ 1 KB threshold)
