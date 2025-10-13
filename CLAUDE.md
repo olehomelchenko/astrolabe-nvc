@@ -9,13 +9,26 @@ Instructions for Claude Code when working on this project.
 ## Architecture
 
 - **Frontend-only**: HTML/CSS/JavaScript with CDN dependencies (Monaco Editor, Vega-Embed)
-- **Storage**: localStorage with Phase 0 schema (id, name, created, modified, spec, draftSpec, comment, tags, datasetRefs, meta)
-- **Structure**: Three resizable panels (snippet library, Monaco editor, live preview)
-- **No build tools**: Open `index.html` directly in browser
+- **Storage**:
+  - **Snippets**: localStorage with Phase 0 schema (id, name, created, modified, spec, draftSpec, comment, tags, datasetRefs, meta)
+  - **Datasets**: IndexedDB (unlimited size, multi-format: JSON/CSV/TSV/TopoJSON, inline & URL sources)
+- **Structure**: Three resizable panels (snippet library, Monaco editor, live preview) + Dataset Manager modal
+- **No build tools**: Open `index.html` directly in browser (needs local server for IndexedDB)
 
 ## Current Status
 
-**Completed**: Phases 0-9 (All core functionality including import/export)
-**Next**: Phase 10 - Dataset Management
+**Completed**: Phases 0-10 (Core functionality + Dataset Management)
+**Next**: Phase 11 - Advanced Dataset Features (optional enhancements)
+
+### Key Features Implemented
+- ✅ Snippet management with draft/published workflow
+- ✅ Multi-field sorting and real-time search
+- ✅ Storage monitoring and import/export
+- ✅ **Dataset management with IndexedDB**
+  - Multi-format support (JSON, CSV, TSV, TopoJSON)
+  - Multi-source support (inline data, URL references)
+  - Automatic metadata calculation and URL fetching
+  - Dataset reference resolution in Vega-Lite specs
+  - Modal UI with button-group selectors
 
 See `docs/dev-plan.md` for complete roadmap and technical details.

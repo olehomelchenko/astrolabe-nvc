@@ -662,3 +662,407 @@ body {
 .storage-fill.critical {
     background: #ff0000;
 }
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    background: #000080;
+    color: #ffffff;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 24px;
+    border-bottom: 2px solid #808080;
+}
+
+.modal-title {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.modal-close {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    color: #000000;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.modal-close:hover {
+    background: #d4d0c8;
+}
+
+.modal-close:active {
+    border: 2px inset #c0c0c0;
+}
+
+.modal-body {
+    flex: 1;
+    overflow: auto;
+    background: #ffffff;
+    border: 2px inset #c0c0c0;
+    margin: 8px;
+    min-height: 0;
+}
+
+/* Dataset Views */
+.dataset-view {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* List View */
+.dataset-list-header {
+    padding: 8px;
+    background: #d4d0c8;
+    border-bottom: 2px solid #808080;
+}
+
+.dataset-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.dataset-list {
+    width: 300px;
+    overflow-y: auto;
+    border-right: 2px solid #808080;
+    background: #ffffff;
+}
+
+.dataset-item {
+    padding: 8px;
+    border-bottom: 1px solid #d0d0d0;
+    cursor: pointer;
+    background: #ffffff;
+}
+
+.dataset-item:hover {
+    background: #6a9ad5;
+    color: #ffffff;
+}
+
+.dataset-item.selected {
+    background: #316ac5;
+    color: #ffffff;
+}
+
+.dataset-name {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.dataset-meta {
+    font-size: 10px;
+    color: #606060;
+}
+
+.dataset-item.selected .dataset-meta,
+.dataset-item:hover .dataset-meta {
+    color: inherit;
+    opacity: 0.9;
+}
+
+.dataset-empty {
+    padding: 32px;
+    text-align: center;
+    color: #808080;
+    font-style: italic;
+    font-size: 12px;
+}
+
+/* Dataset Details */
+.dataset-details {
+    flex: 1;
+    overflow-y: auto;
+    background: #ffffff;
+}
+
+.dataset-detail-section {
+    padding: 16px;
+}
+
+.dataset-detail-header {
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    margin-top: 12px;
+    color: #000000;
+}
+
+.dataset-detail-header:first-child {
+    margin-top: 0;
+}
+
+.dataset-detail-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    margin-top: 12px;
+}
+
+.dataset-refresh-btn {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    color: #000000;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.dataset-refresh-btn:hover {
+    background: #d4d0c8;
+}
+
+.dataset-refresh-btn:active {
+    border: 2px inset #c0c0c0;
+}
+
+.dataset-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.dataset-input,
+.dataset-textarea {
+    width: 100%;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-size: 11px;
+    border: 2px inset #c0c0c0;
+    padding: 4px;
+    background: #ffffff;
+}
+
+.dataset-textarea {
+    resize: vertical;
+}
+
+.dataset-stats {
+    background: #f0f0f0;
+    border: 1px inset #c0c0c0;
+    padding: 8px;
+    font-size: 10px;
+}
+
+.dataset-stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.dataset-stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.dataset-stat-label {
+    font-weight: bold;
+    color: #000000;
+}
+
+.dataset-preview-box {
+    background: #f0f0f0;
+    border: 2px inset #c0c0c0;
+    padding: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    overflow: auto;
+    max-height: 200px;
+    margin: 0;
+}
+
+.dataset-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* Dataset Form */
+.dataset-form {
+    padding: 16px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.dataset-form-header {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #000000;
+}
+
+.dataset-form-group {
+    margin-bottom: 12px;
+}
+
+.dataset-form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #000000;
+}
+
+.dataset-toggle-row {
+    display: flex;
+    gap: 24px;
+    padding: 8px;
+    background: #f0f0f0;
+    border: 1px inset #c0c0c0;
+    flex-wrap: wrap;
+}
+
+.dataset-toggle-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dataset-toggle-label {
+    font-size: 10px;
+    color: #000000;
+}
+
+.dataset-toggle-group {
+    display: flex;
+}
+
+.dataset-toggle-btn {
+    background: #c0c0c0;
+    border: 1px solid #808080;
+    color: #000000;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    height: 20px;
+    box-sizing: border-box;
+}
+
+.dataset-toggle-btn:not(:first-child) {
+    border-left: none;
+}
+
+.dataset-toggle-btn:hover:not(.active) {
+    background: #d4d0c8;
+}
+
+.dataset-toggle-btn:active {
+    background: #316ac5;
+    color: #ffffff;
+}
+
+.dataset-toggle-btn.active {
+    background: #316ac5;
+    color: #ffffff;
+    border-top: 1px solid #0a246a;
+    border-left: 1px solid #0a246a;
+    border-bottom: 1px solid #4a7ac5;
+    border-right: 1px solid #4a7ac5;
+}
+
+.dataset-toggle-btn.active:not(:first-child) {
+    border-left: 1px solid #0a246a;
+}
+
+.dataset-format-hint {
+    font-size: 10px;
+    color: #606060;
+    font-style: italic;
+    margin-bottom: 4px;
+    padding: 4px;
+    background: #fffacd;
+    border: 1px solid #e0e0a0;
+}
+
+.dataset-form-error {
+    color: #ff0000;
+    font-size: 11px;
+    margin-bottom: 12px;
+    min-height: 16px;
+}
+
+.dataset-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* Modal Buttons */
+.modal-btn {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    color: #000000;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+}
+
+.modal-btn:hover {
+    background: #d4d0c8;
+}
+
+.modal-btn:active {
+    border: 2px inset #c0c0c0;
+}
+
+.modal-btn.primary {
+    background: #90ee90;
+}
+
+.modal-btn.primary:hover {
+    background: #a0ffa0;
+}
+
+.modal-btn.delete-btn {
+    background: #ff8080;
+    border: 2px outset #ff8080;
+}
+
+.modal-btn.delete-btn:hover {
+    background: #ff9999;
+}
+
+.modal-btn.delete-btn:active {
+    border: 2px inset #ff8080;
+}

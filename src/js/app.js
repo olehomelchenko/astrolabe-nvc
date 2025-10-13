@@ -117,6 +117,70 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Dataset Manager
+    const datasetsLink = document.getElementById('datasets-link');
+    const toggleDatasetsBtn = document.getElementById('toggle-datasets');
+    const datasetModal = document.getElementById('dataset-modal');
+    const datasetModalClose = document.getElementById('dataset-modal-close');
+    const newDatasetBtn = document.getElementById('new-dataset-btn');
+    const cancelDatasetBtn = document.getElementById('cancel-dataset-btn');
+    const saveDatasetBtn = document.getElementById('save-dataset-btn');
+    const deleteDatasetBtn = document.getElementById('delete-dataset-btn');
+    const copyReferenceBtn = document.getElementById('copy-reference-btn');
+
+    // Open dataset manager
+    if (datasetsLink) {
+        datasetsLink.addEventListener('click', openDatasetManager);
+    }
+    if (toggleDatasetsBtn) {
+        toggleDatasetsBtn.addEventListener('click', openDatasetManager);
+    }
+
+    // Close dataset manager
+    if (datasetModalClose) {
+        datasetModalClose.addEventListener('click', closeDatasetManager);
+    }
+
+    // Close on overlay click
+    if (datasetModal) {
+        datasetModal.addEventListener('click', function (e) {
+            if (e.target === datasetModal) {
+                closeDatasetManager();
+            }
+        });
+    }
+
+    // New dataset button
+    if (newDatasetBtn) {
+        newDatasetBtn.addEventListener('click', showNewDatasetForm);
+    }
+
+    // Cancel dataset button
+    if (cancelDatasetBtn) {
+        cancelDatasetBtn.addEventListener('click', hideNewDatasetForm);
+    }
+
+    // Save dataset button
+    if (saveDatasetBtn) {
+        saveDatasetBtn.addEventListener('click', saveNewDataset);
+    }
+
+    // Delete dataset button
+    if (deleteDatasetBtn) {
+        deleteDatasetBtn.addEventListener('click', deleteCurrentDataset);
+    }
+
+    // Copy reference button
+    if (copyReferenceBtn) {
+        copyReferenceBtn.addEventListener('click', copyDatasetReference);
+    }
+
+    // Refresh metadata button
+    const refreshMetadataBtn = document.getElementById('refresh-metadata-btn');
+    if (refreshMetadataBtn) {
+        refreshMetadataBtn.addEventListener('click', refreshDatasetMetadata);
+    }
+
     // View mode toggle buttons
     document.getElementById('view-draft').addEventListener('click', () => {
         switchViewMode('draft');

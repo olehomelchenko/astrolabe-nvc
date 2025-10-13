@@ -189,31 +189,79 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 10: Dataset Management - Part 1**
-**Goal**: Separate dataset storage infrastructure
+### **Phase 10: Dataset Management** ✅ **COMPLETE**
+**Goal**: Separate dataset storage with multiple data sources and formats
 
-- [ ] Implement dataset storage schema from Phase 0
-- [ ] Create dataset CRUD operations
-- [ ] Add dataset library panel/modal
-- [ ] List all stored datasets with metadata
-- [ ] Add/delete/rename datasets
-- [ ] Display dataset size and row counts
+**Deliverables**:
+- IndexedDB-based dataset storage (separate from snippets, no 5MB localStorage limit)
+- Full CRUD operations for datasets (create, read, update, delete)
+- Modal-based Dataset Manager UI (accessible via header link and 📁 toggle button)
+- Support for multiple data sources:
+  - **Inline data**: JSON, CSV, TSV, TopoJSON stored directly
+  - **URL data**: Remote data sources with format specification
+- Automatic metadata calculation:
+  - Row count, column count, column names
+  - Data size in bytes
+  - Automatic URL fetching on dataset creation
+- Refresh metadata button for URL datasets (🔄)
+- Dataset list with informative metadata display
+- Dataset details panel with:
+  - Editable name and comment
+  - Statistics display (rows, columns, size)
+  - Data preview (first 5 rows or URL info)
+  - Copy reference button (copies `"data": {"name": "dataset-name"}`)
+  - Delete button with confirmation
+- Auto-resolve dataset references in Vega-Lite specs during rendering
+- Format-aware rendering:
+  - JSON: `{ values: data }`
+  - CSV/TSV: `{ values: data, format: { type: 'csv'/'tsv' } }`
+  - TopoJSON: `{ values: data, format: { type: 'topojson' } }`
+  - URL: `{ url: "...", format: { type: '...' } }`
+- Button-group UI for source/format selection (matches editor style)
+- Graceful error handling for CORS and network failures
+- Modal scrolling support for small viewports
 
-**Deliverable**: Basic dataset storage separate from snippets
+**Dataset Schema**:
+```javascript
+{
+  id: number,
+  name: string,
+  created: ISO string,
+  modified: ISO string,
+  data: array/string/object, // Inline data or URL string
+  format: 'json'|'csv'|'tsv'|'topojson',
+  source: 'inline'|'url',
+  comment: string,
+  rowCount: number|null,
+  columnCount: number|null,
+  columns: string[],
+  size: number|null // bytes
+}
+```
+
+**Technical Implementation**:
+- IndexedDB with keyPath 'id', indexes on 'name' (unique) and 'modified'
+- Async/Promise-based DatasetStorage API
+- Format-specific parsing for metadata calculation
+- Vega-Lite's native format parsers used for rendering
+- Metadata refresh fetches live data and updates statistics
+- Modal resizes with viewport (max-height: 90vh)
 
 ---
 
-### **Phase 11: Dataset Management - Part 2**
-**Goal**: Reference datasets from specs
+### **Phase 11: Advanced Dataset Features** _(Future)_
+**Goal**: Enhanced dataset workflows
 
 - [ ] Detect inline data in Vega-Lite specs
 - [ ] "Extract to dataset" feature for inline data
-- [ ] Replace inline data with dataset references
-- [ ] Auto-resolve dataset references when rendering
 - [ ] Update snippet UI to show linked datasets
-- [ ] Handle missing dataset references gracefully
+- [ ] Dataset usage tracking (which snippets reference which datasets)
+- [ ] Import datasets from file upload
+- [ ] Export individual datasets
+- [ ] Dataset preview with table view
+- [ ] Column type detection and display
 
-**Deliverable**: Specs can reference shared datasets
+**Deliverable**: Advanced dataset management and discovery
 
 ---
 
@@ -280,8 +328,9 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 │   └── js/                   # Modular JavaScript organization
 │       ├── config.js         # Global variables, settings, & sample data
 │       ├── snippet-manager.js # Snippet storage, CRUD operations & localStorage wrapper
+│       ├── dataset-manager.js # Dataset storage, CRUD operations & IndexedDB wrapper
 │       ├── panel-manager.js  # Panel resize, toggle & memory system
-│       ├── editor.js         # Monaco Editor initialization & Vega-Lite rendering
+│       ├── editor.js         # Monaco Editor initialization, dataset resolution & Vega-Lite rendering
 │       └── app.js            # Application initialization & event handlers
 └── docs/
     ├── dev-plan.md           # This development roadmap
@@ -311,15 +360,15 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ## Current Status
 
-**Completed**: Phases 0-9 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export)
-**Next**: Phase 10 - Dataset Management
+**Completed**: Phases 0-10 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export, dataset management)
+**Next**: Phase 11 - Advanced Dataset Features (optional enhancements)
 **See**: `CLAUDE.md` for concise current state summary
 
 ---
 
 ## Implemented Features
 
-### Core Capabilities (Phases 0-9)
+### Core Capabilities (Phases 0-10)
 - Three-panel resizable layout with memory and persistence
 - Monaco Editor v0.47.0 with Vega-Lite v5 schema validation
 - Live Vega-Lite rendering with debounced updates and error display
@@ -334,6 +383,15 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - Storage monitoring with visual progress bar and warning states
 - Export/Import functionality with format auto-detection
 - Snippet size display (right-aligned, shown for ≥ 1 KB)
+- **Dataset Management (Phase 10)**:
+  - IndexedDB storage for datasets (unlimited size)
+  - Multi-format support: JSON, CSV, TSV, TopoJSON
+  - Multi-source support: Inline data and URL references
+  - Modal-based Dataset Manager with full CRUD
+  - Automatic metadata calculation and display
+  - URL metadata fetching and refresh
+  - Dataset reference resolution in Vega-Lite specs
+  - Button-group UI for source/format selection
 - Retro Windows 2000 aesthetic throughout
 
 ### Technical Implementation
@@ -349,3 +407,7 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Flexbox Layout**: Scrollable snippet list with fixed metadata and storage monitor at bottom
 - **Import/Export**: Format detection, field normalization, ID conflict resolution, additive merging
 - **Size Display**: Per-snippet size calculation with conditional rendering (≥ 1 KB threshold)
+- **Dataset Storage**: IndexedDB with async/Promise-based API, unique name constraint
+- **Dataset Resolution**: Async spec transformation before rendering, format-aware data injection
+- **URL Metadata**: Fetch on creation with graceful CORS error handling
+- **Modal UI**: Flexbox with overflow:auto, max-height responsive to viewport

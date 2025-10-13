@@ -1,3 +1,76 @@
+// Resolve dataset references in a spec
+async function resolveDatasetReferences(spec) {
+    // If spec has data.name, look it up
+    if (spec.data && spec.data.name && typeof spec.data.name === 'string') {
+        const datasetName = spec.data.name;
+        const dataset = await DatasetStorage.getDatasetByName(datasetName);
+
+        if (dataset) {
+            // Replace data reference with actual data in the format Vega-Lite expects
+            if (dataset.source === 'url') {
+                // For URL sources, pass the URL and format
+                spec.data = {
+                    url: dataset.data,
+                    format: { type: dataset.format }
+                };
+            } else {
+                // For inline sources
+                if (dataset.format === 'json') {
+                    spec.data = { values: dataset.data };
+                } else if (dataset.format === 'csv') {
+                    spec.data = {
+                        values: dataset.data,
+                        format: { type: 'csv' }
+                    };
+                } else if (dataset.format === 'tsv') {
+                    spec.data = {
+                        values: dataset.data,
+                        format: { type: 'tsv' }
+                    };
+                } else if (dataset.format === 'topojson') {
+                    spec.data = {
+                        values: dataset.data,
+                        format: { type: 'topojson' }
+                    };
+                }
+            }
+        } else {
+            throw new Error(`Dataset "${datasetName}" not found`);
+        }
+    }
+
+    // Recursively resolve in layers (for layered specs)
+    if (spec.layer && Array.isArray(spec.layer)) {
+        for (let layer of spec.layer) {
+            await resolveDatasetReferences(layer);
+        }
+    }
+
+    // Recursively resolve in concat/hconcat/vconcat
+    if (spec.concat && Array.isArray(spec.concat)) {
+        for (let view of spec.concat) {
+            await resolveDatasetReferences(view);
+        }
+    }
+    if (spec.hconcat && Array.isArray(spec.hconcat)) {
+        for (let view of spec.hconcat) {
+            await resolveDatasetReferences(view);
+        }
+    }
+    if (spec.vconcat && Array.isArray(spec.vconcat)) {
+        for (let view of spec.vconcat) {
+            await resolveDatasetReferences(view);
+        }
+    }
+
+    // Recursively resolve in facet
+    if (spec.spec) {
+        await resolveDatasetReferences(spec.spec);
+    }
+
+    return spec;
+}
+
 // Render function that takes spec from editor
 async function renderVisualization() {
     const previewContainer = document.getElementById('vega-preview');
@@ -5,7 +78,10 @@ async function renderVisualization() {
     try {
         // Get current content from editor
         const specText = editor.getValue();
-        const spec = JSON.parse(specText);
+        let spec = JSON.parse(specText);
+
+        // Resolve dataset references
+        spec = await resolveDatasetReferences(spec);
 
         // Render with Vega-Embed (use global variable)
         await window.vegaEmbed('#vega-preview', spec, {
