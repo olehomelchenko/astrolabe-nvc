@@ -1,25 +1,28 @@
-# Astrolabe
+# Astrolabe Development Plan
 
 **A lightweight, browser-based snippet manager for Vega-Lite visualizations**
 
-## Overview
+> **For AI Context**: See `CLAUDE.md` for current status and key patterns.
+> **This Document**: Complete development roadmap and technical decisions.
 
-Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visualization specifications. Unlike full-featured visualization editors, Astrolabe emphasizes efficient snippet management with a clean, resizable three-panel interface: snippet library, Monaco editor with schema-aware autocomplete, and live preview.
+## Project Vision
 
-## End Goals
+Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visualization specifications. It emphasizes efficient snippet management with a clean, resizable three-panel interface: snippet library, Monaco editor with schema-aware autocomplete, and live preview.
 
-- **Local-first**: All data stored in browser (localStorage initially, IndexedDB for scale)
+## Design Principles
+
+- **Local-first**: All data stored in browser (localStorage, future IndexedDB migration)
 - **Minimal dependencies**: Vanilla JavaScript, no build tools, direct CDN imports
 - **Developer-friendly**: Full JSON schema support, syntax validation, and intellisense
 - **Version-aware**: Draft/published workflow for safe experimentation
 - **Dataset management**: Separate storage for datasets with reference system
 - **Extensible**: Clean architecture for future cloud sync and authentication
 
-## Core Features
+## Planned Feature Set
 
 - Resizable three-panel layout with show/hide toggles
 - Auto-saving draft system with explicit publishing
-- Snippet duplication, renaming, deletion
+- Snippet organization with sorting and search
 - Storage monitoring and size tracking
 - Export/import functionality
 - Dataset library and management
@@ -54,154 +57,86 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 ### **Phase 1: Static HTML Structure** ✅ **COMPLETE**
 **Goal**: Basic three-panel layout with placeholder content
 
-- [x] Create `index.html` with basic structure
-- [x] Add minimal CSS for three-column flexbox layout
-- [x] Add placeholder divs for: snippet list, editor, preview
-- [x] Add vertical toggle button strip (moved to left side with emoji icons)
-- [x] Test that layout renders at correct proportions
-
-**Deliverable**: Static page with three visible sections + toggle buttons
-
-**Additional Enhancements Made**:
-- Added header with site branding (🔭 Astrolabe) and quick action links
-- Applied retro Windows 2000 aesthetic with square edges and classic colors
-- Implemented basic toggle functionality for show/hide panels
-- Added snippet selection highlighting
-- Used emoji icons for better UX (📄 ✏️ 👁️)
-- Optimized font sizes for better readability
+**Deliverables**:
+- Three-panel flexbox layout (snippet library, editor, preview)
+- Header with site branding (🔭 Astrolabe) and action links
+- Toggle button strip with emoji icons (📄 ✏️ 👁️)
+- Retro Windows 2000 aesthetic with classic colors and square edges
+- Sort and search controls in snippet panel header
+- Metadata panel for snippet details
 
 ---
 
 ### **Phase 2: Resizable Panels** ✅ **COMPLETE**
 **Goal**: Make panels draggable to resize
 
-- [x] Add resize handles/dividers between panels
-- [x] Implement vanilla JS drag handlers for horizontal resizing
-- [x] Store panel widths in localStorage (restore on load)
-- [x] Implement toggle button logic to show/hide each panel
-- [x] Handle edge cases (minimum widths, hiding panels)
-
-**Deliverable**: Fully interactive layout with resizable and toggleable panels
-
-**Key Achievements**:
-- Added 4px retro-styled resize handles between panels with hover/drag feedback
-- Implemented smooth mouse-based dragging with real-time width updates
-- Added 200px minimum width constraints to prevent unusable panels
-- Created intelligent toggle system with proportional space redistribution
-- Implemented panel memory system that preserves preferred sizes across hide/show cycles
-- Added comprehensive localStorage persistence for panel sizes, visibility, and memory
-- Fixed CSS flex properties to allow dynamic width changes (flex: 0 1 auto)
-- Enhanced toggle buttons with proper state management and visual feedback
-
-**Advanced Features**:
-- **Smart Memory**: Panels remember their preferred sizes even when hidden
-- **Proportional Expansion**: Remaining visible panels expand proportionally when others are hidden
-- **Stable Proportions**: Toggle hide/show cycles maintain original size relationships
-- **Manual Resize Memory**: Dragging resize handles updates the memory for future toggle operations
+**Deliverables**:
+- Drag handles between panels with hover/active states
+- Mouse-based horizontal resizing with 200px minimum widths
+- Panel memory system preserving preferred sizes when toggled
+- Proportional redistribution when panels are hidden/shown
+- localStorage persistence for panel widths, visibility, and memory
+- Toggle buttons with active state indicators
 
 ---
 
 ### **Phase 3: Monaco Editor Integration** ✅ **COMPLETE**
 **Goal**: Working code editor with Vega-Lite schema
 
-- [x] Load Monaco Editor from CDN
-- [x] Initialize Monaco in the middle panel
-- [x] Configure JSON mode with Vega-Lite schema for autocomplete
-- [x] Add a test Vega-Lite spec as default content
-- [x] Verify schema validation and autocomplete works
-
-**Deliverable**: Working editor with intellisense for Vega-Lite
-
-**Enhancements Made**:
-- Used specific Monaco version (0.47.0) for consistency
-- Fetch actual Vega-Lite schema JSON for better validation
-- Added formatOnPaste and formatOnType for better UX
-- Implemented proper error handling for schema loading
-- Sample bar chart spec loads by default
+**Deliverables**:
+- Monaco Editor v0.47.0 loaded from CDN
+- JSON language mode with Vega-Lite v5 schema validation
+- Autocomplete and intellisense for Vega-Lite specifications
+- Format on paste/type enabled
+- Error handling for schema loading failures
 
 ---
 
 ### **Phase 4: Vega-Lite Rendering** ✅ **COMPLETE**
 **Goal**: Live preview of visualizations
 
-- [x] Load Vega-Embed from CDN
-- [x] Create render function that takes spec from editor
-- [x] Add debounced auto-render on editor change
-- [x] Display rendered chart in right panel
-- [x] Handle rendering errors gracefully (show in preview panel)
-
-**Deliverable**: Editor → live chart pipeline working with auto-refresh
-
-**Key Achievements**:
-- Successfully resolved AMD loader conflicts with Monaco Editor
-- Implemented UMD build loading with temporary AMD disable/restore
-- Added 1.5s debounced rendering for smooth editing experience
-- Created comprehensive error handling with user-friendly messages
-- Established working editor → JSON parsing → Vega-Lite rendering pipeline
-- Sample bar chart loads and renders immediately on page load
-- Live preview updates automatically as user edits JSON specification
+**Deliverables**:
+- Vega, Vega-Lite, and Vega-Embed libraries loaded via CDN
+- AMD loader conflict resolution between Monaco and Vega
+- 1.5s debounced rendering on editor changes
+- Immediate rendering on snippet selection
+- Error display in preview panel for invalid specs
+- SVG rendering for high-quality output
 
 ---
 
 ### **Phase 5: Data Model + LocalStorage** ✅ **COMPLETE**
 **Goal**: Persist snippets and load them on page refresh
 
-- [x] Implement storage wrapper using Phase 0 schema
-- [x] Create localStorage functions (save, load, list, delete)
-- [x] Initialize with a default example snippet if storage is empty
-- [x] Populate snippet list panel from localStorage
-- [x] Handle localStorage errors/quota exceeded
-
-**Deliverable**: Snippets persist across page reloads
-
-**Key Achievements**:
-- Created comprehensive `snippet-manager.js` with full Phase 0 schema implementation
-- Implemented robust `SnippetStorage` wrapper with error handling and quota management
-- Added ID generation using `Date.now() + random numbers` for uniqueness
-- Implemented auto-naming with ISO datetime format (YYYY-MM-DD_HH-MM-SS)
-- Built dynamic snippet list rendering with smart date formatting (relative dates)
-- Added snippet selection functionality that loads specs into Monaco Editor
-- Integrated default snippet initialization with sample Vega-Lite chart
-- Removed hardcoded HTML snippets in favor of dynamic localStorage-based system
-- Added proper script loading order and initialization sequence
+**Deliverables**:
+- SnippetStorage wrapper with error handling
+- Full Phase 0 schema implementation (id, name, created, modified, spec, draftSpec, comment, tags, datasetRefs, meta)
+- ID generation using timestamp + random numbers
+- Auto-naming with ISO datetime format (YYYY-MM-DD_HH-MM-SS)
+- Dynamic snippet list rendering with relative date formatting
+- Default snippet initialization on first load
+- Snippet selection loading specs into editor
 
 ---
 
-### **Phase 6: Snippet Selection & Basic CRUD** ✅ **COMPLETE + ENHANCED**
+### **Phase 6: Snippet Selection & Basic CRUD** ✅ **COMPLETE**
 **Goal**: Core snippet management with advanced organization
 
-- [x] Click snippet in list → load into editor + render
-- [x] Highlight selected snippet in list
-- [x] **Create**: Ghost card interface → generates datetime name
-- [x] **Duplicate**: Duplicate button creates copy with timestamp suffix
-- [x] **Delete**: Delete button per snippet (with confirmation)
-- [x] **Rename**: Inline editing in metadata panel with auto-save
-- [x] Auto-save draft on editor change (debounced)
-- [x] Add comment/meta text field with creation/modified timestamps
-
-**Enhanced Features Added**:
-- [x] **Multi-field sorting**: Sort by Modified/Created/Name with visual indicators
-- [x] **Ascending/Descending toggle**: Click same button to reverse sort with ⬇⬆ arrows
-- [x] **Comprehensive search**: Real-time filtering by name, comment, and spec content
-- [x] **Search integration**: Works seamlessly with sorting, maintains selection state
-- [x] **Ghost card creation**: Intuitive "Create New Snippet" card at top of list
-- [x] **Enhanced metadata panel**: Shaded section with inline editing and timestamp display
-- [x] **Settings persistence**: Sort preferences and search state saved to localStorage
-- [x] **Performance optimizations**: Prevents unwanted timeouts during snippet switching
-- [x] **Smart state management**: Maintains selection during operations, clears when filtered
-
-**Deliverable**: Complete snippet management system with advanced organization
-
-**Key Achievements**:
-- **Intuitive Interface**: Ghost card replaces header button for snippet creation
-- **Powerful Organization**: Multi-criteria sorting with direction toggle and visual feedback
-- **Comprehensive Search**: Searches across all snippet content with 300ms debounced input
-- **Enhanced Metadata**: Shaded panel with inline name editing, comments, and timestamp info
-- **Smart Operations**: Duplicate/Delete buttons in metadata panel with proper state management
-- **Performance**: Optimized auto-save and rendering to prevent delays during navigation
-- **Settings Persistence**: User preferences for sorting and UI state saved across sessions
-- **Seamless Integration**: Search and sort work together while preserving selection state
-- **User Experience**: Removed context menus in favor of accessible, discoverable controls
+**Deliverables**:
+- Snippet selection loading into editor with live preview
+- Ghost card "Create New Snippet" interface at top of list
+- Duplicate button creating copies with "_copy" suffix
+- Delete button with confirmation dialog
+- Inline name editing in metadata panel with auto-save
+- Comment field with auto-save
+- 1-second debounced auto-save for spec and metadata changes
+- Multi-field sorting (Modified/Created/Name) with ascending/descending toggle
+- Visual sort indicators with arrow icons (⬇⬆)
+- Real-time search across name, comment, and spec content (300ms debounce)
+- Search clear button
+- Settings persistence for sort preferences
+- Smart state management maintaining selection during operations
+- Synchronous flag-based prevention of auto-save during programmatic updates
 
 ---
 
@@ -292,13 +227,14 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 ### **Phase 13: Advanced Snippet Features**
 **Goal**: Power user functionality
 
-- [ ] Search/filter snippets by name, comment, tags
-- [ ] Sort options (name, date created, modified, size)
-- [ ] Basic tagging system
+- [ ] Basic tagging system with tag filtering
 - [ ] Snippet templates/starter library
 - [ ] Bulk operations (delete multiple, export selected)
+- [ ] Size calculation and display for snippets
 
 **Deliverable**: Enhanced snippet discovery and organization
+
+**Note**: Search/filter and sorting already implemented in Phase 6
 
 ---
 
@@ -325,22 +261,23 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Architecture**: Modular script organization with simple file separation
 - **Backend** _(future)_: TBD (minimal REST API)
 
-## Current Project Structure
+## Project Structure
 
 ```
 /
-├── index.html                 # Main application entry point & initialization
+├── index.html                 # Main HTML structure and markup
+├── CLAUDE.md                  # Project instructions for Claude Code
 ├── src/
 │   ├── styles.css            # Retro Windows 2000 aesthetic styling
 │   └── js/                   # Modular JavaScript organization
-│       ├── config.js         # Global variables & sample data
-│       ├── snippet-manager.js # Snippet storage, CRUD & localStorage wrapper
+│       ├── config.js         # Global variables, settings, & sample data
+│       ├── snippet-manager.js # Snippet storage, CRUD operations & localStorage wrapper
 │       ├── panel-manager.js  # Panel resize, toggle & memory system
-│       ├── editor.js         # Monaco Editor & Vega-Lite rendering
-│       └── app.js           # Event handlers & coordination
+│       ├── editor.js         # Monaco Editor initialization & Vega-Lite rendering
+│       └── app.js            # Application initialization & event handlers
 └── docs/
-    ├── dev-plan.md          # This development roadmap
-    └── storage-examples.md  # Data model specifications
+    ├── dev-plan.md           # This development roadmap
+    └── storage-examples.md   # Data model specifications
 ```
 
 ## Development Principles
@@ -350,32 +287,44 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Data-first**: Storage schema designed upfront for extensibility
 - **User-focused**: Auto-save, clear state, forgiving UX
 - **Maintainable**: Clean code organization with logical separation of concerns
+- **Simple**: Favor code removal over addition; avoid over-engineering
 
-## Code Organization Strategy
+## Code Organization
 
-- **index.html**: Main application flow, initialization, and event coordination
-- **Modular JS files**: Function declarations organized by domain (panels, editor, config)
-- **Simple separation**: No over-engineering - just logical file organization
-- **Clear dependencies**: Load order matters (config → modules → app initialization)
+- **index.html**: Main HTML structure with semantic markup
+- **app.js**: Application initialization and event handler registration
+- **config.js**: Global variables, settings management, and sample data
+- **snippet-manager.js**: Storage wrapper and all snippet CRUD operations
+- **panel-manager.js**: Layout resizing, toggling, and persistence
+- **editor.js**: Monaco and Vega library loading and rendering logic
+- **styles.css**: Retro Windows 2000 aesthetic with component-based organization
 
 ---
 
-**Current Phase**: Phase 7 - Draft/Published Workflow
-**Status**: Ready to begin implementation
+## Current Status
 
-**Completion Status**:
-- ✅ Phases 0, 1, 2, 3, 4, 5, 6+ complete with major enhancements
-- ✅ Code organization and cleanup complete
-- ✅ Snippet storage infrastructure complete
-- ✅ Complete CRUD operations with auto-save functionality
-- ✅ Advanced snippet organization with sorting and search
-- ✅ Enhanced user interface with metadata panel and performance optimizations
-- ✅ Settings persistence and smart state management
-- 🎯 Ready for draft/published workflow implementation
+**Completed**: Phases 0-6 (Storage, UI, editor, rendering, persistence, CRUD, organization)
+**Active**: Phase 7 - Draft/Published Workflow
+**See**: `CLAUDE.md` for concise current state summary
 
-**Recent Major Enhancements Beyond Original Plan**:
-- **Advanced Sorting**: Multi-field sorting with ascending/descending toggle and visual indicators
-- **Comprehensive Search**: Real-time filtering across all snippet content with seamless integration
-- **Enhanced Interface**: Ghost card creation, shaded metadata panel, inline editing
-- **Performance Optimizations**: Smart timeout prevention, debounced operations
-- **Settings System**: Persistent user preferences for sorting and UI state
+---
+
+## Implemented Features
+
+### Core Capabilities (Phases 0-6)
+- Three-panel resizable layout with memory and persistence
+- Monaco Editor v0.47.0 with Vega-Lite v5 schema validation
+- Live Vega-Lite rendering with debounced updates and error display
+- localStorage-based snippet management with full CRUD
+- Multi-field sorting (Modified/Created/Name) with direction toggle
+- Real-time search across snippet name, comment, and spec content
+- Auto-save system (1s debounce) for specs and metadata
+- Ghost card interface for snippet creation
+- Retro Windows 2000 aesthetic throughout
+
+### Technical Implementation
+- **State Management**: Synchronous `isUpdatingEditor` flag prevents unwanted auto-saves
+- **Debouncing**: 1.5s render, 1s auto-save, 300ms search
+- **AMD Resolution**: Temporary `window.define` disabling for Vega library loading
+- **Panel Memory**: localStorage persistence for sizes and visibility across sessions
+- **Data Model**: Phase 0 schema with `spec` and `draftSpec` fields ready for versioning
