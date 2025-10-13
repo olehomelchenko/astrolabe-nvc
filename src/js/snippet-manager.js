@@ -8,14 +8,9 @@ function generateSnippetId() {
 // Generate auto-populated name with current datetime
 function generateSnippetName() {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const pad = (n) => String(n).padStart(2, '0');
 
-    return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 }
 
 // Create a new snippet using Phase 0 schema
@@ -174,19 +169,12 @@ function initializeSnippetsStorage() {
 // Format date for display in snippet list
 function formatSnippetDate(isoString) {
     const date = new Date(isoString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffDays === 1) {
-        return 'Yesterday';
-    } else if (diffDays < 7) {
-        return `${diffDays} days ago`;
-    } else {
-        return date.toLocaleDateString();
-    }
+    if (diffDays === 0) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
 }
 
 // Format full date/time for display in meta info
@@ -409,9 +397,7 @@ function clearSelection() {
     if (editor) {
         window.isUpdatingEditor = true;
         editor.setValue('{}');
-        setTimeout(() => {
-            window.isUpdatingEditor = false;
-        }, 50);
+        window.isUpdatingEditor = false;
     }
 
     // Hide meta panel and show placeholder
@@ -459,9 +445,7 @@ function selectSnippet(snippetId) {
     if (editor) {
         window.isUpdatingEditor = true;
         editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
-        setTimeout(() => {
-            window.isUpdatingEditor = false;
-        }, 50); // Small delay to ensure setValue completes
+        window.isUpdatingEditor = false;
     }
 
     // Show and populate meta fields
@@ -524,12 +508,6 @@ function debouncedAutoSave() {
 
 // Initialize auto-save on editor changes
 function initializeAutoSave() {
-    if (editor) {
-        editor.onDidChangeModelContent(() => {
-            debouncedAutoSave();
-        });
-    }
-
     // Initialize meta fields auto-save
     const nameField = document.getElementById('snippet-name');
     const commentField = document.getElementById('snippet-comment');
@@ -651,19 +629,7 @@ function deleteSnippet(snippetId) {
 
         // If we deleted the currently selected snippet, clear selection
         if (window.currentSnippetId === snippetId) {
-            window.currentSnippetId = null;
-            if (editor) {
-                window.isUpdatingEditor = true;
-                editor.setValue('{}');
-                setTimeout(() => {
-                    window.isUpdatingEditor = false;
-                }, 50);
-            }
-            // Hide comment field and show placeholder
-            const metaSection = document.getElementById('snippet-meta');
-            const placeholder = document.querySelector('.placeholder');
-            if (metaSection) metaSection.style.display = 'none';
-            if (placeholder) placeholder.style.display = 'block';
+            clearSelection();
         }
 
         // Refresh the list

@@ -18,22 +18,10 @@ function updatePanelMemory() {
 
 
 function togglePanel(panelId) {
+    const panel = document.getElementById(panelId);
+    const button = document.getElementById(`toggle-${panelId}`);
 
-    // Fix ID mapping - buttons use plural, panels use singular
-    const panelIdMap = {
-        'snippets': 'snippet-panel',
-        'editor': 'editor-panel',
-        'preview': 'preview-panel'
-    };
-
-    const actualPanelId = panelIdMap[panelId];
-    const panel = document.getElementById(actualPanelId);
-    const button = document.getElementById('toggle-' + panelId);
-
-
-    if (!panel || !button) {
-        return;
-    }
+    if (!panel || !button) return;
 
     if (panel.style.display === 'none') {
         // Show panel
@@ -126,9 +114,9 @@ function loadLayoutFromStorage() {
             previewPanel.style.display = layout.previewVisible !== false ? 'flex' : 'none';
 
             // Update toggle button states
-            document.getElementById('toggle-snippets').classList.toggle('active', layout.snippetVisible !== false);
-            document.getElementById('toggle-editor').classList.toggle('active', layout.editorVisible !== false);
-            document.getElementById('toggle-preview').classList.toggle('active', layout.previewVisible !== false);
+            document.getElementById('toggle-snippet-panel').classList.toggle('active', layout.snippetVisible !== false);
+            document.getElementById('toggle-editor-panel').classList.toggle('active', layout.editorVisible !== false);
+            document.getElementById('toggle-preview-panel').classList.toggle('active', layout.previewVisible !== false);
 
             // Restore widths and redistribute
             snippetPanel.style.width = layout.snippetWidth;
