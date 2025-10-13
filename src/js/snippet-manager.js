@@ -264,32 +264,60 @@ function renderSnippetList(searchQuery = null) {
 function initializeSortControls() {
     const sortButtons = document.querySelectorAll('.sort-btn');
     const currentSort = AppSettings.get('sortBy');
+    const currentOrder = AppSettings.get('sortOrder');
 
-    // Update active button based on settings
+    // Update active button and arrow based on settings
     sortButtons.forEach(button => {
         button.classList.remove('active');
         if (button.dataset.sort === currentSort) {
             button.classList.add('active');
+            updateSortArrow(button, currentOrder);
+        } else {
+            updateSortArrow(button, 'desc'); // Default to desc for inactive buttons
         }
 
         // Add click handler
         button.addEventListener('click', function() {
-            const newSort = this.dataset.sort;
-            changeSortBy(newSort);
+            const sortType = this.dataset.sort;
+            toggleSort(sortType);
         });
     });
 }
 
-// Change sort method
-function changeSortBy(sortBy) {
-    // Save to settings
-    AppSettings.set('sortBy', sortBy);
+// Update sort arrow display
+function updateSortArrow(button, direction) {
+    const arrow = button.querySelector('.sort-arrow');
+    if (arrow) {
+        arrow.textContent = direction === 'desc' ? '⬇' : '⬆';
+    }
+}
 
-    // Update button states
+// Toggle sort method and direction
+function toggleSort(sortType) {
+    const currentSort = AppSettings.get('sortBy');
+    const currentOrder = AppSettings.get('sortOrder');
+
+    let newOrder;
+    if (currentSort === sortType) {
+        // Same button clicked - toggle direction
+        newOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+    } else {
+        // Different button clicked - default to desc
+        newOrder = 'desc';
+    }
+
+    // Save to settings
+    AppSettings.set('sortBy', sortType);
+    AppSettings.set('sortOrder', newOrder);
+
+    // Update button states and arrows
     document.querySelectorAll('.sort-btn').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.dataset.sort === sortBy) {
+        if (btn.dataset.sort === sortType) {
             btn.classList.add('active');
+            updateSortArrow(btn, newOrder);
+        } else {
+            updateSortArrow(btn, 'desc'); // Default for inactive buttons
         }
     });
 
