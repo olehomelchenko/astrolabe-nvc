@@ -377,6 +377,15 @@ function clearSelection() {
         item.classList.remove('selected');
     });
 
+    // Clear editor content
+    if (editor) {
+        window.isUpdatingEditor = true;
+        editor.setValue('{}');
+        setTimeout(() => {
+            window.isUpdatingEditor = false;
+        }, 50);
+    }
+
     // Hide meta panel and show placeholder
     const metaSection = document.getElementById('snippet-meta');
     const placeholder = document.querySelector('.placeholder');
@@ -418,9 +427,13 @@ function selectSnippet(snippetId) {
     });
     document.querySelector(`[data-snippet-id="${snippetId}"]`).classList.add('selected');
 
-    // Load draft spec into editor
+    // Load draft spec into editor (prevent auto-save during update)
     if (editor) {
+        window.isUpdatingEditor = true;
         editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
+        setTimeout(() => {
+            window.isUpdatingEditor = false;
+        }, 50); // Small delay to ensure setValue completes
     }
 
     // Show and populate meta fields
@@ -453,6 +466,7 @@ function selectSnippet(snippetId) {
 
 // Auto-save functionality
 let autoSaveTimeout;
+window.isUpdatingEditor = false; // Global flag to prevent auto-save/debounce during programmatic updates
 
 // Save current editor content as draft for the selected snippet
 function autoSaveDraft() {
@@ -473,6 +487,9 @@ function autoSaveDraft() {
 
 // Debounced auto-save (triggered on editor changes)
 function debouncedAutoSave() {
+    // Don't auto-save if we're programmatically updating the editor
+    if (window.isUpdatingEditor) return;
+
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(autoSaveDraft, 1000); // 1 second delay
 }
@@ -608,7 +625,11 @@ function deleteSnippet(snippetId) {
         if (window.currentSnippetId === snippetId) {
             window.currentSnippetId = null;
             if (editor) {
+                window.isUpdatingEditor = true;
                 editor.setValue('{}');
+                setTimeout(() => {
+                    window.isUpdatingEditor = false;
+                }, 50);
             }
             // Hide comment field and show placeholder
             const metaSection = document.getElementById('snippet-meta');

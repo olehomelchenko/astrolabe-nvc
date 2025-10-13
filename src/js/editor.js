@@ -29,7 +29,13 @@ async function renderVisualization() {
 // Debounced render function
 function debouncedRender() {
     clearTimeout(renderTimeout);
-    renderTimeout = setTimeout(renderVisualization, 1500); // 500ms delay
+
+    // If we're updating the editor programmatically, render immediately
+    if (window.isUpdatingEditor) {
+        renderVisualization();
+    } else {
+        renderTimeout = setTimeout(renderVisualization, 1500); // 1.5s delay for user edits
+    }
 }
 
 // Load Vega libraries dynamically with UMD builds
