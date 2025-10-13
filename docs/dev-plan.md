@@ -167,29 +167,41 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 6: Snippet Selection & Basic CRUD** ✅ **COMPLETE**
-**Goal**: Core snippet management
+### **Phase 6: Snippet Selection & Basic CRUD** ✅ **COMPLETE + ENHANCED**
+**Goal**: Core snippet management with advanced organization
 
 - [x] Click snippet in list → load into editor + render
 - [x] Highlight selected snippet in list
-- [x] **Create**: "New Snippet" button → generates datetime name
+- [x] **Create**: Ghost card interface → generates datetime name
 - [x] **Duplicate**: Duplicate button creates copy with timestamp suffix
 - [x] **Delete**: Delete button per snippet (with confirmation)
-- [x] **Rename**: Inline or modal rename functionality
+- [x] **Rename**: Inline editing in metadata panel with auto-save
 - [x] Auto-save draft on editor change (debounced)
-- [x] Add comment/meta text field (below snippet list or in sidebar)
+- [x] Add comment/meta text field with creation/modified timestamps
 
-**Deliverable**: Complete basic CRUD with auto-saving drafts
+**Enhanced Features Added**:
+- [x] **Multi-field sorting**: Sort by Modified/Created/Name with visual indicators
+- [x] **Ascending/Descending toggle**: Click same button to reverse sort with ⬇⬆ arrows
+- [x] **Comprehensive search**: Real-time filtering by name, comment, and spec content
+- [x] **Search integration**: Works seamlessly with sorting, maintains selection state
+- [x] **Ghost card creation**: Intuitive "Create New Snippet" card at top of list
+- [x] **Enhanced metadata panel**: Shaded section with inline editing and timestamp display
+- [x] **Settings persistence**: Sort preferences and search state saved to localStorage
+- [x] **Performance optimizations**: Prevents unwanted timeouts during snippet switching
+- [x] **Smart state management**: Maintains selection during operations, clears when filtered
+
+**Deliverable**: Complete snippet management system with advanced organization
 
 **Key Achievements**:
-- Implemented comprehensive snippet selection with visual highlighting
-- Connected "New" header button to `createNewSnippet()` function for easy snippet creation
-- Added right-click context menu for snippet operations (Rename, Duplicate, Delete)
-- Implemented auto-save functionality for both spec changes and comment field edits
-- Added comment field that appears when a snippet is selected and auto-saves changes
-- Created intuitive UX with proper state management (hiding/showing comment field)
-- Added confirmation dialogs for destructive operations like delete
-- Maintained consistent retro styling for all new UI elements
+- **Intuitive Interface**: Ghost card replaces header button for snippet creation
+- **Powerful Organization**: Multi-criteria sorting with direction toggle and visual feedback
+- **Comprehensive Search**: Searches across all snippet content with 300ms debounced input
+- **Enhanced Metadata**: Shaded panel with inline name editing, comments, and timestamp info
+- **Smart Operations**: Duplicate/Delete buttons in metadata panel with proper state management
+- **Performance**: Optimized auto-save and rendering to prevent delays during navigation
+- **Settings Persistence**: User preferences for sorting and UI state saved across sessions
+- **Seamless Integration**: Search and sort work together while preserving selection state
+- **User Experience**: Removed context menus in favor of accessible, discoverable controls
 
 ---
 
@@ -352,8 +364,18 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 **Status**: Ready to begin implementation
 
 **Completion Status**:
-- ✅ Phases 0, 1, 2, 3, 4, 5, 6 complete
+- ✅ Phases 0, 1, 2, 3, 4, 5, 6+ complete with major enhancements
 - ✅ Code organization and cleanup complete
 - ✅ Snippet storage infrastructure complete
 - ✅ Complete CRUD operations with auto-save functionality
+- ✅ Advanced snippet organization with sorting and search
+- ✅ Enhanced user interface with metadata panel and performance optimizations
+- ✅ Settings persistence and smart state management
 - 🎯 Ready for draft/published workflow implementation
+
+**Recent Major Enhancements Beyond Original Plan**:
+- **Advanced Sorting**: Multi-field sorting with ascending/descending toggle and visual indicators
+- **Comprehensive Search**: Real-time filtering across all snippet content with seamless integration
+- **Enhanced Interface**: Ghost card creation, shaded metadata panel, inline editing
+- **Performance Optimizations**: Smart timeout prevention, debounced operations
+- **Settings System**: Persistent user preferences for sorting and UI state
