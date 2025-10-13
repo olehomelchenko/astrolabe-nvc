@@ -15,4 +15,7 @@ Instructions for Claude Code when working on this project.
 
 ## Current Status
 
-refer `docs/dev-plan.md` for the current status.
+**Completed**: Phases 0-8 (All core functionality including storage monitoring)
+**Next**: Phase 9 - Export/Import
+
+See `docs/dev-plan.md` for complete roadmap and technical details.

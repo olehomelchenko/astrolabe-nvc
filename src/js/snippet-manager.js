@@ -1,5 +1,9 @@
 // Snippet management and localStorage functionality
 
+// Storage limits (5MB in bytes)
+const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
+const WARNING_THRESHOLD = 0.9; // 90% = 4.5MB
+
 // Generate unique ID using Date.now() + random numbers
 function generateSnippetId() {
     return Date.now() + Math.random() * 1000;
@@ -39,10 +43,11 @@ const SnippetStorage = {
     saveSnippets(snippets) {
         try {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(snippets));
+            updateStorageMonitor();
             return true;
         } catch (error) {
             console.error('Failed to save snippets to localStorage:', error);
-            // TODO: Handle quota exceeded, show user error
+            alert('Failed to save: Storage quota may be exceeded. Consider deleting old snippets.');
             return false;
         }
     },
@@ -795,6 +800,49 @@ function revertDraft() {
         if (selectedItem) selectedItem.classList.add('selected');
 
         updateViewModeUI(snippet);
+    }
+}
+
+// Calculate storage usage in bytes
+function calculateStorageUsage() {
+    const snippetsData = localStorage.getItem(SnippetStorage.STORAGE_KEY);
+    if (!snippetsData) return 0;
+
+    // Calculate size in bytes
+    return new Blob([snippetsData]).size;
+}
+
+// Format bytes to human-readable size
+function formatBytes(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+// Update storage monitor display
+function updateStorageMonitor() {
+    const usedBytes = calculateStorageUsage();
+    const percentage = (usedBytes / STORAGE_LIMIT_BYTES) * 100;
+
+    const storageText = document.getElementById('storage-text');
+    const storageFill = document.getElementById('storage-fill');
+
+    if (storageText) {
+        storageText.textContent = `${formatBytes(usedBytes)} / 5 MB`;
+    }
+
+    if (storageFill) {
+        storageFill.style.width = `${Math.min(percentage, 100)}%`;
+
+        // Remove all state classes
+        storageFill.classList.remove('warning', 'critical');
+
+        // Add warning/critical classes based on usage
+        if (percentage >= 95) {
+            storageFill.classList.add('critical');
+        } else if (percentage >= 90) {
+            storageFill.classList.add('warning');
+        }
     }
 }
 

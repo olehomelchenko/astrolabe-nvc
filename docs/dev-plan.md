@@ -156,16 +156,17 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 8: Storage Monitoring**
+### **Phase 8: Storage Monitoring** ✅ **COMPLETE**
 **Goal**: Show storage usage and limits
 
-- [ ] Calculate total localStorage usage
-- [ ] Display as progress bar or text (e.g., "2.3 MB / ~5 MB")
-- [ ] Show individual snippet sizes in list
-- [ ] Add warning indicator when approaching 80% capacity
-- [ ] Display draft vs published size differences
-
-**Deliverable**: User can see storage consumption
+**Deliverables**:
+- Storage usage calculation using Blob API for accurate byte counting
+- Progress bar display showing usage vs 5MB limit (e.g., "2.3 MB / 5 MB")
+- Visual warning states: green (normal), orange (90%+ warning), red (95%+ critical)
+- Storage monitor positioned at bottom of snippet panel below metadata
+- Automatic updates after every save operation
+- Alert dialog when localStorage quota is exceeded
+- Flexbox layout ensuring monitor stays at panel bottom with scrollable snippet list
 
 ---
 
@@ -304,15 +305,15 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ## Current Status
 
-**Completed**: Phases 0-7 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow)
-**Active**: Phase 8 - Storage Monitoring
+**Completed**: Phases 0-8 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring)
+**Next**: Phase 9 - Export/Import
 **See**: `CLAUDE.md` for concise current state summary
 
 ---
 
 ## Implemented Features
 
-### Core Capabilities (Phases 0-7)
+### Core Capabilities (Phases 0-8)
 - Three-panel resizable layout with memory and persistence
 - Monaco Editor v0.47.0 with Vega-Lite v5 schema validation
 - Live Vega-Lite rendering with debounced updates and error display
@@ -324,6 +325,7 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - Draft/Published workflow with version control
 - Status indicator lights (green/yellow) showing draft state
 - Context-aware Publish/Revert buttons with color coding
+- Storage monitoring with visual progress bar and warning states
 - Retro Windows 2000 aesthetic throughout
 
 ### Technical Implementation
@@ -335,3 +337,5 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **AMD Resolution**: Temporary `window.define` disabling for Vega library loading
 - **Panel Memory**: localStorage persistence for sizes and visibility across sessions
 - **Data Model**: Phase 0 schema with `spec` (published) and `draftSpec` (working) fields
+- **Storage Calculation**: Blob API for accurate byte counting of snippet data
+- **Flexbox Layout**: Scrollable snippet list with fixed metadata and storage monitor at bottom

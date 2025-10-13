@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     renderSnippetList();
 
+    // Update storage monitor
+    updateStorageMonitor();
+
     // Auto-select first snippet on page load
     const firstSnippet = SnippetStorage.listSnippets()[0];
     if (firstSnippet) {
