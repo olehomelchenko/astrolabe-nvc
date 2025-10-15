@@ -460,7 +460,7 @@ function attachSnippetEventListeners() {
 }
 
 // Select and load a snippet into the editor
-function selectSnippet(snippetId) {
+function selectSnippet(snippetId, updateURL = true) {
     const snippet = SnippetStorage.getSnippet(snippetId);
     if (!snippet) return;
 
@@ -500,6 +500,11 @@ function selectSnippet(snippetId) {
 
     // Store currently selected snippet ID globally
     window.currentSnippetId = snippetId;
+
+    // Update URL state (URLState.update will add 'snippet-' prefix)
+    if (updateURL) {
+        URLState.update({ view: 'snippets', snippetId: snippetId, datasetId: null });
+    }
 }
 
 // Auto-save functionality

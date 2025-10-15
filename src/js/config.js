@@ -16,6 +16,75 @@ let panelMemory = {
     previewWidth: '25%'
 };
 
+// URL State Management
+const URLState = {
+    // Parse current hash into state object
+    parse() {
+        const hash = window.location.hash.slice(1); // Remove '#'
+        if (!hash) return { view: 'snippets', snippetId: null, datasetId: null };
+
+        const parts = hash.split('/');
+
+        // #snippet-123456
+        if (hash.startsWith('snippet-')) {
+            return { view: 'snippets', snippetId: hash, datasetId: null };
+        }
+
+        // #datasets
+        if (parts[0] === 'datasets') {
+            if (parts.length === 1) {
+                return { view: 'datasets', snippetId: null, datasetId: null };
+            }
+            // #datasets/new
+            if (parts[1] === 'new') {
+                return { view: 'datasets', snippetId: null, datasetId: 'new' };
+            }
+            // #datasets/dataset-123456
+            if (parts[1].startsWith('dataset-')) {
+                return { view: 'datasets', snippetId: null, datasetId: parts[1] };
+            }
+        }
+
+        return { view: 'snippets', snippetId: null, datasetId: null };
+    },
+
+    // Update URL hash without triggering hashchange
+    update(state, replaceState = false) {
+        let hash = '';
+
+        if (state.view === 'datasets') {
+            if (state.datasetId === 'new') {
+                hash = '#datasets/new';
+            } else if (state.datasetId) {
+                // Add 'dataset-' prefix if not already present
+                const datasetId = typeof state.datasetId === 'string' && state.datasetId.startsWith('dataset-')
+                    ? state.datasetId
+                    : `dataset-${state.datasetId}`;
+                hash = `#datasets/${datasetId}`;
+            } else {
+                hash = '#datasets';
+            }
+        } else if (state.snippetId) {
+            // Add 'snippet-' prefix if not already present
+            const snippetId = typeof state.snippetId === 'string' && state.snippetId.startsWith('snippet-')
+                ? state.snippetId
+                : `snippet-${state.snippetId}`;
+            hash = `#${snippetId}`;
+        }
+
+        if (replaceState) {
+            window.history.replaceState(null, '', hash || '#');
+        } else {
+            window.location.hash = hash;
+        }
+    },
+
+    // Clear hash
+    clear() {
+        window.history.replaceState(null, '', window.location.pathname);
+    }
+};
+
 // Settings storage
 const AppSettings = {
     STORAGE_KEY: 'astrolabe-settings',

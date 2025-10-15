@@ -260,7 +260,47 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 11: Advanced Dataset Features** _(Future)_
+### **Phase 11: URL State Management** ✅ **COMPLETE**
+**Goal**: Shareable URLs and browser navigation support
+
+**Deliverables**:
+- Hash-based URL routing for snippets and datasets
+- URL patterns:
+  - Snippet selection: `#snippet-123456`
+  - Dataset modal open: `#datasets`
+  - Dataset selected: `#datasets/dataset-123456`
+  - New dataset form: `#datasets/new`
+- URLState utility in config.js with parse/update/clear methods
+- Browser back/forward navigation (hashchange event listener)
+- Page reload preserves selected snippet or dataset state
+- Automatic state restoration after editor initialization
+- Restores snippet URL when closing dataset modal
+- No external dependencies (native Hash API and History API)
+
+**Technical Implementation**:
+- `URLState.parse()`: Parses hash into state object
+- `URLState.update(state, replaceState)`: Updates URL with optional history.replaceState
+- `URLState.clear()`: Removes hash from URL
+- Integration points:
+  - `selectSnippet()`: Updates URL on snippet selection
+  - `selectDataset()`: Updates URL on dataset selection
+  - `openDatasetManager()`: Sets `#datasets` hash
+  - `closeDatasetManager()`: Restores snippet hash or clears
+  - `showNewDatasetForm()`: Sets `#datasets/new` hash
+- `handleURLStateChange()`: Responds to hashchange events
+- `initializeURLStateManagement()`: Called after Monaco editor ready
+- Prevents double-prefix issues by handling prefix addition in URLState.update()
+- Optional `updateURL` parameter on all functions to prevent infinite loops
+
+**Benefits**:
+- Shareable links to specific snippets or datasets
+- Browser navigation works intuitively
+- Page refresh preserves user context
+- Better UX for multi-tab workflows
+
+---
+
+### **Phase 12: Advanced Dataset Features** _(Future)_
 **Goal**: Enhanced dataset workflows
 
 - [ ] Detect inline data in Vega-Lite specs
@@ -371,15 +411,15 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ## Current Status
 
-**Completed**: Phases 0-10 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export, dataset management)
-**Next**: Phase 11 - Advanced Dataset Features (optional enhancements)
+**Completed**: Phases 0-11 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export, dataset management, URL state management)
+**Next**: Phase 12 - Advanced Dataset Features (optional enhancements)
 **See**: `CLAUDE.md` for concise current state summary
 
 ---
 
 ## Implemented Features
 
-### Core Capabilities (Phases 0-10)
+### Core Capabilities (Phases 0-11)
 - Three-panel resizable layout with memory and persistence
 - Monaco Editor v0.47.0 with Vega-Lite v5 schema validation
 - Live Vega-Lite rendering with debounced updates and error display
@@ -404,7 +444,14 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
   - Automatic metadata calculation and display
   - URL metadata fetching and refresh
   - Dataset reference resolution in Vega-Lite specs
+- **URL State Management (Phase 11)**:
+  - Hash-based routing for snippets and datasets
+  - Browser back/forward navigation support
+  - Page reload preserves state
+  - Shareable URLs for specific snippets/datasets
+  - Restores snippet URL when closing dataset modal
 - Retro Windows 2000 aesthetic throughout
+- Component-based CSS architecture with base classes
 
 ### Technical Implementation
 - **State Management**: Synchronous `isUpdatingEditor` flag prevents unwanted auto-saves
@@ -422,5 +469,7 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Dataset Storage**: IndexedDB with async/Promise-based API, unique name constraint
 - **Dataset Resolution**: Async spec transformation before rendering, format-aware data injection
 - **URL Metadata**: Fetch on creation with graceful CORS error handling
-- **Modal UI**: Flexbox with overflow:auto, max-height responsive to viewport
+- **Modal UI**: Flexbox with overflow:auto, max-height responsive to viewport (80vh fixed height)
 - **Auto-detection**: URL validation, JSON/CSV/TSV parsing, confidence scoring, real-time feedback
+- **URL State Management**: Native Hash API with hashchange listener, initialized after editor ready
+- **CSS Architecture**: Component-based with base classes (.btn, .input, .preview-box) and modifiers

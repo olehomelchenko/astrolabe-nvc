@@ -15,10 +15,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Update storage monitor
     updateStorageMonitor();
 
-    // Auto-select first snippet on page load
-    const firstSnippet = SnippetStorage.listSnippets()[0];
-    if (firstSnippet) {
-        selectSnippet(firstSnippet.id);
+    // Auto-select first snippet on page load (only if no hash in URL)
+    if (!window.location.hash) {
+        const firstSnippet = SnippetStorage.listSnippets()[0];
+        if (firstSnippet) {
+            selectSnippet(firstSnippet.id);
+        }
     }
 
     // Load saved layout
@@ -79,6 +81,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Initialize auto-save functionality
         initializeAutoSave();
+
+        // Initialize URL state management AFTER editor is ready
+        initializeURLStateManagement();
     });
 
     // Toggle panel buttons
@@ -194,3 +199,43 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('publish-btn').addEventListener('click', publishDraft);
     document.getElementById('revert-btn').addEventListener('click', revertDraft);
 });
+
+// Handle URL hash changes (browser back/forward)
+function handleURLStateChange() {
+    const state = URLState.parse();
+
+    if (state.view === 'datasets') {
+        // Open dataset modal
+        openDatasetManager(false); // Don't update URL
+
+        if (state.datasetId === 'new') {
+            // Show new dataset form
+            showNewDatasetForm(false);
+        } else if (state.datasetId) {
+            // Extract numeric ID from "dataset-123456"
+            const numericId = parseFloat(state.datasetId.replace('dataset-', ''));
+            selectDataset(numericId, false);
+        }
+    } else if (state.snippetId) {
+        // Close dataset modal if open
+        const modal = document.getElementById('dataset-modal');
+        if (modal && modal.style.display === 'flex') {
+            closeDatasetManager(false);
+        }
+
+        // Select snippet
+        const numericId = parseFloat(state.snippetId.replace('snippet-', ''));
+        selectSnippet(numericId, false);
+    }
+}
+
+// Initialize URL state management
+function initializeURLStateManagement() {
+    // Handle hashchange event for back/forward navigation
+    window.addEventListener('hashchange', handleURLStateChange);
+
+    // Check if there's a hash in the URL on page load
+    if (window.location.hash) {
+        handleURLStateChange();
+    }
+}

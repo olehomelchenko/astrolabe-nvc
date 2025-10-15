@@ -168,7 +168,25 @@
 
 ---
 
-### **12. User Experience Enhancements**
+### **12. URL State Management**
+- Hash-based URL routing for snippets and datasets
+- Snippet selection persists in URL (`#snippet-123456`)
+- Dataset modal state persists in URL:
+  - Modal open: `#datasets`
+  - Dataset selected: `#datasets/dataset-123456`
+  - New dataset form: `#datasets/new`
+- Browser back/forward navigation support
+- Page reload preserves state (selected snippet/dataset)
+- URL sharing for specific snippets or datasets
+- Automatic state restoration on page load
+- Restores snippet URL when closing dataset modal
+- No external libraries (native Hash API)
+
+**Files**: `config.js` (URLState utility), `snippet-manager.js` (snippet URLs), `dataset-manager.js` (dataset URLs), `app.js` (hashchange listener)
+
+---
+
+### **13. User Experience Enhancements**
 - Auto-select first snippet on page load
 - Relative date formatting (Today/Yesterday/X days ago)
 - Full datetime display in metadata panel
@@ -184,8 +202,8 @@
 
 ## 📊 **Feature Statistics**
 
-- **Core Feature Groups**: 12
-- **Total Individual Capabilities**: ~60+
+- **Core Feature Groups**: 13
+- **Total Individual Capabilities**: ~70+
 - **Storage Systems**: 2 (localStorage for snippets, IndexedDB for datasets)
 - **UI Panels**: 3 main + 1 modal
 - **Auto-save Points**: 3 (draft spec, name, comment)

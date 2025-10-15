@@ -315,7 +315,7 @@ async function renderDatasetList() {
 }
 
 // Select a dataset and show details
-async function selectDataset(datasetId) {
+async function selectDataset(datasetId, updateURL = true) {
     const dataset = await DatasetStorage.getDataset(datasetId);
     if (!dataset) return;
 
@@ -361,20 +361,39 @@ async function selectDataset(datasetId) {
 
     // Store current dataset ID
     window.currentDatasetId = datasetId;
+
+    // Update URL state (URLState.update will add 'dataset-' prefix)
+    if (updateURL) {
+        URLState.update({ view: 'datasets', snippetId: null, datasetId: datasetId });
+    }
 }
 
 // Open dataset manager modal
-function openDatasetManager() {
+function openDatasetManager(updateURL = true) {
     const modal = document.getElementById('dataset-modal');
     modal.style.display = 'flex';
     renderDatasetList();
+
+    // Update URL state
+    if (updateURL) {
+        URLState.update({ view: 'datasets', snippetId: null, datasetId: null });
+    }
 }
 
 // Close dataset manager modal
-function closeDatasetManager() {
+function closeDatasetManager(updateURL = true) {
     const modal = document.getElementById('dataset-modal');
     modal.style.display = 'none';
     window.currentDatasetId = null;
+
+    // Update URL state - restore snippet if one is selected
+    if (updateURL) {
+        if (window.currentSnippetId) {
+            URLState.update({ view: 'snippets', snippetId: window.currentSnippetId, datasetId: null });
+        } else {
+            URLState.clear();
+        }
+    }
 }
 
 // Auto-detect data format from pasted content
@@ -552,7 +571,7 @@ function hideDetectionConfirmation() {
 }
 
 // Show new dataset form
-function showNewDatasetForm() {
+function showNewDatasetForm(updateURL = true) {
     document.getElementById('dataset-list-view').style.display = 'none';
     document.getElementById('dataset-form-view').style.display = 'block';
     document.getElementById('dataset-form-name').value = '';
@@ -562,6 +581,11 @@ function showNewDatasetForm() {
 
     // Hide detection confirmation
     hideDetectionConfirmation();
+
+    // Update URL state
+    if (updateURL) {
+        URLState.update({ view: 'datasets', snippetId: null, datasetId: 'new' });
+    }
 
     // Add paste handler if not already added
     if (!window.datasetListenersAdded) {
