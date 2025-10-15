@@ -298,3 +298,11 @@ body { font-family: var(--font-main); height: 100vh; overflow: hidden; backgroun
 .detection-preview-label { font-size: 10px; font-weight: bold; margin-bottom: 4px; }
 .dataset-form-error { color: #f00; font-size: 11px; margin-bottom: 12px; min-height: 16px; }
 .dataset-form-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+/* Help Modal */
+.help-shortcuts-table { width: 100%; border-collapse: collapse; }
+.help-shortcuts-table tbody tr { border-bottom: 1px solid var(--bg-lighter); }
+.help-shortcuts-table tbody tr:last-child { border-bottom: none; }
+.help-shortcuts-table td { padding: 12px 8px; font-size: 12px; }
+.shortcut-key { font-family: var(--font-mono); font-weight: bold; background: var(--bg-light); border: 1px solid var(--win-gray-dark); padding: 6px 10px; border-radius: 2px; white-space: nowrap; width: 180px; }
+.shortcut-desc { color: var(--win-gray-darker); }

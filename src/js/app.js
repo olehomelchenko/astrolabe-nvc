@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize resize functionality
     initializeResize();
 
+    // Initialize keyboard shortcuts
+    initializeKeyboardShortcuts();
+
     // Initialize Monaco Editor
     require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.47.0/min/vs' } });
     require(['vs/editor/editor.main'], async function () {
@@ -69,6 +72,9 @@ document.addEventListener('DOMContentLoaded', function () {
             formatOnPaste: true,
             formatOnType: true
         });
+
+        // Register custom keyboard shortcuts in Monaco
+        registerMonacoKeyboardShortcuts();
 
         // Add debounced auto-render on editor change
         editor.onDidChangeModelContent(() => {
@@ -118,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (helpLink) {
         helpLink.addEventListener('click', function () {
-            alert('Coming soon in a future phase!');
+            openHelpModal();
         });
     }
 
@@ -229,6 +235,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Help Modal
+    const helpModal = document.getElementById('help-modal');
+    const helpModalClose = document.getElementById('help-modal-close');
+
+    if (helpModalClose) {
+        helpModalClose.addEventListener('click', closeHelpModal);
+    }
+
+    // Close on overlay click
+    if (helpModal) {
+        helpModal.addEventListener('click', function (e) {
+            if (e.target === helpModal) {
+                closeHelpModal();
+            }
+        });
+    }
+
     // View mode toggle buttons
     document.getElementById('view-draft').addEventListener('click', () => {
         switchViewMode('draft');
@@ -313,5 +336,115 @@ function initializeURLStateManagement() {
     // Check if there's a hash in the URL on page load
     if (window.location.hash) {
         handleURLStateChange();
+    }
+}
+
+// Keyboard shortcut action handlers (shared between Monaco and document)
+const KeyboardActions = {
+    createNewSnippet: function() {
+        createNewSnippet();
+    },
+
+    toggleDatasetManager: function() {
+        const modal = document.getElementById('dataset-modal');
+        if (modal && modal.style.display === 'flex') {
+            closeDatasetManager();
+        } else {
+            openDatasetManager();
+        }
+    },
+
+    publishDraft: function() {
+        if (currentViewMode === 'draft' && window.currentSnippetId) {
+            publishDraft();
+        }
+    },
+
+    closeAnyModal: function() {
+        const helpModal = document.getElementById('help-modal');
+        const datasetModal = document.getElementById('dataset-modal');
+        const extractModal = document.getElementById('extract-modal');
+
+        if (helpModal && helpModal.style.display === 'flex') {
+            closeHelpModal();
+            return true;
+        }
+        if (datasetModal && datasetModal.style.display === 'flex') {
+            closeDatasetManager();
+            return true;
+        }
+        if (extractModal && extractModal.style.display === 'flex') {
+            hideExtractModal();
+            return true;
+        }
+        return false;
+    }
+};
+
+// Keyboard shortcuts handler (document-level)
+function initializeKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+        // Escape: Close any open modal
+        if (e.key === 'Escape') {
+            if (KeyboardActions.closeAnyModal()) {
+                return;
+            }
+        }
+
+        // Detect modifier key: Cmd on Mac, Ctrl on Windows/Linux
+        const modifierKey = e.metaKey || e.ctrlKey;
+
+        // Cmd/Ctrl+Shift+N: Create new snippet
+        if (modifierKey && e.shiftKey && e.key.toLowerCase() === 'n') {
+            e.preventDefault();
+            KeyboardActions.createNewSnippet();
+            return;
+        }
+
+        // Cmd/Ctrl+K: Toggle dataset manager
+        if (modifierKey && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            KeyboardActions.toggleDatasetManager();
+            return;
+        }
+
+        // Cmd/Ctrl+S: Publish draft
+        if (modifierKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            KeyboardActions.publishDraft();
+            return;
+        }
+    });
+}
+
+// Register keyboard shortcuts in Monaco Editor
+function registerMonacoKeyboardShortcuts() {
+    if (!editor) return;
+
+    // Cmd/Ctrl+Shift+N: Create new snippet
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyN,
+        KeyboardActions.createNewSnippet);
+
+    // Cmd/Ctrl+K: Toggle dataset manager
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
+        KeyboardActions.toggleDatasetManager);
+
+    // Cmd/Ctrl+S: Publish draft
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+        KeyboardActions.publishDraft);
+}
+
+// Help modal functions
+function openHelpModal() {
+    const modal = document.getElementById('help-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeHelpModal() {
+    const modal = document.getElementById('help-modal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 }

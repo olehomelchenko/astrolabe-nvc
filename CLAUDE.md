@@ -38,3 +38,4 @@ Instructions for Claude Code when working on this project.
   - On-demand URL preview loading with caching
 
 See `docs/dev-plan.md` for complete roadmap and technical details.
+- when updating documentation, do not record intermediate changes - write them always as a matter-of-fact information

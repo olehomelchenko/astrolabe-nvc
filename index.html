@@ -321,6 +321,42 @@
         </div>
     </div>
 
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px; height: auto;">
+            <div class="modal-header">
+                <span class="modal-title">Help</span>
+                <button class="btn btn-icon" id="help-modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="padding: 20px;">
+                    <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 16px; font-weight: bold;">Keyboard Shortcuts</h3>
+
+                    <table class="help-shortcuts-table">
+                        <tbody>
+                            <tr>
+                                <td class="shortcut-key">Cmd/Ctrl+Shift+N</td>
+                                <td class="shortcut-desc">Create new snippet</td>
+                            </tr>
+                            <tr>
+                                <td class="shortcut-key">Cmd/Ctrl+K</td>
+                                <td class="shortcut-desc">Toggle dataset manager</td>
+                            </tr>
+                            <tr>
+                                <td class="shortcut-key">Cmd/Ctrl+S</td>
+                                <td class="shortcut-desc">Publish draft (save)</td>
+                            </tr>
+                            <tr>
+                                <td class="shortcut-key">Escape</td>
+                                <td class="shortcut-desc">Close any open modal</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="src/js/config.js"></script>
     <script src="src/js/snippet-manager.js"></script>
     <script src="src/js/dataset-manager.js"></script>

@@ -303,18 +303,6 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 ### **Phase 12: Advanced Dataset Features** ✅ **COMPLETE**
 **Goal**: Enhanced dataset workflows
 
-- [x] Detect inline data in Vega-Lite specs
-- [x] "Extract to dataset" feature for inline data
-- [x] Update snippet UI to show linked datasets
-- [x] Dataset usage tracking (which snippets reference which datasets)
-- [x] Bidirectional linking between snippets and datasets
-- [x] Usage count badges on dataset list items
-- [x] "New Snippet" button to create snippet from dataset
-- [x] Import datasets from file upload
-- [x] Export individual datasets
-- [x] Dataset preview with table view
-- [x] Column type detection and display
-
 **Deliverables**:
 - Recursive dataset reference extraction from Vega-Lite specs
 - Extract to Dataset modal with automatic spec transformation
