@@ -300,6 +300,20 @@ body { font-family: var(--font-main); height: 100vh; overflow: hidden; backgroun
 .dataset-form-actions { display: flex; gap: 8px; margin-top: 16px; }
 
 /* Help Modal */
+.help-content { padding: 20px; }
+.help-section { margin-bottom: 24px; }
+.help-section:last-child { margin-bottom: 0; }
+.help-heading { font-size: 14px; font-weight: bold; margin: 0 0 12px 0; color: var(--win-blue-dark); border-bottom: 1px solid var(--win-gray-dark); padding-bottom: 4px; }
+.help-text { font-size: 12px; line-height: 1.5; margin: 0 0 8px 0; color: #333; }
+.help-text:last-child { margin-bottom: 0; }
+.help-list { margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.6; }
+.help-list li { margin-bottom: 8px; color: #333; }
+.help-list li:last-child { margin-bottom: 0; }
+.help-workflow { display: flex; flex-direction: column; gap: 12px; }
+.help-step { background: var(--bg-light); border: 1px solid var(--win-gray-dark); padding: 10px 12px; border-radius: 2px; }
+.help-step strong { display: block; font-size: 12px; margin-bottom: 4px; color: var(--win-blue-dark); }
+.help-step p { font-size: 11px; line-height: 1.5; margin: 0; color: #333; }
+.help-step code { font-family: var(--font-mono); font-size: 10px; background: var(--bg-white); border: 1px solid var(--win-gray-dark); padding: 2px 4px; border-radius: 2px; }
 .help-shortcuts-table { width: 100%; border-collapse: collapse; }
 .help-shortcuts-table tbody tr { border-bottom: 1px solid var(--bg-lighter); }
 .help-shortcuts-table tbody tr:last-child { border-bottom: none; }

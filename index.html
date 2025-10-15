@@ -19,10 +19,10 @@
             <span class="header-title">Astrolabe</span>
         </div>
         <div class="header-links">
-            <span class="header-link" id="import-link">Import</span>
-            <span class="header-link" id="export-link">Export</span>
-            <span class="header-link" id="datasets-link">Datasets</span>
-            <span class="header-link" id="help-link">Help</span>
+            <span class="header-link" id="import-link" title="Import snippets from JSON file">Import</span>
+            <span class="header-link" id="export-link" title="Export all snippets to JSON file">Export</span>
+            <span class="header-link" id="datasets-link" title="Open dataset manager (Cmd/Ctrl+K)">Datasets</span>
+            <span class="header-link" id="help-link" title="View keyboard shortcuts and help">Help</span>
             <input type="file" id="import-file-input" accept=".json" style="display: none;" />
         </div>
     </div>
@@ -52,15 +52,15 @@
                 </div>
                 <div class="sort-controls">
                     <span class="sort-label">Sort by:</span>
-                    <button class="sort-btn active" data-sort="modified">
+                    <button class="sort-btn active" data-sort="modified" title="Sort by last modified date">
                         <span class="sort-text">Modified</span>
                         <span class="sort-arrow">⬇</span>
                     </button>
-                    <button class="sort-btn" data-sort="created">
+                    <button class="sort-btn" data-sort="created" title="Sort by creation date">
                         <span class="sort-text">Created</span>
                         <span class="sort-arrow">⬇</span>
                     </button>
-                    <button class="sort-btn" data-sort="name">
+                    <button class="sort-btn" data-sort="name" title="Sort alphabetically by name">
                         <span class="sort-text">Name</span>
                         <span class="sort-arrow">⬇</span>
                     </button>
@@ -102,8 +102,8 @@
                         </div>
 
                         <div class="meta-actions">
-                            <button class="btn btn-standard flex" id="duplicate-btn">Duplicate</button>
-                            <button class="btn btn-standard flex danger" id="delete-btn">Delete</button>
+                            <button class="btn btn-standard flex" id="duplicate-btn" title="Create a copy of this snippet">Duplicate</button>
+                            <button class="btn btn-standard flex danger" id="delete-btn" title="Delete this snippet permanently">Delete</button>
                         </div>
                     </div>
                     <div class="storage-monitor" id="storage-monitor">
@@ -126,13 +126,13 @@
                 <div class="panel-header">
                     <span>Editor</span>
                     <div class="editor-controls">
-                        <button class="btn btn-action" id="extract-btn" style="display: none; background: #87CEEB;">Extract to Dataset</button>
-                        <button class="btn btn-action publish" id="publish-btn">Publish</button>
-                        <button class="btn btn-action revert" id="revert-btn">Revert</button>
+                        <button class="btn btn-action" id="extract-btn" style="display: none; background: #87CEEB;" title="Extract inline data to a reusable dataset">Extract to Dataset</button>
+                        <button class="btn btn-action publish" id="publish-btn" title="Publish draft changes (Cmd/Ctrl+S)">Publish</button>
+                        <button class="btn btn-action revert" id="revert-btn" title="Discard draft and revert to published version">Revert</button>
                         <span class="view-label">View:</span>
                         <div class="view-toggle-group">
-                            <button class="btn btn-toggle active" id="view-draft">Draft</button>
-                            <button class="btn btn-toggle" id="view-published">Published</button>
+                            <button class="btn btn-toggle active" id="view-draft" title="View and edit draft version">Draft</button>
+                            <button class="btn btn-toggle" id="view-published" title="View published version (read-only if draft exists)">Published</button>
                         </div>
                     </div>
                 </div>
@@ -161,14 +161,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <span class="modal-title">Dataset Manager</span>
-                <button class="btn btn-icon" id="dataset-modal-close">×</button>
+                <button class="btn btn-icon" id="dataset-modal-close" title="Close dataset manager (Escape)">×</button>
             </div>
             <div class="modal-body">
                 <!-- List View (default) -->
                 <div id="dataset-list-view" class="dataset-view">
                     <div class="dataset-list-header">
-                        <button class="btn btn-modal primary" id="new-dataset-btn">New Dataset</button>
-                        <button class="btn btn-modal" id="import-dataset-btn">Import</button>
+                        <button class="btn btn-modal primary" id="new-dataset-btn" title="Create a new dataset">New Dataset</button>
+                        <button class="btn btn-modal" id="import-dataset-btn" title="Import dataset from file">Import</button>
                         <input type="file" id="import-dataset-file" accept=".json,.csv,.tsv,.txt" style="display: none;" />
                     </div>
                     <div class="dataset-container">
@@ -178,10 +178,10 @@
                         <div class="dataset-details" id="dataset-details" style="display: none;">
                             <div class="dataset-detail-section">
                                 <div class="dataset-actions">
-                                    <button class="btn btn-modal primary" id="new-snippet-btn">New Snippet</button>
-                                    <button class="btn btn-modal" id="export-dataset-btn">Export</button>
-                                    <button class="btn btn-modal" id="copy-reference-btn">Copy Reference</button>
-                                    <button class="btn btn-modal danger" id="delete-dataset-btn">Delete</button>
+                                    <button class="btn btn-modal primary" id="new-snippet-btn" title="Create a new snippet using this dataset">New Snippet</button>
+                                    <button class="btn btn-modal" id="export-dataset-btn" title="Export this dataset to file">Export</button>
+                                    <button class="btn btn-modal" id="copy-reference-btn" title="Copy dataset reference to clipboard">Copy Reference</button>
+                                    <button class="btn btn-modal danger" id="delete-dataset-btn" title="Delete this dataset permanently">Delete</button>
                                 </div>
 
                                 <div class="dataset-detail-header">Name</div>
@@ -224,8 +224,8 @@
                                 <div class="dataset-detail-header-row">
                                     <span class="dataset-detail-header">Preview</span>
                                     <div class="preview-toggle-group" id="preview-toggle-group" style="display: none;">
-                                        <button class="btn btn-toggle small active" id="preview-raw-btn">Raw</button>
-                                        <button class="btn btn-toggle small" id="preview-table-btn">Table</button>
+                                        <button class="btn btn-toggle small active" id="preview-raw-btn" title="Show raw data preview">Raw</button>
+                                        <button class="btn btn-toggle small" id="preview-table-btn" title="Show data in table format with type detection">Table</button>
                                     </div>
                                 </div>
                                 <pre id="dataset-preview" class="preview-box large"></pre>
@@ -282,8 +282,8 @@
                         <div class="dataset-form-error" id="dataset-form-error"></div>
 
                         <div class="dataset-form-actions">
-                            <button class="btn btn-modal primary" id="save-dataset-btn">Save Dataset</button>
-                            <button class="btn btn-modal" id="cancel-dataset-btn">Cancel</button>
+                            <button class="btn btn-modal primary" id="save-dataset-btn" title="Save this dataset">Save Dataset</button>
+                            <button class="btn btn-modal" id="cancel-dataset-btn" title="Cancel and return to dataset list">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -296,7 +296,7 @@
         <div class="modal-content" style="max-width: 600px; height: auto; max-height: 80vh;">
             <div class="modal-header">
                 <span class="modal-title">Extract to Dataset</span>
-                <button class="btn btn-icon" id="extract-modal-close">×</button>
+                <button class="btn btn-icon" id="extract-modal-close" title="Close modal (Escape)">×</button>
             </div>
             <div class="modal-body">
                 <div style="padding: 16px;">
@@ -313,8 +313,8 @@
                     <div class="dataset-form-error" id="extract-form-error"></div>
 
                     <div class="dataset-form-actions">
-                        <button class="btn btn-modal primary" id="extract-create-btn">Create Dataset</button>
-                        <button class="btn btn-modal" id="extract-cancel-btn">Cancel</button>
+                        <button class="btn btn-modal primary" id="extract-create-btn" title="Create dataset and update snippet reference">Create Dataset</button>
+                        <button class="btn btn-modal" id="extract-cancel-btn" title="Cancel extraction">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -323,35 +323,109 @@
 
     <!-- Help Modal -->
     <div id="help-modal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 600px; height: auto;">
+        <div class="modal-content" style="max-width: 700px; height: auto; max-height: 85vh;">
             <div class="modal-header">
                 <span class="modal-title">Help</span>
-                <button class="btn btn-icon" id="help-modal-close">×</button>
+                <button class="btn btn-icon" id="help-modal-close" title="Close help (Escape)">×</button>
             </div>
             <div class="modal-body">
-                <div style="padding: 20px;">
-                    <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 16px; font-weight: bold;">Keyboard Shortcuts</h3>
+                <div class="help-content">
+                    <!-- About -->
+                    <section class="help-section">
+                        <h3 class="help-heading">About Astrolabe</h3>
+                        <p class="help-text">
+                            Astrolabe is a lightweight, browser-based snippet manager for Vega-Lite visualizations.
+                            It's designed to help you quickly create, organize, and iterate on visualization specs without
+                            the overhead of a full development environment.
+                        </p>
+                        <p class="help-text">
+                            Everything runs locally in your browser—no server, no signup, no data leaving your machine.
+                            Your snippets and datasets are stored using browser storage, so they persist across sessions.
+                        </p>
+                    </section>
 
-                    <table class="help-shortcuts-table">
-                        <tbody>
-                            <tr>
-                                <td class="shortcut-key">Cmd/Ctrl+Shift+N</td>
-                                <td class="shortcut-desc">Create new snippet</td>
-                            </tr>
-                            <tr>
-                                <td class="shortcut-key">Cmd/Ctrl+K</td>
-                                <td class="shortcut-desc">Toggle dataset manager</td>
-                            </tr>
-                            <tr>
-                                <td class="shortcut-key">Cmd/Ctrl+S</td>
-                                <td class="shortcut-desc">Publish draft (save)</td>
-                            </tr>
-                            <tr>
-                                <td class="shortcut-key">Escape</td>
-                                <td class="shortcut-desc">Close any open modal</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- Key Features -->
+                    <section class="help-section">
+                        <h3 class="help-heading">Key Features</h3>
+                        <ul class="help-list">
+                            <li><strong>Three-panel workspace</strong> — Snippet library, Monaco code editor with Vega-Lite schema validation, and live preview</li>
+                            <li><strong>Draft/published workflow</strong> — Experiment safely without losing your working version</li>
+                            <li><strong>Dataset library</strong> — Store and reuse datasets across multiple visualizations (supports JSON, CSV, TSV, TopoJSON)</li>
+                            <li><strong>Import/export</strong> — Back up your work or move it between browsers</li>
+                            <li><strong>Inline data extraction</strong> — Convert hardcoded data into reusable datasets</li>
+                            <li><strong>Search and sorting</strong> — Find snippets by name, comment, or spec content</li>
+                        </ul>
+                    </section>
+
+                    <!-- Quick Start -->
+                    <section class="help-section">
+                        <h3 class="help-heading">Getting Started</h3>
+                        <div class="help-workflow">
+                            <div class="help-step">
+                                <strong>1. Create a snippet</strong>
+                                <p>Click the "Create New Snippet" ghost card at the top of the snippet list. A sample Vega-Lite spec loads automatically.</p>
+                            </div>
+                            <div class="help-step">
+                                <strong>2. Edit in the Draft view</strong>
+                                <p>Changes auto-save as you type. The preview updates automatically. Your published version stays safe until you're ready.</p>
+                            </div>
+                            <div class="help-step">
+                                <strong>3. Publish when ready</strong>
+                                <p>Click "Publish" (or Cmd/Ctrl+S) to save your draft as the official version. Use "Revert" if you want to discard changes.</p>
+                            </div>
+                            <div class="help-step">
+                                <strong>4. Organize with datasets</strong>
+                                <p>Open the Dataset Manager to create reusable datasets. Reference them in your specs using <code>{"data": {"name": "dataset-name"}}</code>.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Keyboard Shortcuts -->
+                    <section class="help-section">
+                        <h3 class="help-heading">Keyboard Shortcuts</h3>
+                        <table class="help-shortcuts-table">
+                            <tbody>
+                                <tr>
+                                    <td class="shortcut-key">Cmd/Ctrl+Shift+N</td>
+                                    <td class="shortcut-desc">Create new snippet</td>
+                                </tr>
+                                <tr>
+                                    <td class="shortcut-key">Cmd/Ctrl+K</td>
+                                    <td class="shortcut-desc">Toggle dataset manager</td>
+                                </tr>
+                                <tr>
+                                    <td class="shortcut-key">Cmd/Ctrl+S</td>
+                                    <td class="shortcut-desc">Publish draft (save)</td>
+                                </tr>
+                                <tr>
+                                    <td class="shortcut-key">Escape</td>
+                                    <td class="shortcut-desc">Close any open modal</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- Storage & Limits -->
+                    <section class="help-section">
+                        <h3 class="help-heading">Storage & Limits</h3>
+                        <ul class="help-list">
+                            <li><strong>Snippets</strong> — Stored in localStorage with a 5 MB limit (shared across all snippets). The storage monitor shows current usage.</li>
+                            <li><strong>Datasets</strong> — Stored in IndexedDB with effectively unlimited space (browser-dependent, typically 50 MB+).</li>
+                            <li><strong>Backup</strong> — Use Import/Export to save your work as JSON files. Datasets can be exported individually from the Dataset Manager.</li>
+                        </ul>
+                    </section>
+
+                    <!-- Tips & Tricks -->
+                    <section class="help-section">
+                        <h3 class="help-heading">Tips & Tricks</h3>
+                        <ul class="help-list">
+                            <li><strong>Extract inline data</strong> — When editing a spec with inline data, click "Extract to Dataset" to create a reusable dataset automatically.</li>
+                            <li><strong>Dataset references</strong> — Astrolabe resolves dataset references at render time, so you can freely switch between inline and referenced data.</li>
+                            <li><strong>Search across specs</strong> — The search box looks inside snippet names, comments, and the spec content itself.</li>
+                            <li><strong>Linked datasets</strong> — The metadata panel shows which datasets a snippet uses, and the Dataset Manager shows which snippets reference each dataset.</li>
+                            <li><strong>URL datasets</strong> — Reference remote data by URL. Astrolabe fetches and caches it for preview, but the URL is what gets stored.</li>
+                        </ul>
+                    </section>
                 </div>
             </div>
         </div>
