@@ -796,13 +796,6 @@ function calculateStorageUsage() {
     return new Blob([snippetsData]).size;
 }
 
-// Format bytes to human-readable size
-function formatBytes(bytes) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
-
 // Update storage monitor display
 function updateStorageMonitor() {
     const usedBytes = calculateStorageUsage();

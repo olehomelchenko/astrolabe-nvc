@@ -216,11 +216,9 @@ const DatasetStorage = {
     }
 };
 
-// Format bytes for display
-function formatDatasetSize(bytes) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+// Helper: Get currently selected dataset
+async function getCurrentDataset() {
+    return window.currentDatasetId ? await DatasetStorage.getDataset(window.currentDatasetId) : null;
 }
 
 // Fetch URL data and calculate metadata
@@ -287,12 +285,12 @@ async function renderDatasetList() {
         if (dataset.source === 'url') {
             // Show metadata if available, otherwise just URL and format
             if (dataset.rowCount !== null && dataset.size !== null) {
-                metaText = `URL • ${dataset.rowCount} rows • ${dataset.format.toUpperCase()} • ${formatDatasetSize(dataset.size)}`;
+                metaText = `URL • ${dataset.rowCount} rows • ${dataset.format.toUpperCase()} • ${formatBytes(dataset.size)}`;
             } else {
                 metaText = `URL • ${dataset.format.toUpperCase()}`;
             }
         } else {
-            metaText = `${dataset.rowCount} rows • ${dataset.format.toUpperCase()} • ${formatDatasetSize(dataset.size)}`;
+            metaText = `${dataset.rowCount} rows • ${dataset.format.toUpperCase()} • ${formatBytes(dataset.size)}`;
         }
 
         return `
@@ -344,7 +342,7 @@ async function selectDataset(datasetId) {
     document.getElementById('dataset-detail-comment').value = dataset.comment;
     document.getElementById('dataset-detail-rows').textContent = dataset.rowCount !== null ? dataset.rowCount : 'N/A';
     document.getElementById('dataset-detail-columns').textContent = dataset.columnCount !== null ? dataset.columnCount : 'N/A';
-    document.getElementById('dataset-detail-size').textContent = dataset.size !== null ? formatDatasetSize(dataset.size) : 'N/A';
+    document.getElementById('dataset-detail-size').textContent = formatBytes(dataset.size);
     document.getElementById('dataset-detail-created').textContent = new Date(dataset.created).toLocaleString();
     document.getElementById('dataset-detail-modified').textContent = new Date(dataset.modified).toLocaleString();
 
@@ -573,13 +571,11 @@ async function saveNewDataset() {
 
 // Delete current dataset
 async function deleteCurrentDataset() {
-    if (!window.currentDatasetId) return;
-
-    const dataset = await DatasetStorage.getDataset(window.currentDatasetId);
+    const dataset = await getCurrentDataset();
     if (!dataset) return;
 
     if (confirm(`Delete dataset "${dataset.name}"? This action cannot be undone.`)) {
-        await DatasetStorage.deleteDataset(window.currentDatasetId);
+        await DatasetStorage.deleteDataset(dataset.id);
         document.getElementById('dataset-details').style.display = 'none';
         window.currentDatasetId = null;
         await renderDatasetList();
@@ -587,22 +583,18 @@ async function deleteCurrentDataset() {
 }
 
 // Copy dataset reference to clipboard
-function copyDatasetReference() {
-    if (!window.currentDatasetId) return;
+async function copyDatasetReference() {
+    const dataset = await getCurrentDataset();
+    if (!dataset) return;
 
-    DatasetStorage.getDataset(window.currentDatasetId).then(dataset => {
-        const reference = `"data": {"name": "${dataset.name}"}`;
-        navigator.clipboard.writeText(reference).then(() => {
-            alert('Dataset reference copied to clipboard!');
-        });
-    });
+    const reference = `"data": {"name": "${dataset.name}"}`;
+    await navigator.clipboard.writeText(reference);
+    alert('Dataset reference copied to clipboard!');
 }
 
 // Refresh metadata for URL dataset
 async function refreshDatasetMetadata() {
-    if (!window.currentDatasetId) return;
-
-    const dataset = await DatasetStorage.getDataset(window.currentDatasetId);
+    const dataset = await getCurrentDataset();
     if (!dataset || dataset.source !== 'url') return;
 
     const refreshBtn = document.getElementById('refresh-metadata-btn');

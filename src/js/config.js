@@ -64,6 +64,14 @@ const AppSettings = {
     }
 };
 
+// Shared utility: Format bytes for display
+function formatBytes(bytes) {
+    if (bytes === null || bytes === undefined) return 'N/A';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 // Sample Vega-Lite specification
 const sampleSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
