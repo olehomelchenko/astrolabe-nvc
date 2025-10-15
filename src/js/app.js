@@ -160,6 +160,19 @@ document.addEventListener('DOMContentLoaded', function () {
         newDatasetBtn.addEventListener('click', showNewDatasetForm);
     }
 
+    // Import dataset button and file input
+    const importDatasetBtn = document.getElementById('import-dataset-btn');
+    const importDatasetFile = document.getElementById('import-dataset-file');
+    if (importDatasetBtn && importDatasetFile) {
+        importDatasetBtn.addEventListener('click', function () {
+            importDatasetFile.click();
+        });
+
+        importDatasetFile.addEventListener('change', function () {
+            importDatasetFromFile(this);
+        });
+    }
+
     // Cancel dataset button
     if (cancelDatasetBtn) {
         cancelDatasetBtn.addEventListener('click', hideNewDatasetForm);
@@ -186,6 +199,36 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshMetadataBtn.addEventListener('click', refreshDatasetMetadata);
     }
 
+    // New snippet from dataset button
+    const newSnippetBtn = document.getElementById('new-snippet-btn');
+    if (newSnippetBtn) {
+        newSnippetBtn.addEventListener('click', createNewSnippetFromDataset);
+    }
+
+    // Export dataset button
+    const exportDatasetBtn = document.getElementById('export-dataset-btn');
+    if (exportDatasetBtn) {
+        exportDatasetBtn.addEventListener('click', exportCurrentDataset);
+    }
+
+    // Preview toggle buttons
+    const previewRawBtn = document.getElementById('preview-raw-btn');
+    const previewTableBtn = document.getElementById('preview-table-btn');
+    if (previewRawBtn) {
+        previewRawBtn.addEventListener('click', function() {
+            if (window.currentDatasetData) {
+                showRawPreview(window.currentDatasetData);
+            }
+        });
+    }
+    if (previewTableBtn) {
+        previewTableBtn.addEventListener('click', function() {
+            if (window.currentDatasetData) {
+                showTablePreview(window.currentDatasetData);
+            }
+        });
+    }
+
     // View mode toggle buttons
     document.getElementById('view-draft').addEventListener('click', () => {
         switchViewMode('draft');
@@ -198,6 +241,39 @@ document.addEventListener('DOMContentLoaded', function () {
     // Publish and Revert buttons
     document.getElementById('publish-btn').addEventListener('click', publishDraft);
     document.getElementById('revert-btn').addEventListener('click', revertDraft);
+
+    // Extract to Dataset button
+    const extractBtn = document.getElementById('extract-btn');
+    if (extractBtn) {
+        extractBtn.addEventListener('click', showExtractModal);
+    }
+
+    // Extract modal buttons
+    const extractModalClose = document.getElementById('extract-modal-close');
+    const extractCancelBtn = document.getElementById('extract-cancel-btn');
+    const extractCreateBtn = document.getElementById('extract-create-btn');
+    const extractModal = document.getElementById('extract-modal');
+
+    if (extractModalClose) {
+        extractModalClose.addEventListener('click', hideExtractModal);
+    }
+
+    if (extractCancelBtn) {
+        extractCancelBtn.addEventListener('click', hideExtractModal);
+    }
+
+    if (extractCreateBtn) {
+        extractCreateBtn.addEventListener('click', extractToDataset);
+    }
+
+    // Close modal on overlay click
+    if (extractModal) {
+        extractModal.addEventListener('click', function (e) {
+            if (e.target === extractModal) {
+                hideExtractModal();
+            }
+        });
+    }
 });
 
 // Handle URL hash changes (browser back/forward)

@@ -16,6 +16,117 @@ function generateSnippetName() {
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 }
 
+// Extract dataset references from Vega-Lite spec
+function extractDatasetRefs(spec) {
+    const datasetNames = new Set();
+
+    function traverse(obj) {
+        if (!obj || typeof obj !== 'object') return;
+
+        // Check if this is a data object with a name property
+        if (obj.data && typeof obj.data === 'object' && obj.data.name) {
+            datasetNames.add(obj.data.name);
+        }
+
+        // Recursively check all properties
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                traverse(obj[key]);
+            }
+        }
+    }
+
+    traverse(spec);
+    return Array.from(datasetNames);
+}
+
+// Detect if spec has inline data (data.values)
+function hasInlineData(spec) {
+    if (!spec || typeof spec !== 'object') return false;
+
+    // Check top-level data.values
+    if (spec.data && Array.isArray(spec.data.values)) {
+        return true;
+    }
+
+    // Check common nested locations (layer, concat, hconcat, vconcat, facet)
+    const nestedKeys = ['layer', 'concat', 'hconcat', 'vconcat', 'spec'];
+    for (const key of nestedKeys) {
+        if (Array.isArray(spec[key])) {
+            for (const item of spec[key]) {
+                if (hasInlineData(item)) {
+                    return true;
+                }
+            }
+        } else if (spec[key] && typeof spec[key] === 'object') {
+            if (hasInlineData(spec[key])) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// Extract inline data from spec (finds first occurrence)
+function extractInlineDataFromSpec(spec) {
+    if (!spec || typeof spec !== 'object') return null;
+
+    // Check top-level data.values
+    if (spec.data && Array.isArray(spec.data.values)) {
+        return spec.data.values;
+    }
+
+    // Check nested locations
+    const nestedKeys = ['layer', 'concat', 'hconcat', 'vconcat', 'spec'];
+    for (const key of nestedKeys) {
+        if (Array.isArray(spec[key])) {
+            for (const item of spec[key]) {
+                const data = extractInlineDataFromSpec(item);
+                if (data) return data;
+            }
+        } else if (spec[key] && typeof spec[key] === 'object') {
+            const data = extractInlineDataFromSpec(spec[key]);
+            if (data) return data;
+        }
+    }
+
+    return null;
+}
+
+// Replace inline data with dataset reference
+function replaceInlineDataWithReference(spec, datasetName) {
+    if (!spec || typeof spec !== 'object') return spec;
+
+    // Clone the spec to avoid mutation
+    const newSpec = JSON.parse(JSON.stringify(spec));
+
+    function replaceData(obj) {
+        if (!obj || typeof obj !== 'object') return;
+
+        // Replace top-level data.values with data.name
+        if (obj.data && Array.isArray(obj.data.values)) {
+            obj.data = { name: datasetName };
+            return; // Stop after first replacement
+        }
+
+        // Check nested locations
+        const nestedKeys = ['layer', 'concat', 'hconcat', 'vconcat', 'spec'];
+        for (const key of nestedKeys) {
+            if (Array.isArray(obj[key])) {
+                for (const item of obj[key]) {
+                    replaceData(item);
+                }
+            } else if (obj[key] && typeof obj[key] === 'object') {
+                replaceData(obj[key]);
+            }
+        }
+    }
+
+    replaceData(newSpec);
+    return newSpec;
+}
+
 // Create a new snippet using Phase 0 schema
 function createSnippet(spec, name = null) {
     const now = new Date().toISOString();
@@ -247,10 +358,14 @@ function renderSnippetList(searchQuery = null) {
         const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
         const statusClass = hasDraft ? 'draft' : 'published';
 
+        // Check if snippet uses external datasets
+        const usesDatasets = snippet.datasetRefs && snippet.datasetRefs.length > 0;
+        const datasetIconHTML = usesDatasets ? '<span class="snippet-dataset-icon" title="Uses external dataset">📁</span>' : '';
+
         return `
             <li class="snippet-item" data-snippet-id="${snippet.id}">
                 <div class="snippet-info">
-                    <div class="snippet-name">${snippet.name}</div>
+                    <div class="snippet-name">${snippet.name}${datasetIconHTML}</div>
                     <div class="snippet-date">${dateText}</div>
                 </div>
                 ${sizeHTML}
@@ -501,9 +616,79 @@ function selectSnippet(snippetId, updateURL = true) {
     // Store currently selected snippet ID globally
     window.currentSnippetId = snippetId;
 
+    // Update linked datasets display
+    updateLinkedDatasets(snippet);
+
+    // Update Extract to Dataset button visibility
+    updateExtractButton();
+
     // Update URL state (URLState.update will add 'snippet-' prefix)
     if (updateURL) {
         URLState.update({ view: 'snippets', snippetId: snippetId, datasetId: null });
+    }
+}
+
+// Update linked datasets display in metadata panel
+function updateLinkedDatasets(snippet) {
+    const datasetsSection = document.getElementById('snippet-datasets-section');
+    const datasetsContainer = document.getElementById('snippet-datasets');
+
+    if (!datasetsSection || !datasetsContainer) return;
+
+    // Get dataset references from snippet
+    const datasetRefs = snippet.datasetRefs || [];
+
+    if (datasetRefs.length === 0) {
+        datasetsSection.style.display = 'none';
+        return;
+    }
+
+    // Show section and populate with dataset references
+    datasetsSection.style.display = 'block';
+
+    const datasetItems = datasetRefs.map(datasetName => {
+        return `
+            <div class="meta-info-item">
+                <span class="meta-info-label">📁</span>
+                <span class="meta-info-value">
+                    <a href="#" class="dataset-link" data-dataset-name="${datasetName}">${datasetName}</a>
+                </span>
+            </div>
+        `;
+    }).join('');
+
+    datasetsContainer.innerHTML = datasetItems;
+
+    // Attach click handlers to dataset links
+    datasetsContainer.querySelectorAll('.dataset-link').forEach(link => {
+        link.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const datasetName = this.dataset.datasetName;
+            await openDatasetByName(datasetName);
+        });
+    });
+}
+
+// Open dataset manager and select dataset by name
+async function openDatasetByName(datasetName) {
+    // Open dataset manager modal
+    openDatasetManager();
+
+    // Wait for datasets to load and find the one with matching name
+    // We need to use DatasetStorage which is defined in dataset-manager.js
+    try {
+        const dataset = await DatasetStorage.getDatasetByName(datasetName);
+        if (dataset) {
+            // Small delay to ensure UI is ready
+            setTimeout(() => {
+                selectDataset(dataset.id);
+            }, 100);
+        } else {
+            alert(`Dataset "${datasetName}" not found. It may have been deleted.`);
+        }
+    } catch (error) {
+        console.error('Error opening dataset:', error);
+        alert(`Could not open dataset "${datasetName}".`);
     }
 }
 
@@ -524,9 +709,13 @@ function autoSaveDraft() {
 
         if (snippet) {
             snippet.draftSpec = currentSpec;
+
+            // Extract and update dataset references
+            snippet.datasetRefs = extractDatasetRefs(currentSpec);
+
             SnippetStorage.saveSnippet(snippet);
 
-            // Refresh snippet list to update status light
+            // Refresh snippet list to update status light and dataset indicator
             renderSnippetList();
             // Restore selection
             restoreSnippetSelection();
@@ -670,6 +859,157 @@ function duplicateSnippet(snippetId) {
     return newSnippet;
 }
 
+// Create new snippet from dataset with minimal spec
+function createSnippetFromDataset(datasetName) {
+    const minimalSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "data": {"name": datasetName},
+        "mark": "point",
+        "encoding": {}
+    };
+
+    const newSnippet = createSnippet(minimalSpec);
+    newSnippet.comment = `Visualization using dataset: ${datasetName}`;
+    newSnippet.datasetRefs = [datasetName];
+
+    SnippetStorage.saveSnippet(newSnippet);
+
+    // Refresh the list and select the new snippet
+    renderSnippetList();
+    selectSnippet(newSnippet.id);
+
+    return newSnippet;
+}
+
+// Show extract to dataset modal
+function showExtractModal() {
+    const snippet = getCurrentSnippet();
+    if (!snippet) return;
+
+    // Get the draft spec (most recent version)
+    const spec = snippet.draftSpec;
+
+    // Check if spec has inline data
+    if (!hasInlineData(spec)) {
+        alert('No inline data found in this snippet.');
+        return;
+    }
+
+    // Extract the inline data
+    const inlineData = extractInlineDataFromSpec(spec);
+    if (!inlineData || inlineData.length === 0) {
+        alert('No inline data could be extracted.');
+        return;
+    }
+
+    // Generate default dataset name from snippet name
+    const defaultName = `${snippet.name}_data`.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    // Show modal
+    const modal = document.getElementById('extract-modal');
+    const nameInput = document.getElementById('extract-dataset-name');
+    const previewEl = document.getElementById('extract-data-preview');
+    const errorEl = document.getElementById('extract-form-error');
+
+    nameInput.value = defaultName;
+    previewEl.textContent = JSON.stringify(inlineData.slice(0, 10), null, 2);
+    if (inlineData.length > 10) {
+        previewEl.textContent += `\n\n... (${inlineData.length - 10} more rows)`;
+    }
+    errorEl.textContent = '';
+
+    modal.style.display = 'flex';
+}
+
+// Hide extract to dataset modal
+function hideExtractModal() {
+    const modal = document.getElementById('extract-modal');
+    modal.style.display = 'none';
+}
+
+// Extract to dataset - create dataset and update snippet
+async function extractToDataset() {
+    const snippet = getCurrentSnippet();
+    if (!snippet) return;
+
+    const nameInput = document.getElementById('extract-dataset-name');
+    const errorEl = document.getElementById('extract-form-error');
+    const datasetName = nameInput.value.trim();
+
+    errorEl.textContent = '';
+
+    // Validation
+    if (!datasetName) {
+        errorEl.textContent = 'Dataset name is required';
+        return;
+    }
+
+    // Check if dataset name already exists
+    if (await DatasetStorage.nameExists(datasetName)) {
+        errorEl.textContent = 'A dataset with this name already exists';
+        return;
+    }
+
+    // Extract inline data from draft spec
+    const inlineData = extractInlineDataFromSpec(snippet.draftSpec);
+    if (!inlineData) {
+        errorEl.textContent = 'Could not extract inline data';
+        return;
+    }
+
+    try {
+        // Create dataset in IndexedDB
+        await DatasetStorage.createDataset(datasetName, inlineData, 'json', 'inline', `Extracted from snippet: ${snippet.name}`);
+
+        // Replace inline data with dataset reference in draft spec
+        snippet.draftSpec = replaceInlineDataWithReference(snippet.draftSpec, datasetName);
+
+        // Update dataset references
+        snippet.datasetRefs = extractDatasetRefs(snippet.draftSpec);
+
+        // Save snippet
+        SnippetStorage.saveSnippet(snippet);
+
+        // Update editor with new spec
+        if (editor && currentViewMode === 'draft') {
+            window.isUpdatingEditor = true;
+            editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
+            window.isUpdatingEditor = false;
+        }
+
+        // Refresh UI
+        renderSnippetList();
+        restoreSnippetSelection();
+        updateLinkedDatasets(snippet);
+        updateViewModeUI(snippet);
+        updateExtractButton();
+
+        // Close modal
+        hideExtractModal();
+
+        // Show success message
+        alert(`Dataset "${datasetName}" created successfully!`);
+    } catch (error) {
+        errorEl.textContent = `Failed to create dataset: ${error.message}`;
+    }
+}
+
+// Update visibility of Extract to Dataset button
+function updateExtractButton() {
+    const extractBtn = document.getElementById('extract-btn');
+    if (!extractBtn) return;
+
+    const snippet = getCurrentSnippet();
+    if (!snippet) {
+        extractBtn.style.display = 'none';
+        return;
+    }
+
+    // Check if draft spec has inline data
+    const hasInline = hasInlineData(snippet.draftSpec);
+    extractBtn.style.display = hasInline ? 'block' : 'none';
+}
+
 // Delete snippet with confirmation
 function deleteSnippet(snippetId) {
     const snippet = SnippetStorage.getSnippet(snippetId);
@@ -760,6 +1100,10 @@ function publishDraft() {
 
     // Copy draftSpec to spec
     snippet.spec = JSON.parse(JSON.stringify(snippet.draftSpec));
+
+    // Update dataset references for published spec
+    snippet.datasetRefs = extractDatasetRefs(snippet.spec);
+
     SnippetStorage.saveSnippet(snippet);
 
     // Refresh UI

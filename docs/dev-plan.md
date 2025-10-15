@@ -300,19 +300,39 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 12: Advanced Dataset Features** _(Future)_
+### **Phase 12: Advanced Dataset Features** ✅ **COMPLETE**
 **Goal**: Enhanced dataset workflows
 
-- [ ] Detect inline data in Vega-Lite specs
-- [ ] "Extract to dataset" feature for inline data
-- [ ] Update snippet UI to show linked datasets
-- [ ] Dataset usage tracking (which snippets reference which datasets)
-- [ ] Import datasets from file upload
-- [ ] Export individual datasets
-- [ ] Dataset preview with table view
-- [ ] Column type detection and display
+- [x] Detect inline data in Vega-Lite specs
+- [x] "Extract to dataset" feature for inline data
+- [x] Update snippet UI to show linked datasets
+- [x] Dataset usage tracking (which snippets reference which datasets)
+- [x] Bidirectional linking between snippets and datasets
+- [x] Usage count badges on dataset list items
+- [x] "New Snippet" button to create snippet from dataset
+- [x] Import datasets from file upload
+- [x] Export individual datasets
+- [x] Dataset preview with table view
+- [x] Column type detection and display
 
-**Deliverable**: Advanced dataset management and discovery
+**Deliverables**:
+- Recursive dataset reference extraction from Vega-Lite specs
+- Extract to Dataset modal with automatic spec transformation
+- Bidirectional linking between snippets and datasets
+- Usage tracking with visual indicators (📁 icon, 📄 count badges)
+- Dataset import/export with auto-format detection
+- Table preview with type detection (🔢📅✓🔤)
+- On-demand URL preview loading with session cache
+- New Snippet creation from datasets
+
+**Technical Implementation**:
+- Type detection: 80% threshold for number/date/boolean/text inference
+- Table rendering: Vanilla JS with sticky headers, 20-row preview
+- Cell formatting: Type-specific styling and alignment
+- Import: Automatic naming with timestamp collision handling
+- Export: Format-specific extensions with URL content fetching
+- Preview cache: In-memory storage, not persisted to database
+- Modal: 95% width (max 1200px), 85% height for improved data visibility
 
 ---
 
@@ -411,8 +431,8 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ## Current Status
 
-**Completed**: Phases 0-11 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export, dataset management, URL state management)
-**Next**: Phase 12 - Advanced Dataset Features (optional enhancements)
+**Completed**: Phases 0-12 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export, dataset management, URL state management, advanced dataset features)
+**Next**: Phase 13 - Polish & UX Refinements or Phase 14 - Advanced Snippet Features
 **See**: `CLAUDE.md` for concise current state summary
 
 ---
@@ -450,6 +470,13 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
   - Page reload preserves state
   - Shareable URLs for specific snippets/datasets
   - Restores snippet URL when closing dataset modal
+- **Advanced Dataset Features (Phase 12)**:
+  - Bidirectional linking with usage tracking and navigation
+  - Extract to Dataset with automatic spec transformation
+  - Import/Export with format detection and URL content fetching
+  - Table preview with type detection and formatting (🔢📅✓🔤)
+  - On-demand URL preview loading with session cache
+  - New Snippet creation from datasets
 - Retro Windows 2000 aesthetic throughout
 - Component-based CSS architecture with base classes
 

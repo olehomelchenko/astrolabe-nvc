@@ -17,8 +17,8 @@ Instructions for Claude Code when working on this project.
 
 ## Current Status
 
-**Completed**: Phases 0-10 (Core functionality + Dataset Management)
-**Next**: Phase 11 - Advanced Dataset Features (optional enhancements)
+**Completed**: Phases 0-12 (Core functionality + Dataset Management + Advanced Dataset Features)
+**Next**: Phase 13 - Polish & UX Refinements or Phase 14 - Advanced Snippet Features
 
 ### Key Features Implemented
 - ✅ Snippet management with draft/published workflow
@@ -30,5 +30,11 @@ Instructions for Claude Code when working on this project.
   - Automatic metadata calculation and URL fetching
   - Dataset reference resolution in Vega-Lite specs
   - Modal UI with button-group selectors
+- ✅ **Advanced Dataset Features (Phase 12)**
+  - Bidirectional snippet ↔ dataset linking with usage tracking
+  - Extract inline data to datasets
+  - Import/Export datasets with auto-format detection
+  - Table preview with type detection (🔢📅🔤✓)
+  - On-demand URL preview loading with caching
 
 See `docs/dev-plan.md` for complete roadmap and technical details.

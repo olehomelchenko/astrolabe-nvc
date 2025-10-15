@@ -221,6 +221,14 @@ async function getCurrentDataset() {
     return window.currentDatasetId ? await DatasetStorage.getDataset(window.currentDatasetId) : null;
 }
 
+// Count how many snippets use a specific dataset
+function countSnippetUsage(datasetName) {
+    const snippets = SnippetStorage.loadSnippets();
+    return snippets.filter(snippet =>
+        snippet.datasetRefs && snippet.datasetRefs.includes(datasetName)
+    ).length;
+}
+
 // Fetch URL data and calculate metadata
 async function fetchURLMetadata(url, format) {
     try {
@@ -293,12 +301,19 @@ async function renderDatasetList() {
             metaText = `${dataset.rowCount} rows • ${dataset.format.toUpperCase()} • ${formatBytes(dataset.size)}`;
         }
 
+        // Count snippet usage and create badge
+        const usageCount = countSnippetUsage(dataset.name);
+        const usageBadge = usageCount > 0
+            ? `<div class="dataset-usage-badge" title="${usageCount} snippet${usageCount !== 1 ? 's' : ''} using this dataset">📄 ${usageCount}</div>`
+            : '';
+
         return `
             <div class="dataset-item" data-dataset-id="${dataset.id}">
                 <div class="dataset-info">
                     <div class="dataset-name">${dataset.name}</div>
                     <div class="dataset-meta">${metaText}</div>
                 </div>
+                ${usageBadge}
             </div>
         `;
     }).join('');
@@ -346,7 +361,165 @@ async function selectDataset(datasetId, updateURL = true) {
     document.getElementById('dataset-detail-created').textContent = new Date(dataset.created).toLocaleString();
     document.getElementById('dataset-detail-modified').textContent = new Date(dataset.modified).toLocaleString();
 
-    // Show preview
+    // Show/hide preview toggle based on data type
+    const toggleGroup = document.getElementById('preview-toggle-group');
+    const canShowTable = (dataset.format === 'json' || dataset.format === 'csv' || dataset.format === 'tsv');
+
+    if (dataset.source === 'url') {
+        // For URL datasets, check if we have cached preview data
+        if (window.urlPreviewCache && window.urlPreviewCache[dataset.id]) {
+            if (canShowTable) {
+                toggleGroup.style.display = 'flex';
+            } else {
+                toggleGroup.style.display = 'none';
+            }
+            showRawPreview(dataset);
+        } else {
+            // Show load preview option
+            toggleGroup.style.display = 'none';
+            showURLPreviewPrompt(dataset);
+        }
+    } else {
+        // For inline datasets
+        if (canShowTable) {
+            toggleGroup.style.display = 'flex';
+        } else {
+            toggleGroup.style.display = 'none';
+        }
+        showRawPreview(dataset);
+    }
+
+    // Store current dataset ID and data
+    window.currentDatasetId = datasetId;
+    window.currentDatasetData = dataset;
+
+    // Update linked snippets display
+    updateLinkedSnippets(dataset);
+
+    // Update URL state (URLState.update will add 'dataset-' prefix)
+    if (updateURL) {
+        URLState.update({ view: 'datasets', snippetId: null, datasetId: datasetId });
+    }
+}
+
+// Show URL preview prompt (button to load data)
+function showURLPreviewPrompt(dataset) {
+    const previewBox = document.getElementById('dataset-preview');
+    const tableContainer = document.getElementById('dataset-preview-table');
+
+    previewBox.style.display = 'block';
+    tableContainer.style.display = 'none';
+
+    const promptHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div style="margin-bottom: 12px; font-size: 11px; color: #606060;">
+                URL: ${dataset.data}<br/>
+                Format: ${dataset.format.toUpperCase()}
+            </div>
+            <button class="btn btn-standard primary" id="load-preview-btn">Load Preview</button>
+            <div style="margin-top: 8px; font-size: 10px; color: #808080; font-style: italic;">
+                Data will be fetched but not saved
+            </div>
+        </div>
+    `;
+
+    previewBox.innerHTML = promptHTML;
+
+    // Add click handler
+    const loadBtn = document.getElementById('load-preview-btn');
+    if (loadBtn) {
+        loadBtn.addEventListener('click', async () => {
+            await loadURLPreview(dataset);
+        });
+    }
+}
+
+// Load and cache URL preview data
+async function loadURLPreview(dataset) {
+    const previewBox = document.getElementById('dataset-preview');
+    previewBox.innerHTML = '<div style="text-align: center; padding: 20px; font-size: 11px;">Loading data from URL...</div>';
+
+    try {
+        const response = await fetch(dataset.data);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const text = await response.text();
+
+        // Parse data based on format
+        let parsedData;
+        if (dataset.format === 'json' || dataset.format === 'topojson') {
+            parsedData = JSON.parse(text);
+        } else if (dataset.format === 'csv' || dataset.format === 'tsv') {
+            parsedData = text;
+        }
+
+        // Cache the preview data (don't save to DB)
+        if (!window.urlPreviewCache) {
+            window.urlPreviewCache = {};
+        }
+        window.urlPreviewCache[dataset.id] = {
+            data: parsedData,
+            fetchedAt: Date.now()
+        };
+
+        // Create a temporary dataset object with the fetched data
+        const previewDataset = {
+            ...dataset,
+            data: parsedData,
+            source: 'inline' // Treat as inline for preview purposes
+        };
+
+        // Update current dataset data for preview
+        window.currentDatasetData = previewDataset;
+
+        // Show toggle buttons now that we have data
+        const toggleGroup = document.getElementById('preview-toggle-group');
+        const canShowTable = (dataset.format === 'json' || dataset.format === 'csv' || dataset.format === 'tsv');
+        if (canShowTable) {
+            toggleGroup.style.display = 'flex';
+        }
+
+        // Show the preview
+        showRawPreview(previewDataset);
+
+    } catch (error) {
+        previewBox.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #f00; font-size: 11px;">
+                <div style="margin-bottom: 8px;">Failed to load URL data:</div>
+                <div>${error.message}</div>
+                <button class="btn btn-standard" id="retry-preview-btn" style="margin-top: 12px;">Retry</button>
+            </div>
+        `;
+
+        const retryBtn = document.getElementById('retry-preview-btn');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', async () => {
+                await loadURLPreview(dataset);
+            });
+        }
+    }
+}
+
+// Show raw preview
+function showRawPreview(dataset) {
+    const rawBtn = document.getElementById('preview-raw-btn');
+    const tableBtn = document.getElementById('preview-table-btn');
+    const previewBox = document.getElementById('dataset-preview');
+    const tableContainer = document.getElementById('dataset-preview-table');
+
+    // Update button states
+    if (rawBtn && tableBtn) {
+        rawBtn.classList.add('active');
+        tableBtn.classList.remove('active');
+    }
+
+    // Show raw, hide table
+    previewBox.style.display = 'block';
+    tableContainer.style.display = 'none';
+
+    // Generate preview text
     let previewText;
     if (dataset.source === 'url') {
         previewText = `URL: ${dataset.data}\nFormat: ${dataset.format.toUpperCase()}`;
@@ -357,15 +530,249 @@ async function selectDataset(datasetId, updateURL = true) {
         const lines = dataset.data.split('\n');
         previewText = lines.slice(0, 6).join('\n'); // Header + 5 rows
     }
-    document.getElementById('dataset-preview').textContent = previewText;
+    previewBox.textContent = previewText;
+}
 
-    // Store current dataset ID
-    window.currentDatasetId = datasetId;
+// Detect column type from sample values
+function detectColumnType(values) {
+    // Filter out null/undefined values
+    const validValues = values.filter(v => v !== null && v !== undefined && v !== '');
+    if (validValues.length === 0) return 'text';
 
-    // Update URL state (URLState.update will add 'dataset-' prefix)
-    if (updateURL) {
-        URLState.update({ view: 'datasets', snippetId: null, datasetId: datasetId });
+    let numberCount = 0;
+    let booleanCount = 0;
+    let dateCount = 0;
+
+    for (const val of validValues) {
+        const str = String(val).trim();
+
+        // Check boolean
+        if (str === 'true' || str === 'false' || str === '0' || str === '1' ||
+            str === 'True' || str === 'False' || str === 'TRUE' || str === 'FALSE') {
+            booleanCount++;
+            continue;
+        }
+
+        // Check number
+        const num = parseFloat(str);
+        if (!isNaN(num) && isFinite(num) && str === String(num)) {
+            numberCount++;
+            continue;
+        }
+
+        // Check date (ISO format or common patterns)
+        // ISO: 2024-01-15, 2024-01-15T10:30:00, etc.
+        const isoDatePattern = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/;
+        // Common: 01/15/2024, 15-01-2024, etc.
+        const commonDatePattern = /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/;
+
+        if (isoDatePattern.test(str) || commonDatePattern.test(str)) {
+            const parsed = new Date(str);
+            if (!isNaN(parsed.getTime())) {
+                dateCount++;
+                continue;
+            }
+        }
     }
+
+    const total = validValues.length;
+    const threshold = 0.8; // 80% of values must match type
+
+    if (booleanCount / total >= threshold) return 'boolean';
+    if (numberCount / total >= threshold) return 'number';
+    if (dateCount / total >= threshold) return 'date';
+    return 'text';
+}
+
+// Get type icon
+function getTypeIcon(type) {
+    switch (type) {
+        case 'number': return '🔢';
+        case 'date': return '📅';
+        case 'boolean': return '✓';
+        case 'text':
+        default: return '🔤';
+    }
+}
+
+// Show table preview
+function showTablePreview(dataset) {
+    const rawBtn = document.getElementById('preview-raw-btn');
+    const tableBtn = document.getElementById('preview-table-btn');
+    const previewBox = document.getElementById('dataset-preview');
+    const tableContainer = document.getElementById('dataset-preview-table');
+
+    // Update button states
+    rawBtn.classList.remove('active');
+    tableBtn.classList.add('active');
+
+    // Hide raw, show table
+    previewBox.style.display = 'none';
+    tableContainer.style.display = 'block';
+
+    // Generate table HTML
+    let tableHTML = '';
+    const maxRows = 20; // Show first 20 rows
+
+    if (dataset.format === 'json') {
+        if (!Array.isArray(dataset.data) || dataset.data.length === 0) {
+            tableHTML = '<div class="preview-table-info">Cannot display non-array JSON data in table format</div>';
+        } else {
+            const rows = dataset.data.slice(0, maxRows);
+            const columns = Object.keys(rows[0] || {});
+
+            // Detect column types
+            const columnTypes = {};
+            columns.forEach(col => {
+                const values = dataset.data.map(row => row[col]);
+                columnTypes[col] = detectColumnType(values);
+            });
+
+            tableHTML = '<table class="preview-table">';
+            tableHTML += '<thead><tr>';
+            columns.forEach(col => {
+                const typeIcon = getTypeIcon(columnTypes[col]);
+                tableHTML += `<th><span class="type-icon">${typeIcon}</span> ${col}</th>`;
+            });
+            tableHTML += '</tr></thead>';
+            tableHTML += '<tbody>';
+            rows.forEach(row => {
+                tableHTML += '<tr>';
+                columns.forEach(col => {
+                    const value = row[col];
+                    const type = columnTypes[col];
+                    let displayValue = '';
+                    let cssClass = '';
+
+                    if (value === null || value === undefined) {
+                        displayValue = '';
+                        cssClass = 'cell-null';
+                    } else if (typeof value === 'object') {
+                        displayValue = JSON.stringify(value);
+                        cssClass = 'cell-text';
+                    } else {
+                        displayValue = String(value);
+                        cssClass = `cell-${type}`;
+                    }
+
+                    tableHTML += `<td class="${cssClass}">${displayValue}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+
+            if (dataset.data.length > maxRows) {
+                tableHTML += `<div class="preview-table-info">Showing first ${maxRows} of ${dataset.data.length} rows</div>`;
+            }
+        }
+    } else if (dataset.format === 'csv' || dataset.format === 'tsv') {
+        const separator = dataset.format === 'csv' ? ',' : '\t';
+        const lines = dataset.data.split('\n').filter(line => line.trim());
+
+        if (lines.length < 2) {
+            tableHTML = '<div class="preview-table-info">No data to display</div>';
+        } else {
+            const headerLine = lines[0];
+            const headers = headerLine.split(separator).map(h => h.trim().replace(/^"|"$/g, ''));
+            const dataLines = lines.slice(1, maxRows + 1);
+            const allDataLines = lines.slice(1); // All lines for type detection
+
+            // Parse all data for type detection
+            const columnData = headers.map(() => []);
+            allDataLines.forEach(line => {
+                const cells = line.split(separator).map(c => c.trim().replace(/^"|"$/g, ''));
+                cells.forEach((cell, idx) => {
+                    if (columnData[idx]) {
+                        columnData[idx].push(cell);
+                    }
+                });
+            });
+
+            // Detect column types
+            const columnTypes = columnData.map(colValues => detectColumnType(colValues));
+
+            tableHTML = '<table class="preview-table">';
+            tableHTML += '<thead><tr>';
+            headers.forEach((header, idx) => {
+                const typeIcon = getTypeIcon(columnTypes[idx]);
+                tableHTML += `<th><span class="type-icon">${typeIcon}</span> ${header}</th>`;
+            });
+            tableHTML += '</tr></thead>';
+            tableHTML += '<tbody>';
+            dataLines.forEach(line => {
+                const cells = line.split(separator).map(c => c.trim().replace(/^"|"$/g, ''));
+                tableHTML += '<tr>';
+                cells.forEach((cell, idx) => {
+                    const type = columnTypes[idx] || 'text';
+                    const cssClass = cell === '' ? 'cell-null' : `cell-${type}`;
+                    tableHTML += `<td class="${cssClass}">${cell}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+
+            if (lines.length > maxRows + 1) {
+                tableHTML += `<div class="preview-table-info">Showing first ${maxRows} of ${lines.length - 1} rows</div>`;
+            }
+        }
+    }
+
+    tableContainer.innerHTML = tableHTML;
+}
+
+// Update linked snippets display in dataset details panel
+function updateLinkedSnippets(dataset) {
+    const snippetsSection = document.getElementById('dataset-snippets-section');
+    const snippetsContainer = document.getElementById('dataset-snippets');
+
+    if (!snippetsSection || !snippetsContainer) return;
+
+    // Find all snippets that reference this dataset
+    const snippets = SnippetStorage.loadSnippets();
+    const linkedSnippets = snippets.filter(snippet =>
+        snippet.datasetRefs && snippet.datasetRefs.includes(dataset.name)
+    );
+
+    if (linkedSnippets.length === 0) {
+        snippetsSection.style.display = 'none';
+        return;
+    }
+
+    // Show section and populate with snippet links
+    snippetsSection.style.display = 'block';
+
+    const snippetItems = linkedSnippets.map(snippet => {
+        return `
+            <div class="stat-item">
+                <span class="stat-label">📄</span>
+                <span>
+                    <a href="#" class="snippet-link" data-snippet-id="${snippet.id}">${snippet.name}</a>
+                </span>
+            </div>
+        `;
+    }).join('');
+
+    snippetsContainer.innerHTML = snippetItems;
+
+    // Attach click handlers to snippet links
+    snippetsContainer.querySelectorAll('.snippet-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const snippetId = parseFloat(this.dataset.snippetId);
+            openSnippetFromDataset(snippetId);
+        });
+    });
+}
+
+// Close dataset manager and open snippet
+function openSnippetFromDataset(snippetId) {
+    // Close dataset manager
+    closeDatasetManager();
+
+    // Small delay to ensure UI is ready
+    setTimeout(() => {
+        selectSnippet(snippetId);
+    }, 100);
 }
 
 // Open dataset manager modal
@@ -742,7 +1149,17 @@ async function deleteCurrentDataset() {
     const dataset = await getCurrentDataset();
     if (!dataset) return;
 
-    if (confirm(`Delete dataset "${dataset.name}"? This action cannot be undone.`)) {
+    // Check if dataset is in use
+    const usageCount = countSnippetUsage(dataset.name);
+    let confirmMessage = `Delete dataset "${dataset.name}"?`;
+
+    if (usageCount > 0) {
+        confirmMessage = `⚠️ Warning: Dataset "${dataset.name}" is currently used by ${usageCount} snippet${usageCount !== 1 ? 's' : ''}.\n\nDeleting this dataset will break those visualizations. Are you sure you want to delete it?`;
+    } else {
+        confirmMessage += ' This action cannot be undone.';
+    }
+
+    if (confirm(confirmMessage)) {
         await DatasetStorage.deleteDataset(dataset.id);
         document.getElementById('dataset-details').style.display = 'none';
         window.currentDatasetId = null;
@@ -792,5 +1209,189 @@ async function refreshDatasetMetadata() {
         alert(`Failed to refresh metadata: ${error.message}`);
         refreshBtn.textContent = '🔄';
         refreshBtn.disabled = false;
+    }
+}
+
+// Create new snippet from current dataset
+async function createNewSnippetFromDataset() {
+    const dataset = await getCurrentDataset();
+    if (!dataset) return;
+
+    // Close dataset manager
+    closeDatasetManager();
+
+    // Small delay to ensure UI is ready
+    setTimeout(() => {
+        // Call the function from snippet-manager.js
+        createSnippetFromDataset(dataset.name);
+    }, 100);
+}
+
+// Export dataset to file
+async function exportCurrentDataset() {
+    const dataset = await getCurrentDataset();
+    if (!dataset) return;
+
+    let dataToExport;
+    let filename;
+    let mimeType;
+
+    try {
+        if (dataset.source === 'url') {
+            // For URL datasets, fetch the content and export it
+            const response = await fetch(dataset.data);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const content = await response.text();
+            dataToExport = content;
+        } else {
+            // For inline datasets, export the stored data
+            if (dataset.format === 'json' || dataset.format === 'topojson') {
+                dataToExport = JSON.stringify(dataset.data, null, 2);
+            } else if (dataset.format === 'csv' || dataset.format === 'tsv') {
+                dataToExport = dataset.data;
+            }
+        }
+
+        // Determine file extension and MIME type
+        switch (dataset.format) {
+            case 'json':
+                filename = `${dataset.name}.json`;
+                mimeType = 'application/json';
+                break;
+            case 'csv':
+                filename = `${dataset.name}.csv`;
+                mimeType = 'text/csv';
+                break;
+            case 'tsv':
+                filename = `${dataset.name}.tsv`;
+                mimeType = 'text/tab-separated-values';
+                break;
+            case 'topojson':
+                filename = `${dataset.name}.topojson`;
+                mimeType = 'application/json';
+                break;
+            default:
+                filename = `${dataset.name}.txt`;
+                mimeType = 'text/plain';
+        }
+
+        // Create blob and download
+        const blob = new Blob([dataToExport], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+    } catch (error) {
+        alert(`Failed to export dataset: ${error.message}`);
+    }
+}
+
+// Detect format from file extension
+function detectFormatFromFilename(filename) {
+    const lower = filename.toLowerCase();
+    if (lower.endsWith('.json')) return 'json';
+    if (lower.endsWith('.csv')) return 'csv';
+    if (lower.endsWith('.tsv') || lower.endsWith('.tab') || lower.endsWith('.txt')) return 'tsv';
+    if (lower.endsWith('.topojson')) return 'topojson';
+    return null;
+}
+
+// Import dataset from file
+async function importDatasetFromFile(fileInput) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    try {
+        // Read file content
+        const text = await file.text();
+
+        // Try to detect format from filename first
+        let formatHint = detectFormatFromFilename(file.name);
+
+        // Auto-detect format from content
+        const detection = detectDataFormat(text);
+
+        // Use filename hint if content detection is uncertain
+        let format = detection.format;
+        if (!format && formatHint) {
+            format = formatHint;
+        }
+
+        if (!format) {
+            alert('Could not detect data format from file. Please ensure the file contains valid JSON, CSV, or TSV data.');
+            return;
+        }
+
+        // Generate default name from filename (remove extension)
+        let baseName = file.name.replace(/\.(json|csv|tsv|txt|topojson)$/i, '');
+
+        // Check if name already exists and make it unique
+        let datasetName = baseName;
+        let wasRenamed = false;
+        let counter = 1;
+        while (await DatasetStorage.nameExists(datasetName)) {
+            wasRenamed = true;
+            // Add timestamp-based suffix for uniqueness
+            const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+            datasetName = `${baseName}_${timestamp}`;
+
+            // If still exists (unlikely), add a counter
+            if (await DatasetStorage.nameExists(datasetName)) {
+                datasetName = `${baseName}_${timestamp}_${counter}`;
+                counter++;
+            } else {
+                break;
+            }
+        }
+
+        // Prepare data based on format
+        let data;
+        if (format === 'json' || format === 'topojson') {
+            if (!detection.parsed) {
+                alert('Invalid JSON data in file.');
+                return;
+            }
+            data = detection.parsed;
+        } else if (format === 'csv' || format === 'tsv') {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) {
+                alert(`${format.toUpperCase()} file must have at least a header row and one data row.`);
+                return;
+            }
+            data = text.trim();
+        }
+
+        // Create dataset
+        await DatasetStorage.createDataset(
+            datasetName,
+            data,
+            format,
+            'inline',
+            `Imported from file: ${file.name}`
+        );
+
+        // Refresh the list
+        await renderDatasetList();
+
+        // Show success message with rename notification if applicable
+        if (wasRenamed) {
+            alert(`Dataset name "${baseName}" was already taken, so your dataset was automatically renamed to "${datasetName}".`);
+        } else {
+            alert(`Dataset "${datasetName}" imported successfully!`);
+        }
+
+    } catch (error) {
+        alert(`Failed to import dataset: ${error.message}`);
+    } finally {
+        // Reset file input
+        fileInput.value = '';
     }
 }

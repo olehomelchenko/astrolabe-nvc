@@ -2,7 +2,8 @@
 
 > **Purpose**: Comprehensive inventory of all implemented features for code review and optimization
 > **Created**: 2025-10-15
-> **Status**: Phases 0-10 Complete
+> **Updated**: 2025-10-16
+> **Status**: Phases 0-12 Complete
 
 ---
 
@@ -200,15 +201,67 @@
 
 ---
 
+### **13. Advanced Dataset Features (Phase 12)**
+- **Dataset Dependencies & Linking**:
+  - Recursive dataset reference extraction from Vega-Lite specs
+  - Bidirectional snippet ↔ dataset linking with clickable links
+  - Dataset usage tracking and count badges (📄 count)
+  - Visual indicators (📁) for snippets using datasets
+  - Linked datasets section in snippet metadata
+  - Linked snippets section in dataset details
+  - Navigation between snippets and datasets via links
+- **Extract to Dataset**:
+  - Inline data detection in draft specs
+  - Extract modal with name generation and preview
+  - Automatic spec transformation (inline → reference)
+  - Auto-update snippet with dataset reference
+  - Conditional Extract button (shows when inline data detected)
+- **Import/Export Datasets**:
+  - Import from file (.json, .csv, .tsv, .txt)
+  - Auto-format detection from content and filename
+  - Automatic naming from filename with duplicate handling
+  - Timestamp suffix for duplicate names (e.g., "data_123456")
+  - Export to format-specific files (.json, .csv, .tsv, .topojson)
+  - URL dataset export fetches and downloads live content
+- **Table Preview with Type Detection**:
+  - Raw/Table toggle for tabular data (JSON arrays, CSV, TSV)
+  - Vanilla JS table rendering (first 20 rows)
+  - Sticky headers with scrollable content
+  - Column type detection (80% threshold): number, date, boolean, text
+  - Type icons in headers: 🔢 📅 ✓ 🔤
+  - Type-specific formatting: italic numbers (right-aligned), italic dates, bold booleans
+  - Color coding: blue numbers, green dates, orange booleans, gray nulls
+  - Monospace font (Consolas/Monaco/Courier New)
+- **URL Preview Loading**:
+  - On-demand fetch with "Load Preview" button
+  - In-memory cache for fetched data (session-only)
+  - Full table view and type detection for fetched data
+  - Error handling with retry option
+  - Data not saved to database (preview only)
+- **New Snippet from Dataset**:
+  - Button in dataset details to create snippet
+  - Auto-generated minimal Vega-Lite spec with dataset reference
+  - Pre-populated comment and datasetRefs
+- **UI Enhancements**:
+  - Larger modal (95% width, max 1200px, 85% height)
+  - Actions moved to top of dataset details
+  - Dataset list with usage badges
+
+**Files**: `dataset-manager.js` (lines 19-1165), `snippet-manager.js` (dataset tracking), `app.js` (event handlers), `index.html` (UI), `styles.css` (table styles)
+
+---
+
 ## 📊 **Feature Statistics**
 
-- **Core Feature Groups**: 13
-- **Total Individual Capabilities**: ~70+
+- **Core Feature Groups**: 14
+- **Total Individual Capabilities**: ~100+
 - **Storage Systems**: 2 (localStorage for snippets, IndexedDB for datasets)
 - **UI Panels**: 3 main + 1 modal
 - **Auto-save Points**: 3 (draft spec, name, comment)
 - **Data Formats**: 4 (JSON, CSV, TSV, TopoJSON)
 - **Data Sources**: 2 (inline, URL)
+- **Type Detection**: 4 types (number, date, boolean, text)
+- **Import/Export**: Snippets + Datasets
 
 ---
 
@@ -218,15 +271,15 @@
 src/
 ├── js/
 │   ├── config.js           # Global variables, settings, sample data
-│   ├── snippet-manager.js  # Snippet CRUD, storage, search, sort (977 lines)
-│   ├── dataset-manager.js  # Dataset CRUD, IndexedDB, auto-detection (714 lines)
+│   ├── snippet-manager.js  # Snippet CRUD, storage, search, sort, extract (1,100+ lines)
+│   ├── dataset-manager.js  # Dataset CRUD, IndexedDB, preview, types (1,200+ lines)
 │   ├── panel-manager.js    # Layout resizing, toggling, persistence (200 lines)
 │   ├── editor.js           # Monaco setup, Vega rendering, dataset resolution (150 lines)
-│   └── app.js              # Event handlers, initialization (197 lines)
-└── styles.css              # Retro Windows 2000 aesthetic
+│   └── app.js              # Event handlers, initialization (250+ lines)
+└── styles.css              # Retro Windows 2000 aesthetic (280+ lines)
 ```
 
-**Total JS Lines**: ~2,238 lines (excluding comments and blank lines)
+**Total JS Lines**: ~2,900+ lines (excluding comments and blank lines)
 
 ---
 
@@ -242,7 +295,11 @@ src/
 
 ## 📝 **Next Steps**
 
-- Choose a feature number (1-12) to review in detail
-- Analyze code for that feature to ensure all parts are necessary
-- Remove dead code or consolidate redundancies
-- Document any optimizations made
+### Phase 12 Complete! All dataset features implemented.
+
+**Potential Next Phases**:
+- **Phase 13**: Polish & UX Refinements (keyboard shortcuts, tooltips, loading states)
+- **Phase 14**: Advanced Snippet Features (tagging system, templates, bulk operations)
+- **Phase 15**: Authentication & Backend (cloud sync, sharing)
+
+**Current Priority**: Code review and optimization of Phase 12 features if needed.
