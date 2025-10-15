@@ -377,38 +377,178 @@ function closeDatasetManager() {
     window.currentDatasetId = null;
 }
 
-// Update format hint and placeholder
-function updateFormatHint(format) {
-    const hintEl = document.getElementById('dataset-format-hint');
-    const dataEl = document.getElementById('dataset-form-data');
+// Auto-detect data format from pasted content
+function detectDataFormat(text) {
+    text = text.trim();
 
-    if (format === 'json') {
-        hintEl.textContent = 'JSON array of objects: [{"col1": "value", "col2": 123}, ...]';
-        dataEl.placeholder = '[{"col1": "value", "col2": 123}, ...]';
-    } else if (format === 'csv') {
-        hintEl.textContent = 'CSV with header row: col1,col2\\nvalue1,123\\nvalue2,456';
-        dataEl.placeholder = 'col1,col2\nvalue1,123\nvalue2,456';
-    } else if (format === 'tsv') {
-        hintEl.textContent = 'TSV with header row: col1\\tcol2\\nvalue1\\t123\\nvalue2\\t456';
-        dataEl.placeholder = 'col1\tcol2\nvalue1\t123\nvalue2\t456';
-    } else if (format === 'topojson') {
-        hintEl.textContent = 'TopoJSON object: {"type": "Topology", "objects": {...}, "arcs": [...]}';
-        dataEl.placeholder = '{"type": "Topology", "objects": {...}}';
+    // Try JSON first
+    try {
+        const parsed = JSON.parse(text);
+
+        // Check if it's TopoJSON
+        if (parsed && typeof parsed === 'object' && parsed.type === 'Topology') {
+            return { format: 'topojson', parsed, confidence: 'high' };
+        }
+
+        // Check if it's JSON array
+        if (Array.isArray(parsed)) {
+            return { format: 'json', parsed, confidence: 'high' };
+        }
+
+        // Could be TopoJSON or other JSON object
+        return { format: 'json', parsed, confidence: 'medium' };
+    } catch (e) {
+        // Not JSON, continue checking
+    }
+
+    // Check for CSV/TSV
+    const lines = text.split('\n').filter(line => line.trim());
+    if (lines.length >= 2) {
+        const firstLine = lines[0];
+
+        // Count delimiters
+        const commaCount = (firstLine.match(/,/g) || []).length;
+        const tabCount = (firstLine.match(/\t/g) || []).length;
+
+        // TSV detection
+        if (tabCount > 0 && tabCount > commaCount) {
+            // Verify consistency across rows
+            const isConsistent = lines.slice(0, 5).every(line =>
+                (line.match(/\t/g) || []).length === tabCount
+            );
+
+            if (isConsistent) {
+                return { format: 'tsv', parsed: text, confidence: 'high' };
+            }
+        }
+
+        // CSV detection
+        if (commaCount > 0) {
+            // Basic consistency check (at least 2 rows with similar comma count)
+            const isConsistent = lines.slice(0, 5).every(line => {
+                const count = (line.match(/,/g) || []).length;
+                return Math.abs(count - commaCount) <= 1; // Allow 1 comma difference
+            });
+
+            if (isConsistent) {
+                return { format: 'csv', parsed: text, confidence: 'medium' };
+            }
+        }
+    }
+
+    return { format: null, parsed: null, confidence: 'low' };
+}
+
+// Check if text is a URL
+function isURL(text) {
+    try {
+        const url = new URL(text.trim());
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (e) {
+        return false;
     }
 }
 
-// Toggle between URL and inline data inputs
-function toggleDataSource(source) {
-    const urlGroup = document.getElementById('dataset-url-group');
-    const dataGroup = document.getElementById('dataset-data-group');
+// Detect format from URL extension
+function detectFormatFromURL(url) {
+    const urlLower = url.toLowerCase();
+    if (urlLower.endsWith('.json')) return 'json';
+    if (urlLower.endsWith('.csv')) return 'csv';
+    if (urlLower.endsWith('.tsv') || urlLower.endsWith('.tab')) return 'tsv';
+    if (urlLower.endsWith('.topojson')) return 'topojson';
+    return null;
+}
 
-    if (source === 'url') {
-        urlGroup.style.display = 'block';
-        dataGroup.style.display = 'none';
-    } else {
-        urlGroup.style.display = 'none';
-        dataGroup.style.display = 'block';
+// Fetch and detect format from URL
+async function fetchAndDetectURL(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const text = await response.text();
+        const detected = detectDataFormat(text);
+
+        // If no format detected from content, try URL extension
+        if (!detected.format) {
+            const formatFromURL = detectFormatFromURL(url);
+            if (formatFromURL) {
+                return {
+                    format: formatFromURL,
+                    content: text,
+                    confidence: 'low',
+                    source: 'url'
+                };
+            }
+        }
+
+        return {
+            format: detected.format,
+            content: text,
+            parsed: detected.parsed,
+            confidence: detected.confidence,
+            source: 'url'
+        };
+    } catch (error) {
+        throw new Error(`Failed to fetch URL: ${error.message}`);
     }
+}
+
+// Show detected format confirmation UI
+function showDetectionConfirmation(detection, originalInput) {
+    const confirmEl = document.getElementById('dataset-detection-confirm');
+    const detectedFormatEl = document.getElementById('detected-format');
+    const detectedSourceEl = document.getElementById('detected-source');
+    const detectedPreviewEl = document.getElementById('detected-preview');
+    const detectedConfidenceEl = document.getElementById('detected-confidence');
+
+    confirmEl.style.display = 'block';
+
+    // Show detected format
+    detectedFormatEl.textContent = detection.format ? detection.format.toUpperCase() : 'Unknown';
+
+    // Show source
+    detectedSourceEl.textContent = detection.source === 'url' ? 'URL' : 'Inline Data';
+
+    // Show confidence indicator
+    const confidenceClass = detection.confidence === 'high' ? 'high' :
+                           detection.confidence === 'medium' ? 'medium' : 'low';
+    detectedConfidenceEl.className = `detected-confidence ${confidenceClass}`;
+    detectedConfidenceEl.textContent = `${detection.confidence} confidence`;
+
+    // Show preview
+    let previewText = '';
+    if (detection.source === 'url') {
+        previewText = `URL: ${originalInput}\n\n`;
+        if (detection.content) {
+            const lines = detection.content.split('\n');
+            previewText += `Preview (first 10 lines):\n${lines.slice(0, 10).join('\n')}`;
+            if (lines.length > 10) {
+                previewText += `\n... (${lines.length - 10} more lines)`;
+            }
+        }
+    } else {
+        const lines = originalInput.split('\n');
+        previewText = lines.slice(0, 15).join('\n');
+        if (lines.length > 15) {
+            previewText += `\n... (${lines.length - 15} more lines)`;
+        }
+    }
+    detectedPreviewEl.textContent = previewText;
+
+    // Store detection data for later use
+    window.currentDetection = {
+        ...detection,
+        originalInput
+    };
+}
+
+// Hide detection confirmation UI
+function hideDetectionConfirmation() {
+    const confirmEl = document.getElementById('dataset-detection-confirm');
+    confirmEl.style.display = 'none';
+    window.currentDetection = null;
 }
 
 // Show new dataset form
@@ -416,41 +556,60 @@ function showNewDatasetForm() {
     document.getElementById('dataset-list-view').style.display = 'none';
     document.getElementById('dataset-form-view').style.display = 'block';
     document.getElementById('dataset-form-name').value = '';
-    document.getElementById('dataset-form-data').value = '';
-    document.getElementById('dataset-form-url').value = '';
+    document.getElementById('dataset-form-input').value = '';
     document.getElementById('dataset-form-comment').value = '';
     document.getElementById('dataset-form-error').textContent = '';
 
-    // Reset to inline data source and JSON format
-    document.querySelectorAll('[data-source]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.source === 'inline');
-    });
-    document.querySelectorAll('[data-format]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.format === 'json');
-    });
-    toggleDataSource('inline');
-    updateFormatHint('json');
+    // Hide detection confirmation
+    hideDetectionConfirmation();
 
-    // Add listeners if not already added
+    // Add paste handler if not already added
     if (!window.datasetListenersAdded) {
-        // Source toggle button listeners
-        document.querySelectorAll('[data-source]').forEach(btn => {
-            btn.addEventListener('click', function () {
-                // Update active state
-                document.querySelectorAll('[data-source]').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                toggleDataSource(this.dataset.source);
-            });
-        });
+        const inputEl = document.getElementById('dataset-form-input');
 
-        // Format toggle button listeners
-        document.querySelectorAll('[data-format]').forEach(btn => {
-            btn.addEventListener('click', function () {
-                // Update active state
-                document.querySelectorAll('[data-format]').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                updateFormatHint(this.dataset.format);
-            });
+        // Handle paste/input with auto-detection
+        inputEl.addEventListener('input', async function () {
+            const text = this.value.trim();
+            if (!text) {
+                hideDetectionConfirmation();
+                return;
+            }
+
+            const errorEl = document.getElementById('dataset-form-error');
+            errorEl.textContent = '';
+
+            // Check if it's a URL
+            if (isURL(text)) {
+                errorEl.textContent = 'Fetching and analyzing URL...';
+
+                try {
+                    const detection = await fetchAndDetectURL(text);
+                    errorEl.textContent = '';
+
+                    if (detection.format) {
+                        showDetectionConfirmation(detection, text);
+                    } else {
+                        errorEl.textContent = 'Could not detect data format from URL. Please check the URL or try pasting the data directly.';
+                        hideDetectionConfirmation();
+                    }
+                } catch (error) {
+                    errorEl.textContent = error.message;
+                    hideDetectionConfirmation();
+                }
+            } else {
+                // Inline data - detect format
+                const detection = detectDataFormat(text);
+
+                if (detection.format) {
+                    showDetectionConfirmation({
+                        ...detection,
+                        source: 'inline'
+                    }, text);
+                } else {
+                    errorEl.textContent = 'Could not detect data format. Please ensure your data is valid JSON, CSV, or TSV.';
+                    hideDetectionConfirmation();
+                }
+            }
         });
 
         window.datasetListenersAdded = true;
@@ -466,8 +625,6 @@ function hideNewDatasetForm() {
 // Save new dataset
 async function saveNewDataset() {
     const name = document.getElementById('dataset-form-name').value.trim();
-    const source = document.querySelector('[data-source].active').dataset.source;
-    const format = document.querySelector('[data-format].active').dataset.format;
     const comment = document.getElementById('dataset-form-comment').value.trim();
     const errorEl = document.getElementById('dataset-form-error');
 
@@ -479,68 +636,55 @@ async function saveNewDataset() {
         return;
     }
 
+    // Check if we have detected data
+    if (!window.currentDetection || !window.currentDetection.format) {
+        errorEl.textContent = 'Please paste data or URL to detect format';
+        return;
+    }
+
+    const detection = window.currentDetection;
+    const { format, source, originalInput } = detection;
+
     let data;
     let metadata = null;
 
     if (source === 'url') {
-        const url = document.getElementById('dataset-form-url').value.trim();
-        if (!url) {
-            errorEl.textContent = 'URL is required';
-            return;
-        }
-        // Basic URL validation
-        try {
-            new URL(url);
-        } catch (error) {
-            errorEl.textContent = 'Invalid URL format';
-            return;
-        }
+        // For URL, we already fetched the content
+        data = originalInput; // Store the URL string
 
-        // Fetch metadata from URL
-        errorEl.textContent = 'Fetching data from URL...';
-        try {
-            metadata = await fetchURLMetadata(url, format);
-            errorEl.textContent = '';
-        } catch (error) {
-            errorEl.textContent = `Warning: ${error.message}. Dataset will be created without metadata.`;
-            // Continue anyway - URL might require CORS or auth
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Show warning briefly
-            errorEl.textContent = '';
+        // Calculate metadata from fetched content
+        if (detection.content) {
+            try {
+                metadata = calculateDatasetStats(
+                    detection.parsed || detection.content,
+                    format,
+                    'inline'
+                );
+                // Override to use actual content size
+                metadata.size = new Blob([detection.content]).size;
+            } catch (error) {
+                console.warn('Failed to calculate metadata:', error);
+            }
         }
-
-        data = url; // Store the URL string
     } else {
         // Inline data
-        const dataText = document.getElementById('dataset-form-data').value.trim();
-        if (!dataText) {
-            errorEl.textContent = 'Data is required';
-            return;
-        }
-
-        // Basic validation of data format
-        try {
-            if (format === 'json' || format === 'topojson') {
-                const parsed = JSON.parse(dataText);
-                if (format === 'json' && !Array.isArray(parsed)) {
-                    errorEl.textContent = 'JSON data must be an array of objects';
-                    return;
-                }
-                if (format === 'json' && parsed.length === 0) {
-                    errorEl.textContent = 'Data array cannot be empty';
-                    return;
-                }
-                data = parsed; // Store as parsed JSON
-            } else if (format === 'csv' || format === 'tsv') {
-                const lines = dataText.trim().split('\n');
-                if (lines.length < 2) {
-                    errorEl.textContent = `${format.toUpperCase()} must have at least a header row and one data row`;
-                    return;
-                }
-                data = dataText; // Store as raw CSV/TSV string
+        if (format === 'json' || format === 'topojson') {
+            if (!detection.parsed) {
+                errorEl.textContent = 'Invalid JSON data';
+                return;
             }
-        } catch (error) {
-            errorEl.textContent = `Validation error: ${error.message}`;
-            return;
+            if (format === 'json' && Array.isArray(detection.parsed) && detection.parsed.length === 0) {
+                errorEl.textContent = 'Data array cannot be empty';
+                return;
+            }
+            data = detection.parsed;
+        } else if (format === 'csv' || format === 'tsv') {
+            const lines = originalInput.trim().split('\n');
+            if (lines.length < 2) {
+                errorEl.textContent = `${format.toUpperCase()} must have at least a header row and one data row`;
+                return;
+            }
+            data = originalInput.trim();
         }
     }
 

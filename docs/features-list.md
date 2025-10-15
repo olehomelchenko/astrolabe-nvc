@@ -129,9 +129,13 @@
 - Copy reference button (generates `"data": {"name": "..."}`)
 - Delete dataset with confirmation
 - Refresh metadata button for URL datasets (🔄)
-- Automatic metadata calculation on creation
+- **Auto-detection system**:
+  - Single input field for data or URL
+  - Automatic URL detection and content fetching
+  - Format detection (JSON, CSV, TSV, TopoJSON)
+  - Confidence scoring (high/medium/low)
+  - Visual confirmation with badges and preview
 - URL fetching with CORS error handling
-- Button-group UI for source/format selection
 - Unique dataset name constraint (IndexedDB index)
 - Empty state message for no datasets
 
@@ -197,14 +201,14 @@ src/
 ├── js/
 │   ├── config.js           # Global variables, settings, sample data
 │   ├── snippet-manager.js  # Snippet CRUD, storage, search, sort (977 lines)
-│   ├── dataset-manager.js  # Dataset CRUD, IndexedDB, formats (637 lines)
+│   ├── dataset-manager.js  # Dataset CRUD, IndexedDB, auto-detection (714 lines)
 │   ├── panel-manager.js    # Layout resizing, toggling, persistence (200 lines)
 │   ├── editor.js           # Monaco setup, Vega rendering, dataset resolution (150 lines)
 │   └── app.js              # Event handlers, initialization (197 lines)
 └── styles.css              # Retro Windows 2000 aesthetic
 ```
 
-**Total JS Lines**: ~2,161 lines (excluding comments and blank lines)
+**Total JS Lines**: ~2,238 lines (excluding comments and blank lines)
 
 ---
 

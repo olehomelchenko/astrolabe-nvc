@@ -199,6 +199,12 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - Support for multiple data sources:
   - **Inline data**: JSON, CSV, TSV, TopoJSON stored directly
   - **URL data**: Remote data sources with format specification
+- **Intelligent auto-detection system**:
+  - Single input field for data or URL
+  - Automatic URL detection and content fetching
+  - Format detection from content (JSON, CSV, TSV, TopoJSON)
+  - Confidence scoring (high/medium/low)
+  - Visual confirmation UI with badges and preview
 - Automatic metadata calculation:
   - Row count, column count, column names
   - Data size in bytes
@@ -217,7 +223,6 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
   - CSV/TSV: `{ values: data, format: { type: 'csv'/'tsv' } }`
   - TopoJSON: `{ values: data, format: { type: 'topojson' } }`
   - URL: `{ url: "...", format: { type: '...' } }`
-- Button-group UI for source/format selection (matches editor style)
 - Graceful error handling for CORS and network failures
 - Modal scrolling support for small viewports
 
@@ -246,6 +251,12 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - Vega-Lite's native format parsers used for rendering
 - Metadata refresh fetches live data and updates statistics
 - Modal resizes with viewport (max-height: 90vh)
+- **Auto-detection algorithms**:
+  - URL validation with protocol check (http/https)
+  - JSON parsing with TopoJSON identification
+  - CSV/TSV detection via delimiter counting and consistency checks
+  - Format inference from URL file extensions
+  - Debounced input handling for real-time feedback
 
 ---
 
@@ -388,10 +399,11 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
   - Multi-format support: JSON, CSV, TSV, TopoJSON
   - Multi-source support: Inline data and URL references
   - Modal-based Dataset Manager with full CRUD
+  - Intelligent auto-detection (URL/format/confidence)
+  - Visual confirmation UI with badges and preview
   - Automatic metadata calculation and display
   - URL metadata fetching and refresh
   - Dataset reference resolution in Vega-Lite specs
-  - Button-group UI for source/format selection
 - Retro Windows 2000 aesthetic throughout
 
 ### Technical Implementation
@@ -411,3 +423,4 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Dataset Resolution**: Async spec transformation before rendering, format-aware data injection
 - **URL Metadata**: Fetch on creation with graceful CORS error handling
 - **Modal UI**: Flexbox with overflow:auto, max-height responsive to viewport
+- **Auto-detection**: URL validation, JSON/CSV/TSV parsing, confidence scoring, real-time feedback

@@ -227,37 +227,25 @@
                         </div>
 
                         <div class="dataset-form-group">
-                            <div class="dataset-toggle-row">
-                                <div class="dataset-toggle-section">
-                                    <span class="dataset-toggle-label">Source:</span>
-                                    <div class="dataset-toggle-group">
-                                        <button class="dataset-toggle-btn active" data-source="inline" type="button">Inline</button>
-                                        <button class="dataset-toggle-btn" data-source="url" type="button">URL</button>
-                                    </div>
-                                </div>
-                                <div class="dataset-toggle-section">
-                                    <span class="dataset-toggle-label">Format:</span>
-                                    <div class="dataset-toggle-group">
-                                        <button class="dataset-toggle-btn active" data-format="json" type="button">JSON</button>
-                                        <button class="dataset-toggle-btn" data-format="csv" type="button">CSV</button>
-                                        <button class="dataset-toggle-btn" data-format="tsv" type="button">TSV</button>
-                                        <button class="dataset-toggle-btn" data-format="topojson" type="button">TopoJSON</button>
-                                    </div>
-                                </div>
+                            <label class="dataset-form-label">Data or URL *</label>
+                            <div class="dataset-format-hint">
+                                Paste your data (JSON, CSV, or TSV) or a URL. Format will be detected automatically.
                             </div>
+                            <textarea id="dataset-form-input" class="dataset-textarea" placeholder="Paste data or URL here..." rows="12"></textarea>
                         </div>
 
-                        <div class="dataset-form-group" id="dataset-url-group" style="display: none;">
-                            <label class="dataset-form-label">URL *</label>
-                            <input type="text" id="dataset-form-url" class="dataset-input" placeholder="https://example.com/data.csv" />
-                        </div>
-
-                        <div class="dataset-form-group" id="dataset-data-group">
-                            <label class="dataset-form-label">Data *</label>
-                            <div class="dataset-format-hint" id="dataset-format-hint">
-                                JSON array of objects: [{"col1": "value", "col2": 123}, ...]
+                        <!-- Detection Confirmation UI -->
+                        <div id="dataset-detection-confirm" class="dataset-detection-confirm" style="display: none;">
+                            <div class="detection-header">
+                                <span class="detection-title">Detected:</span>
+                                <div class="detection-badges">
+                                    <span class="detection-badge" id="detected-format">JSON</span>
+                                    <span class="detection-badge" id="detected-source">Inline</span>
+                                    <span class="detected-confidence high" id="detected-confidence">high confidence</span>
+                                </div>
                             </div>
-                            <textarea id="dataset-form-data" class="dataset-textarea" placeholder='[{"col1": "value", "col2": 123}, ...]' rows="12"></textarea>
+                            <div class="detection-preview-label">Preview:</div>
+                            <pre id="detected-preview" class="detection-preview-box"></pre>
                         </div>
 
                         <div class="dataset-form-group">

@@ -1014,6 +1014,87 @@ body {
     border: 1px solid #e0e0a0;
 }
 
+/* Detection Confirmation UI */
+.dataset-detection-confirm {
+    margin: 12px 0;
+    padding: 12px;
+    background: #e8f4f8;
+    border: 2px solid #4a90c5;
+    border-radius: 4px;
+}
+
+.detection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.detection-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: #000000;
+}
+
+.detection-badges {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.detection-badge {
+    background: #316ac5;
+    color: #ffffff;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: bold;
+    border: 1px solid #0a246a;
+    border-radius: 2px;
+}
+
+.detected-confidence {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-weight: normal;
+}
+
+.detected-confidence.high {
+    background: #90ee90;
+    color: #000000;
+    border: 1px solid #60c060;
+}
+
+.detected-confidence.medium {
+    background: #ffff90;
+    color: #000000;
+    border: 1px solid #d0d060;
+}
+
+.detected-confidence.low {
+    background: #ffb080;
+    color: #000000;
+    border: 1px solid #d08050;
+}
+
+.detection-preview-label {
+    font-size: 10px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #000000;
+}
+
+.detection-preview-box {
+    background: #ffffff;
+    border: 2px inset #c0c0c0;
+    padding: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    overflow: auto;
+    max-height: 150px;
+    margin: 0;
+}
+
 .dataset-form-error {
     color: #ff0000;
     font-size: 11px;
