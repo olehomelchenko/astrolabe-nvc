@@ -30,16 +30,16 @@
     <div class="app-container">
         <!-- Toggle Button Strip -->
         <div class="toggle-strip">
-            <button class="toggle-btn active" id="toggle-snippet-panel" title="Toggle Snippets Panel">
+            <button class="btn btn-icon xlarge active" id="toggle-snippet-panel" title="Toggle Snippets Panel">
                 📄
             </button>
-            <button class="toggle-btn active" id="toggle-editor-panel" title="Toggle Editor Panel">
+            <button class="btn btn-icon xlarge active" id="toggle-editor-panel" title="Toggle Editor Panel">
                 ✏️
             </button>
-            <button class="toggle-btn active" id="toggle-preview-panel" title="Toggle Preview Panel">
+            <button class="btn btn-icon xlarge active" id="toggle-preview-panel" title="Toggle Preview Panel">
                 👁️
             </button>
-            <button class="toggle-btn" id="toggle-datasets" title="Datasets">
+            <button class="btn btn-icon xlarge" id="toggle-datasets" title="Datasets">
                 📁
             </button>
         </div>
@@ -67,7 +67,7 @@
                 </div>
                 <div class="search-controls">
                     <input type="text" id="snippet-search" placeholder="Search snippets..." />
-                    <button class="search-clear-btn" id="search-clear" title="Clear search">×</button>
+                    <button class="btn btn-icon" id="search-clear" title="Clear search">×</button>
                 </div>
                 <div class="panel-content">
                     <ul class="snippet-list">
@@ -78,10 +78,10 @@
                     </div>
                     <div class="snippet-meta" id="snippet-meta" style="display: none;">
                         <div class="meta-header">Name</div>
-                        <input type="text" id="snippet-name" placeholder="Snippet name..." />
+                        <input type="text" id="snippet-name" class="input small" placeholder="Snippet name..." />
 
                         <div class="meta-header">Comment</div>
-                        <textarea id="snippet-comment" placeholder="Add a comment..." rows="3"></textarea>
+                        <textarea id="snippet-comment" class="input textarea medium" placeholder="Add a comment..." rows="3"></textarea>
 
                         <div class="meta-info">
                             <div class="meta-info-item">
@@ -95,8 +95,8 @@
                         </div>
 
                         <div class="meta-actions">
-                            <button class="meta-btn" id="duplicate-btn">Duplicate</button>
-                            <button class="meta-btn delete-btn" id="delete-btn">Delete</button>
+                            <button class="btn btn-standard flex" id="duplicate-btn">Duplicate</button>
+                            <button class="btn btn-standard flex danger" id="delete-btn">Delete</button>
                         </div>
                     </div>
                     <div class="storage-monitor" id="storage-monitor">
@@ -119,12 +119,12 @@
                 <div class="panel-header">
                     <span>Editor</span>
                     <div class="editor-controls">
-                        <button class="action-btn publish-btn" id="publish-btn">Publish</button>
-                        <button class="action-btn revert-btn" id="revert-btn">Revert</button>
+                        <button class="btn btn-action publish" id="publish-btn">Publish</button>
+                        <button class="btn btn-action revert" id="revert-btn">Revert</button>
                         <span class="view-label">View:</span>
                         <div class="view-toggle-group">
-                            <button class="view-toggle-btn active" id="view-draft">Draft</button>
-                            <button class="view-toggle-btn" id="view-published">Published</button>
+                            <button class="btn btn-toggle active" id="view-draft">Draft</button>
+                            <button class="btn btn-toggle" id="view-published">Published</button>
                         </div>
                     </div>
                 </div>
@@ -153,13 +153,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <span class="modal-title">Dataset Manager</span>
-                <button class="modal-close" id="dataset-modal-close">×</button>
+                <button class="btn btn-icon" id="dataset-modal-close">×</button>
             </div>
             <div class="modal-body">
                 <!-- List View (default) -->
                 <div id="dataset-list-view" class="dataset-view">
                     <div class="dataset-list-header">
-                        <button class="modal-btn primary" id="new-dataset-btn">New Dataset</button>
+                        <button class="btn btn-modal primary" id="new-dataset-btn">New Dataset</button>
                     </div>
                     <div class="dataset-container">
                         <div class="dataset-list" id="dataset-list">
@@ -168,48 +168,48 @@
                         <div class="dataset-details" id="dataset-details" style="display: none;">
                             <div class="dataset-detail-section">
                                 <div class="dataset-detail-header">Name</div>
-                                <input type="text" id="dataset-detail-name" class="dataset-input" placeholder="Dataset name..." />
+                                <input type="text" id="dataset-detail-name" class="input" placeholder="Dataset name..." />
 
                                 <div class="dataset-detail-header">Comment</div>
-                                <textarea id="dataset-detail-comment" class="dataset-textarea" placeholder="Add a comment..." rows="3"></textarea>
+                                <textarea id="dataset-detail-comment" class="input textarea" placeholder="Add a comment..." rows="3"></textarea>
 
                                 <div class="dataset-detail-header-row">
                                     <span class="dataset-detail-header">Statistics</span>
-                                    <button class="dataset-refresh-btn" id="refresh-metadata-btn" style="display: none;" title="Refresh metadata from URL">🔄</button>
+                                    <button class="btn btn-icon large" id="refresh-metadata-btn" style="display: none;" title="Refresh metadata from URL">🔄</button>
                                 </div>
-                                <div class="dataset-stats">
-                                    <div class="dataset-stat-item">
-                                        <span class="dataset-stat-label">Rows:</span>
+                                <div class="stats-box">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Rows:</span>
                                         <span id="dataset-detail-rows">0</span>
                                     </div>
-                                    <div class="dataset-stat-item">
-                                        <span class="dataset-stat-label">Columns:</span>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Columns:</span>
                                         <span id="dataset-detail-columns">0</span>
                                     </div>
-                                    <div class="dataset-stat-item">
-                                        <span class="dataset-stat-label">Size:</span>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Size:</span>
                                         <span id="dataset-detail-size">0 B</span>
                                     </div>
                                 </div>
 
                                 <div class="dataset-detail-header">Timestamps</div>
-                                <div class="dataset-stats">
-                                    <div class="dataset-stat-item">
-                                        <span class="dataset-stat-label">Created:</span>
+                                <div class="stats-box">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Created:</span>
                                         <span id="dataset-detail-created">-</span>
                                     </div>
-                                    <div class="dataset-stat-item">
-                                        <span class="dataset-stat-label">Modified:</span>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Modified:</span>
                                         <span id="dataset-detail-modified">-</span>
                                     </div>
                                 </div>
 
                                 <div class="dataset-detail-header">Preview</div>
-                                <pre id="dataset-preview" class="dataset-preview-box"></pre>
+                                <pre id="dataset-preview" class="preview-box large"></pre>
 
                                 <div class="dataset-actions">
-                                    <button class="modal-btn" id="copy-reference-btn">Copy Reference</button>
-                                    <button class="modal-btn delete-btn" id="delete-dataset-btn">Delete</button>
+                                    <button class="btn btn-modal" id="copy-reference-btn">Copy Reference</button>
+                                    <button class="btn btn-modal danger" id="delete-dataset-btn">Delete</button>
                                 </div>
                             </div>
                         </div>
@@ -223,7 +223,7 @@
 
                         <div class="dataset-form-group">
                             <label class="dataset-form-label">Name *</label>
-                            <input type="text" id="dataset-form-name" class="dataset-input" placeholder="Enter dataset name..." />
+                            <input type="text" id="dataset-form-name" class="input" placeholder="Enter dataset name..." />
                         </div>
 
                         <div class="dataset-form-group">
@@ -231,7 +231,7 @@
                             <div class="dataset-format-hint">
                                 Paste your data (JSON, CSV, or TSV) or a URL. Format will be detected automatically.
                             </div>
-                            <textarea id="dataset-form-input" class="dataset-textarea" placeholder="Paste data or URL here..." rows="12"></textarea>
+                            <textarea id="dataset-form-input" class="input textarea" placeholder="Paste data or URL here..." rows="12"></textarea>
                         </div>
 
                         <!-- Detection Confirmation UI -->
@@ -245,19 +245,19 @@
                                 </div>
                             </div>
                             <div class="detection-preview-label">Preview:</div>
-                            <pre id="detected-preview" class="detection-preview-box"></pre>
+                            <pre id="detected-preview" class="preview-box medium"></pre>
                         </div>
 
                         <div class="dataset-form-group">
                             <label class="dataset-form-label">Comment</label>
-                            <textarea id="dataset-form-comment" class="dataset-textarea" placeholder="Optional description..." rows="3"></textarea>
+                            <textarea id="dataset-form-comment" class="input textarea" placeholder="Optional description..." rows="3"></textarea>
                         </div>
 
                         <div class="dataset-form-error" id="dataset-form-error"></div>
 
                         <div class="dataset-form-actions">
-                            <button class="modal-btn primary" id="save-dataset-btn">Save Dataset</button>
-                            <button class="modal-btn" id="cancel-dataset-btn">Cancel</button>
+                            <button class="btn btn-modal primary" id="save-dataset-btn">Save Dataset</button>
+                            <button class="btn btn-modal" id="cancel-dataset-btn">Cancel</button>
                         </div>
                     </div>
                 </div>
