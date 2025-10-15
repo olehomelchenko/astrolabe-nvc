@@ -2,7 +2,6 @@
 
 // Storage limits (5MB in bytes)
 const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
-const WARNING_THRESHOLD = 0.9; // 90% = 4.5MB
 
 // Generate unique ID using Date.now() + random numbers
 function generateSnippetId() {
@@ -331,12 +330,7 @@ function toggleSort(sortType) {
     renderSnippetList();
 
     // Restore selection if there was one
-    if (window.currentSnippetId) {
-        const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
-        if (selectedItem) {
-            selectedItem.classList.add('selected');
-        }
-    }
+    restoreSnippetSelection();
 }
 
 // Initialize search controls
@@ -402,6 +396,23 @@ function updateClearButton() {
     if (clearButton && searchInput) {
         clearButton.disabled = !searchInput.value.trim();
     }
+}
+
+// Helper: Get currently selected snippet
+function getCurrentSnippet() {
+    return window.currentSnippetId ? SnippetStorage.getSnippet(window.currentSnippetId) : null;
+}
+
+// Helper: Restore visual selection state for current snippet
+function restoreSnippetSelection() {
+    if (window.currentSnippetId) {
+        const item = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+        if (item) {
+            item.classList.add('selected');
+            return item;
+        }
+    }
+    return null;
 }
 
 // Clear current selection and hide meta panel
@@ -504,7 +515,7 @@ function autoSaveDraft() {
 
     try {
         const currentSpec = JSON.parse(editor.getValue());
-        const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+        const snippet = getCurrentSnippet();
 
         if (snippet) {
             snippet.draftSpec = currentSpec;
@@ -513,8 +524,7 @@ function autoSaveDraft() {
             // Refresh snippet list to update status light
             renderSnippetList();
             // Restore selection
-            const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
-            if (selectedItem) selectedItem.classList.add('selected');
+            restoreSnippetSelection();
 
             // Update button states
             updateViewModeUI(snippet);
@@ -530,8 +540,8 @@ function debouncedAutoSave() {
     if (window.isUpdatingEditor) return;
 
     // If viewing published and no draft exists, create draft automatically
-    if (currentViewMode === 'published' && window.currentSnippetId) {
-        const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    if (currentViewMode === 'published') {
+        const snippet = getCurrentSnippet();
         if (snippet) {
             const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
             if (!hasDraft) {
@@ -588,13 +598,11 @@ function initializeAutoSave() {
 
 // Save meta fields (name and comment) for the selected snippet
 function autoSaveMeta() {
-    if (!window.currentSnippetId) return;
-
     const nameField = document.getElementById('snippet-name');
     const commentField = document.getElementById('snippet-comment');
     if (!nameField || !commentField) return;
 
-    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    const snippet = getCurrentSnippet();
     if (snippet) {
         snippet.name = nameField.value.trim() || generateSnippetName();
         snippet.comment = commentField.value;
@@ -604,10 +612,7 @@ function autoSaveMeta() {
         renderSnippetList();
 
         // Restore selection after re-render
-        const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
-        if (selectedItem) {
-            selectedItem.classList.add('selected');
-        }
+        restoreSnippetSelection();
     }
 }
 
@@ -681,25 +686,6 @@ function deleteSnippet(snippetId) {
     return false;
 }
 
-// Rename snippet
-function renameSnippet(snippetId, newName) {
-    const snippet = SnippetStorage.getSnippet(snippetId);
-    if (!snippet) return false;
-
-    snippet.name = newName.trim() || generateSnippetName();
-    SnippetStorage.saveSnippet(snippet);
-
-    // Refresh the list to show new name
-    renderSnippetList();
-
-    // Restore selection if this was the selected snippet
-    if (window.currentSnippetId === snippetId) {
-        document.querySelector(`[data-snippet-id="${snippetId}"]`).classList.add('selected');
-    }
-
-    return true;
-}
-
 // Load snippet into editor based on view mode
 function loadSnippetIntoEditor(snippet) {
     if (!editor) return;
@@ -754,10 +740,8 @@ function updateViewModeUI(snippet) {
 
 // Switch view mode
 function switchViewMode(mode) {
-    if (!window.currentSnippetId) return;
-
     currentViewMode = mode;
-    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    const snippet = getCurrentSnippet();
     if (snippet) {
         loadSnippetIntoEditor(snippet);
         updateViewModeUI(snippet);
@@ -766,9 +750,7 @@ function switchViewMode(mode) {
 
 // Publish draft to spec
 function publishDraft() {
-    if (!window.currentSnippetId) return;
-
-    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    const snippet = getCurrentSnippet();
     if (!snippet) return;
 
     // Copy draftSpec to spec
@@ -777,17 +759,14 @@ function publishDraft() {
 
     // Refresh UI
     renderSnippetList();
-    const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
-    if (selectedItem) selectedItem.classList.add('selected');
+    restoreSnippetSelection();
 
     updateViewModeUI(snippet);
 }
 
 // Revert draft to published spec
 function revertDraft() {
-    if (!window.currentSnippetId) return;
-
-    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+    const snippet = getCurrentSnippet();
     if (!snippet) return;
 
     if (confirm('Revert all draft changes to last published version? This cannot be undone.')) {
@@ -802,8 +781,7 @@ function revertDraft() {
 
         // Refresh UI
         renderSnippetList();
-        const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
-        if (selectedItem) selectedItem.classList.add('selected');
+        restoreSnippetSelection();
 
         updateViewModeUI(snippet);
     }
