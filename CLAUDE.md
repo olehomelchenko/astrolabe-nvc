@@ -18,7 +18,8 @@ Instructions for Claude Code when working on this project.
 ## Current Status
 
 **Completed**: Phases 0-12 (Core functionality + Dataset Management + Advanced Dataset Features)
-**Next**: Phase 13 - Polish & UX Refinements or Phase 14 - Advanced Snippet Features
+**In Progress**: Phase 13 - Polish & UX Refinements (keyboard shortcuts, tooltips, notifications, help documentation)
+**Next**: Complete Phase 13 or move to Phase 14 - Advanced Snippet Features
 
 ### Key Features Implemented
 - ✅ Snippet management with draft/published workflow
@@ -36,6 +37,12 @@ Instructions for Claude Code when working on this project.
   - Import/Export datasets with auto-format detection
   - Table preview with type detection (🔢📅🔤✓)
   - On-demand URL preview loading with caching
+- ✅ **Polish & UX Features (Phase 13 - In Progress)**
+  - Cross-platform keyboard shortcuts (Cmd/Ctrl+Shift+N, Cmd/Ctrl+K, Cmd/Ctrl+S, Escape)
+  - Toast notification system (error, success, warning, info)
+  - Comprehensive tooltips on all interactive elements
+  - Enhanced Help modal with 6 sections
+  - Data persistence warnings
 
 See `docs/dev-plan.md` for complete roadmap and technical details.
 - when updating documentation, do not record intermediate changes - write them always as a matter-of-fact information

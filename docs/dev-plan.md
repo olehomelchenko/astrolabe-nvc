@@ -324,22 +324,32 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 12: Polish & UX Refinements**
+### **Phase 13: Polish & UX Refinements** ⏳ **IN PROGRESS**
 **Goal**: Professional feel and usability
 
-- [ ] Improved visual design (minimal but polished CSS)
-- [ ] Keyboard shortcuts (Ctrl+S to publish, Ctrl+N for new, etc.)
-- [ ] Better error messages and validation feedback
+- [x] **Keyboard shortcuts** - Cross-platform support (Cmd/Ctrl+Shift+N, Cmd/Ctrl+K, Cmd/Ctrl+S, Escape)
+- [x] **Tooltips for buttons and features** - Added to all interactive elements throughout the UI
+- [x] **Better error messages and validation feedback** - Toast notification system with 4 types (error, success, warning, info)
+- [x] **Enhanced Help documentation** - Comprehensive help modal with About, Features, Getting Started, Shortcuts, Storage, and Tips sections
 - [ ] Loading states for rendering
 - [ ] Empty states (no snippets, no datasets)
-- [ ] Tooltips for buttons and features
+- [ ] Improved visual design (minimal but polished CSS)
 - [ ] Cross-browser testing (Chrome, Firefox, Safari)
 
 **Deliverable**: Polished, production-ready MVP
 
+**Completed Features**:
+- Keyboard shortcut system with dual handlers (document-level + Monaco integration)
+- Toast notification system (bottom-right, 4s auto-dismiss, slide animations)
+- Replaced 19 `alert()` calls with contextual toasts
+- Added success feedback for silent operations (publish, duplicate, delete, export, etc.)
+- Comprehensive tooltips with keyboard shortcut hints
+- Data persistence warning in Help section
+- Help modal with 6 sections covering full app functionality
+
 ---
 
-### **Phase 13: Advanced Snippet Features**
+### **Phase 14: Advanced Snippet Features**
 **Goal**: Power user functionality
 
 - [ ] Basic tagging system with tag filtering
@@ -353,7 +363,7 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 14: Authentication & Backend** _(Future)_
+### **Phase 15: Authentication & Backend** _(Future)_
 **Goal**: Multi-device sync and sharing
 
 - [ ] Design minimal backend API
@@ -420,7 +430,8 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 ## Current Status
 
 **Completed**: Phases 0-12 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export, dataset management, URL state management, advanced dataset features)
-**Next**: Phase 13 - Polish & UX Refinements or Phase 14 - Advanced Snippet Features
+**In Progress**: Phase 13 - Polish & UX Refinements (keyboard shortcuts, tooltips, toast notifications, enhanced help complete)
+**Next**: Complete Phase 13 (loading states, empty states) or move to Phase 14 - Advanced Snippet Features
 **See**: `CLAUDE.md` for concise current state summary
 
 ---
@@ -465,6 +476,14 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
   - Table preview with type detection and formatting (🔢📅✓🔤)
   - On-demand URL preview loading with session cache
   - New Snippet creation from datasets
+- **Polish & UX Refinements (Phase 13)** _(In Progress)_:
+  - Cross-platform keyboard shortcuts (Cmd/Ctrl+Shift+N, Cmd/Ctrl+K, Cmd/Ctrl+S, Escape)
+  - Dual keyboard handlers (document-level + Monaco integration)
+  - Toast notification system (error, success, warning, info)
+  - Contextual feedback for all major operations
+  - Comprehensive tooltips with keyboard hints
+  - Enhanced Help modal with 6 sections (About, Features, Getting Started, Shortcuts, Storage, Tips)
+  - Data persistence warning in Help section
 - Retro Windows 2000 aesthetic throughout
 - Component-based CSS architecture with base classes
 
@@ -488,3 +507,6 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Auto-detection**: URL validation, JSON/CSV/TSV parsing, confidence scoring, real-time feedback
 - **URL State Management**: Native Hash API with hashchange listener, initialized after editor ready
 - **CSS Architecture**: Component-based with base classes (.btn, .input, .preview-box) and modifiers
+- **Keyboard Shortcuts**: Dual system with document listeners + Monaco commands for full coverage
+- **Toast Notifications**: Bottom-right positioned, 4s auto-dismiss, slide animations, 4 types (error/success/warning/info)
+- **User Feedback**: Replaced 19 alert() calls with contextual toasts, kept confirm() for destructive actions
