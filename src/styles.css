@@ -11,8 +11,8 @@
     --bg-white: #fff;
     --bg-light: #f0f0f0;
     --bg-lighter: #e0e0e0;
-    --font-main: 'MS Sans Serif', Tahoma, sans-serif;
-    --font-mono: 'Courier New', monospace;
+    --font-main: 'IBM Plex Mono', 'Courier New', Consolas, monospace;
+    --font-mono: 'IBM Plex Mono', 'Courier New', Consolas, monospace;
 }
 
 /* Base */
