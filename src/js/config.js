@@ -133,6 +133,83 @@ const AppSettings = {
     }
 };
 
+// Toast Notification System
+const Toast = {
+    // Auto-dismiss duration in milliseconds
+    DURATION: 4000,
+
+    // Toast counter for unique IDs
+    toastCounter: 0,
+
+    // Show toast notification
+    show(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        // Create toast element
+        const toast = document.createElement('div');
+        const toastId = `toast-${++this.toastCounter}`;
+        toast.id = toastId;
+        toast.className = `toast toast-${type}`;
+
+        // Toast icon based on type
+        const icons = {
+            error: '❌',
+            success: '✓',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        toast.innerHTML = `
+            <span class="toast-icon">${icons[type] || icons.info}</span>
+            <span class="toast-message">${message}</span>
+            <button class="toast-close" onclick="Toast.dismiss('${toastId}')">×</button>
+        `;
+
+        // Add to container
+        container.appendChild(toast);
+
+        // Trigger animation
+        setTimeout(() => toast.classList.add('toast-show'), 10);
+
+        // Auto-dismiss
+        setTimeout(() => this.dismiss(toastId), this.DURATION);
+    },
+
+    // Dismiss specific toast
+    dismiss(toastId) {
+        const toast = document.getElementById(toastId);
+        if (!toast) return;
+
+        toast.classList.remove('toast-show');
+        toast.classList.add('toast-hide');
+
+        // Remove from DOM after animation
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    },
+
+    // Convenience methods
+    error(message) {
+        this.show(message, 'error');
+    },
+
+    success(message) {
+        this.show(message, 'success');
+    },
+
+    warning(message) {
+        this.show(message, 'warning');
+    },
+
+    info(message) {
+        this.show(message, 'info');
+    }
+};
+
 // Shared utility: Format bytes for display
 function formatBytes(bytes) {
     if (bytes === null || bytes === undefined) return 'N/A';

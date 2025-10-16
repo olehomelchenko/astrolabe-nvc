@@ -157,7 +157,7 @@ const SnippetStorage = {
             return true;
         } catch (error) {
             console.error('Failed to save snippets to localStorage:', error);
-            alert('Failed to save: Storage quota may be exceeded. Consider deleting old snippets.');
+            Toast.error('Failed to save: Storage quota may be exceeded. Consider deleting old snippets.');
             return false;
         }
     },
@@ -684,11 +684,11 @@ async function openDatasetByName(datasetName) {
                 selectDataset(dataset.id);
             }, 100);
         } else {
-            alert(`Dataset "${datasetName}" not found. It may have been deleted.`);
+            Toast.error(`Dataset "${datasetName}" not found. It may have been deleted.`);
         }
     } catch (error) {
         console.error('Error opening dataset:', error);
-        alert(`Could not open dataset "${datasetName}".`);
+        Toast.error(`Could not open dataset "${datasetName}".`);
     }
 }
 
@@ -856,6 +856,9 @@ function duplicateSnippet(snippetId) {
     renderSnippetList();
     selectSnippet(newSnippet.id);
 
+    // Show success message
+    Toast.success('Snippet duplicated successfully');
+
     return newSnippet;
 }
 
@@ -891,14 +894,14 @@ function showExtractModal() {
 
     // Check if spec has inline data
     if (!hasInlineData(spec)) {
-        alert('No inline data found in this snippet.');
+        Toast.info('No inline data found in this snippet.');
         return;
     }
 
     // Extract the inline data
     const inlineData = extractInlineDataFromSpec(spec);
     if (!inlineData || inlineData.length === 0) {
-        alert('No inline data could be extracted.');
+        Toast.warning('No inline data could be extracted.');
         return;
     }
 
@@ -988,7 +991,7 @@ async function extractToDataset() {
         hideExtractModal();
 
         // Show success message
-        alert(`Dataset "${datasetName}" created successfully!`);
+        Toast.success(`Dataset "${datasetName}" created successfully!`);
     } catch (error) {
         errorEl.textContent = `Failed to create dataset: ${error.message}`;
     }
@@ -1025,6 +1028,10 @@ function deleteSnippet(snippetId) {
 
         // Refresh the list
         renderSnippetList();
+
+        // Show success message
+        Toast.success('Snippet deleted');
+
         return true;
     }
 
@@ -1111,6 +1118,9 @@ function publishDraft() {
     restoreSnippetSelection();
 
     updateViewModeUI(snippet);
+
+    // Show success message
+    Toast.success('Snippet published successfully!');
 }
 
 // Revert draft to published spec
@@ -1133,6 +1143,9 @@ function revertDraft() {
         restoreSnippetSelection();
 
         updateViewModeUI(snippet);
+
+        // Show success message
+        Toast.success('Draft reverted to published version');
     }
 }
 
@@ -1177,7 +1190,7 @@ function exportSnippets() {
     const snippets = SnippetStorage.loadSnippets();
 
     if (snippets.length === 0) {
-        alert('No snippets to export');
+        Toast.info('No snippets to export');
         return;
     }
 
@@ -1196,6 +1209,9 @@ function exportSnippets() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    // Show success message
+    Toast.success(`Exported ${snippets.length} snippet${snippets.length !== 1 ? 's' : ''}`);
 }
 
 // Normalize external snippet format to Astrolabe format
@@ -1254,7 +1270,7 @@ function importSnippets(fileInput) {
             const snippetsToImport = Array.isArray(importedData) ? importedData : [importedData];
 
             if (snippetsToImport.length === 0) {
-                alert('No snippets found in file');
+                Toast.info('No snippets found in file');
                 return;
             }
 
@@ -1278,13 +1294,13 @@ function importSnippets(fileInput) {
 
             // Save all snippets
             if (SnippetStorage.saveSnippets(existingSnippets)) {
-                alert(`Successfully imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''}`);
+                Toast.success(`Successfully imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''}`);
                 renderSnippetList();
             }
 
         } catch (error) {
             console.error('Import error:', error);
-            alert('Failed to import snippets. Please check that the file is valid JSON.');
+            Toast.error('Failed to import snippets. Please check that the file is valid JSON.');
         }
 
         // Clear file input

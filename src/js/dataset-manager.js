@@ -1164,6 +1164,9 @@ async function deleteCurrentDataset() {
         document.getElementById('dataset-details').style.display = 'none';
         window.currentDatasetId = null;
         await renderDatasetList();
+
+        // Show success message
+        Toast.success('Dataset deleted');
     }
 }
 
@@ -1174,7 +1177,7 @@ async function copyDatasetReference() {
 
     const reference = `"data": {"name": "${dataset.name}"}`;
     await navigator.clipboard.writeText(reference);
-    alert('Dataset reference copied to clipboard!');
+    Toast.success('Dataset reference copied to clipboard!');
 }
 
 // Refresh metadata for URL dataset
@@ -1206,7 +1209,7 @@ async function refreshDatasetMetadata() {
             refreshBtn.disabled = false;
         }, 1000);
     } catch (error) {
-        alert(`Failed to refresh metadata: ${error.message}`);
+        Toast.error(`Failed to refresh metadata: ${error.message}`);
         refreshBtn.textContent = '🔄';
         refreshBtn.disabled = false;
     }
@@ -1289,8 +1292,11 @@ async function exportCurrentDataset() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
+        // Show success message
+        Toast.success(`Dataset "${dataset.name}" exported successfully`);
+
     } catch (error) {
-        alert(`Failed to export dataset: ${error.message}`);
+        Toast.error(`Failed to export dataset: ${error.message}`);
     }
 }
 
@@ -1326,7 +1332,7 @@ async function importDatasetFromFile(fileInput) {
         }
 
         if (!format) {
-            alert('Could not detect data format from file. Please ensure the file contains valid JSON, CSV, or TSV data.');
+            Toast.error('Could not detect data format from file. Please ensure the file contains valid JSON, CSV, or TSV data.');
             return;
         }
 
@@ -1356,14 +1362,14 @@ async function importDatasetFromFile(fileInput) {
         let data;
         if (format === 'json' || format === 'topojson') {
             if (!detection.parsed) {
-                alert('Invalid JSON data in file.');
+                Toast.error('Invalid JSON data in file.');
                 return;
             }
             data = detection.parsed;
         } else if (format === 'csv' || format === 'tsv') {
             const lines = text.trim().split('\n');
             if (lines.length < 2) {
-                alert(`${format.toUpperCase()} file must have at least a header row and one data row.`);
+                Toast.error(`${format.toUpperCase()} file must have at least a header row and one data row.`);
                 return;
             }
             data = text.trim();
@@ -1383,13 +1389,13 @@ async function importDatasetFromFile(fileInput) {
 
         // Show success message with rename notification if applicable
         if (wasRenamed) {
-            alert(`Dataset name "${baseName}" was already taken, so your dataset was automatically renamed to "${datasetName}".`);
+            Toast.warning(`Dataset name "${baseName}" was already taken, so your dataset was automatically renamed to "${datasetName}".`);
         } else {
-            alert(`Dataset "${datasetName}" imported successfully!`);
+            Toast.success(`Dataset "${datasetName}" imported successfully!`);
         }
 
     } catch (error) {
-        alert(`Failed to import dataset: ${error.message}`);
+        Toast.error(`Failed to import dataset: ${error.message}`);
     } finally {
         // Reset file input
         fileInput.value = '';
