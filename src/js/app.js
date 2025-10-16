@@ -1,6 +1,9 @@
 // Application initialization and event handlers
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Initialize user settings
+    initSettings();
+
     // Initialize snippet storage and render list
     initializeSnippetsStorage();
 
@@ -59,16 +62,28 @@ document.addEventListener('DOMContentLoaded', function () {
         // Load Vega libraries before creating editor
         await loadVegaLibraries();
 
+        // Get user settings for editor configuration
+        const editorSettings = getSetting('editor') || {
+            fontSize: 12,
+            theme: 'vs-light',
+            minimap: false,
+            wordWrap: 'on',
+            lineNumbers: 'on',
+            tabSize: 2
+        };
+
         // Create the editor
         editor = monaco.editor.create(document.getElementById('monaco-editor'), {
             value: JSON.stringify(sampleSpec, null, 2),
             language: 'json',
-            theme: 'vs-light',
-            fontSize: 12,
-            minimap: { enabled: false },
+            theme: editorSettings.theme,
+            fontSize: editorSettings.fontSize,
+            minimap: { enabled: editorSettings.minimap },
             scrollBeyondLastLine: false,
             automaticLayout: true,
-            wordWrap: 'on',
+            wordWrap: editorSettings.wordWrap,
+            lineNumbers: editorSettings.lineNumbers,
+            tabSize: editorSettings.tabSize,
             formatOnPaste: true,
             formatOnType: true
         });
@@ -132,6 +147,80 @@ document.addEventListener('DOMContentLoaded', function () {
     if (donateLink) {
         donateLink.addEventListener('click', function () {
             openDonateModal();
+        });
+    }
+
+    // Settings Modal
+    const settingsLink = document.getElementById('settings-link');
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsModalClose = document.getElementById('settings-modal-close');
+    const settingsApplyBtn = document.getElementById('settings-apply-btn');
+    const settingsResetBtn = document.getElementById('settings-reset-btn');
+    const settingsCancelBtn = document.getElementById('settings-cancel-btn');
+
+    if (settingsLink) {
+        settingsLink.addEventListener('click', function () {
+            openSettingsModal();
+        });
+    }
+
+    if (settingsModalClose) {
+        settingsModalClose.addEventListener('click', closeSettingsModal);
+    }
+
+    if (settingsCancelBtn) {
+        settingsCancelBtn.addEventListener('click', closeSettingsModal);
+    }
+
+    if (settingsApplyBtn) {
+        settingsApplyBtn.addEventListener('click', applySettings);
+    }
+
+    if (settingsResetBtn) {
+        settingsResetBtn.addEventListener('click', function() {
+            if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+                resetSettings();
+                loadSettingsIntoUI();
+                Toast.show('Settings reset to defaults', 'success');
+            }
+        });
+    }
+
+    // Close on overlay click
+    if (settingsModal) {
+        settingsModal.addEventListener('click', function (e) {
+            if (e.target === settingsModal) {
+                closeSettingsModal();
+            }
+        });
+    }
+
+    // Settings UI interactions
+    const fontSizeSlider = document.getElementById('setting-font-size');
+    const fontSizeValue = document.getElementById('setting-font-size-value');
+    if (fontSizeSlider && fontSizeValue) {
+        fontSizeSlider.addEventListener('input', function() {
+            fontSizeValue.textContent = this.value + 'px';
+        });
+    }
+
+    const renderDebounceSlider = document.getElementById('setting-render-debounce');
+    const renderDebounceValue = document.getElementById('setting-render-debounce-value');
+    if (renderDebounceSlider && renderDebounceValue) {
+        renderDebounceSlider.addEventListener('input', function() {
+            renderDebounceValue.textContent = this.value + 'ms';
+        });
+    }
+
+    const dateFormatSelect = document.getElementById('setting-date-format');
+    const customDateFormatItem = document.getElementById('custom-date-format-item');
+    if (dateFormatSelect && customDateFormatItem) {
+        dateFormatSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateFormatItem.style.display = 'block';
+            } else {
+                customDateFormatItem.style.display = 'none';
+            }
         });
     }
 
@@ -384,11 +473,21 @@ const KeyboardActions = {
         }
     },
 
+    toggleSettings: function() {
+        const modal = document.getElementById('settings-modal');
+        if (modal && modal.style.display === 'flex') {
+            closeSettingsModal();
+        } else {
+            openSettingsModal();
+        }
+    },
+
     closeAnyModal: function() {
         const helpModal = document.getElementById('help-modal');
         const datasetModal = document.getElementById('dataset-modal');
         const extractModal = document.getElementById('extract-modal');
         const donateModal = document.getElementById('donate-modal');
+        const settingsModal = document.getElementById('settings-modal');
 
         if (helpModal && helpModal.style.display === 'flex') {
             closeHelpModal();
@@ -404,6 +503,10 @@ const KeyboardActions = {
         }
         if (donateModal && donateModal.style.display === 'flex') {
             closeDonateModal();
+            return true;
+        }
+        if (settingsModal && settingsModal.style.display === 'flex') {
+            closeSettingsModal();
             return true;
         }
         return false;
@@ -434,6 +537,13 @@ function initializeKeyboardShortcuts() {
         if (modifierKey && e.key.toLowerCase() === 'k') {
             e.preventDefault();
             KeyboardActions.toggleDatasetManager();
+            return;
+        }
+
+        // Cmd/Ctrl+,: Toggle settings
+        if (modifierKey && e.key === ',') {
+            e.preventDefault();
+            KeyboardActions.toggleSettings();
             return;
         }
 
@@ -494,5 +604,153 @@ function closeDonateModal() {
     const modal = document.getElementById('donate-modal');
     if (modal) {
         modal.style.display = 'none';
+    }
+}
+
+// Settings modal functions
+function openSettingsModal() {
+    loadSettingsIntoUI();
+    const modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Track event
+        Analytics.track('modal-settings', 'Open Settings modal');
+    }
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function loadSettingsIntoUI() {
+    const settings = getSettings();
+
+    // Editor settings
+    const fontSizeSlider = document.getElementById('setting-font-size');
+    const fontSizeValue = document.getElementById('setting-font-size-value');
+    if (fontSizeSlider && fontSizeValue) {
+        fontSizeSlider.value = settings.editor.fontSize;
+        fontSizeValue.textContent = settings.editor.fontSize + 'px';
+    }
+
+    const themeSelect = document.getElementById('setting-theme');
+    if (themeSelect) {
+        themeSelect.value = settings.editor.theme;
+    }
+
+    const tabSizeSelect = document.getElementById('setting-tab-size');
+    if (tabSizeSelect) {
+        tabSizeSelect.value = settings.editor.tabSize;
+    }
+
+    const minimapCheckbox = document.getElementById('setting-minimap');
+    if (minimapCheckbox) {
+        minimapCheckbox.checked = settings.editor.minimap;
+    }
+
+    const wordWrapCheckbox = document.getElementById('setting-word-wrap');
+    if (wordWrapCheckbox) {
+        wordWrapCheckbox.checked = settings.editor.wordWrap === 'on';
+    }
+
+    const lineNumbersCheckbox = document.getElementById('setting-line-numbers');
+    if (lineNumbersCheckbox) {
+        lineNumbersCheckbox.checked = settings.editor.lineNumbers === 'on';
+    }
+
+    // Performance settings
+    const renderDebounceSlider = document.getElementById('setting-render-debounce');
+    const renderDebounceValue = document.getElementById('setting-render-debounce-value');
+    if (renderDebounceSlider && renderDebounceValue) {
+        renderDebounceSlider.value = settings.performance.renderDebounce;
+        renderDebounceValue.textContent = settings.performance.renderDebounce + 'ms';
+    }
+
+    // Formatting settings
+    const dateFormatSelect = document.getElementById('setting-date-format');
+    const customDateFormatItem = document.getElementById('custom-date-format-item');
+    if (dateFormatSelect) {
+        dateFormatSelect.value = settings.formatting.dateFormat;
+        if (customDateFormatItem) {
+            customDateFormatItem.style.display = settings.formatting.dateFormat === 'custom' ? 'block' : 'none';
+        }
+    }
+
+    const customDateFormatInput = document.getElementById('setting-custom-date-format');
+    if (customDateFormatInput) {
+        customDateFormatInput.value = settings.formatting.customDateFormat;
+    }
+}
+
+function applySettings() {
+    // Collect values from UI
+    const newSettings = {
+        'editor.fontSize': parseInt(document.getElementById('setting-font-size').value),
+        'editor.theme': document.getElementById('setting-theme').value,
+        'editor.tabSize': parseInt(document.getElementById('setting-tab-size').value),
+        'editor.minimap': document.getElementById('setting-minimap').checked,
+        'editor.wordWrap': document.getElementById('setting-word-wrap').checked ? 'on' : 'off',
+        'editor.lineNumbers': document.getElementById('setting-line-numbers').checked ? 'on' : 'off',
+        'performance.renderDebounce': parseInt(document.getElementById('setting-render-debounce').value),
+        'formatting.dateFormat': document.getElementById('setting-date-format').value,
+        'formatting.customDateFormat': document.getElementById('setting-custom-date-format').value
+    };
+
+    // Validate settings
+    let hasErrors = false;
+    for (const [path, value] of Object.entries(newSettings)) {
+        const errors = validateSetting(path, value);
+        if (errors.length > 0) {
+            Toast.show(errors.join(', '), 'error');
+            hasErrors = true;
+            break;
+        }
+    }
+
+    if (hasErrors) {
+        return;
+    }
+
+    // Save settings
+    if (updateSettings(newSettings)) {
+        // Apply editor settings immediately
+        if (editor) {
+            editor.updateOptions({
+                fontSize: newSettings['editor.fontSize'],
+                theme: newSettings['editor.theme'],
+                tabSize: newSettings['editor.tabSize'],
+                minimap: { enabled: newSettings['editor.minimap'] },
+                wordWrap: newSettings['editor.wordWrap'],
+                lineNumbers: newSettings['editor.lineNumbers']
+            });
+        }
+
+        // Update debounced render function
+        if (typeof updateRenderDebounce === 'function') {
+            updateRenderDebounce(newSettings['performance.renderDebounce']);
+        }
+
+        // Re-render snippet list to reflect date format changes
+        renderSnippetList();
+
+        // Update metadata display if a snippet is selected
+        if (window.currentSnippetId) {
+            const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+            if (snippet) {
+                document.getElementById('snippet-created').textContent = formatDate(snippet.created, true);
+                document.getElementById('snippet-modified').textContent = formatDate(snippet.modified, true);
+            }
+        }
+
+        Toast.show('Settings applied successfully', 'success');
+        closeSettingsModal();
+
+        // Track event
+        Analytics.track('settings-apply', 'Applied settings');
+    } else {
+        Toast.show('Failed to save settings', 'error');
     }
 }

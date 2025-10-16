@@ -281,28 +281,14 @@ function initializeSnippetsStorage() {
     return existingSnippets;
 }
 
-// Format date for display in snippet list
+// Format date for display in snippet list (delegates to user-settings.js)
 function formatSnippetDate(isoString) {
-    const date = new Date(isoString);
-    const diffDays = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
+    return formatDate(isoString, false);
 }
 
-// Format full date/time for display in meta info
+// Format full date/time for display in meta info (delegates to user-settings.js)
 function formatFullDate(isoString) {
-    const date = new Date(isoString);
-    return date.toLocaleString([], {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
+    return formatDate(isoString, true);
 }
 
 // Render snippet list in the UI

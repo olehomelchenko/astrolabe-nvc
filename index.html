@@ -29,6 +29,7 @@
             <span class="header-link" id="import-link" title="Import snippets from JSON file">Import</span>
             <span class="header-link" id="export-link" title="Export all snippets to JSON file">Export</span>
             <span class="header-link" id="datasets-link" title="Open dataset manager (Cmd/Ctrl+K)">Datasets</span>
+            <span class="header-link" id="settings-link" title="Open settings (Cmd/Ctrl+,)">Settings</span>
             <span class="header-link" id="help-link" title="View keyboard shortcuts and help">Help</span>
             <span class="header-link" id="donate-link" title="Support Astrolabe creators">Donate 🇺🇦</span>
             <input type="file" id="import-file-input" accept=".json" style="display: none;" />
@@ -402,6 +403,10 @@
                                     <td class="shortcut-desc">Toggle dataset manager</td>
                                 </tr>
                                 <tr>
+                                    <td class="shortcut-key">Cmd/Ctrl+,</td>
+                                    <td class="shortcut-desc">Open settings</td>
+                                </tr>
+                                <tr>
                                     <td class="shortcut-key">Cmd/Ctrl+S</td>
                                     <td class="shortcut-desc">Publish draft (save)</td>
                                 </tr>
@@ -553,9 +558,127 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px; height: auto; max-height: 85vh;">
+            <div class="modal-header">
+                <span class="modal-title">Settings</span>
+                <button class="btn btn-icon" id="settings-modal-close" title="Close settings (Escape)">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-content">
+                    <!-- Editor Settings -->
+                    <section class="settings-section">
+                        <h3 class="settings-heading">Editor</h3>
+
+                        <div class="settings-item">
+                            <label class="settings-label" for="setting-font-size">Font Size</label>
+                            <div class="settings-control">
+                                <input type="range" id="setting-font-size" min="10" max="18" step="1" value="12" class="settings-slider" />
+                                <span class="settings-value" id="setting-font-size-value">12px</span>
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <label class="settings-label" for="setting-theme">Theme</label>
+                            <div class="settings-control">
+                                <select id="setting-theme" class="settings-select">
+                                    <option value="vs-light">Light</option>
+                                    <option value="vs-dark">Dark</option>
+                                    <option value="hc-black">High Contrast</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <label class="settings-label" for="setting-tab-size">Tab Size</label>
+                            <div class="settings-control">
+                                <select id="setting-tab-size" class="settings-select">
+                                    <option value="2">2 spaces</option>
+                                    <option value="4">4 spaces</option>
+                                    <option value="8">8 spaces</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <label class="settings-label">
+                                <input type="checkbox" id="setting-minimap" class="settings-checkbox" />
+                                Show minimap
+                            </label>
+                        </div>
+
+                        <div class="settings-item">
+                            <label class="settings-label">
+                                <input type="checkbox" id="setting-word-wrap" class="settings-checkbox" checked />
+                                Enable word wrap
+                            </label>
+                        </div>
+
+                        <div class="settings-item">
+                            <label class="settings-label">
+                                <input type="checkbox" id="setting-line-numbers" class="settings-checkbox" checked />
+                                Show line numbers
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- Performance Settings -->
+                    <section class="settings-section">
+                        <h3 class="settings-heading">Performance</h3>
+
+                        <div class="settings-item">
+                            <label class="settings-label" for="setting-render-debounce">Render Delay</label>
+                            <div class="settings-control">
+                                <input type="range" id="setting-render-debounce" min="300" max="3000" step="100" value="1500" class="settings-slider" />
+                                <span class="settings-value" id="setting-render-debounce-value">1500ms</span>
+                            </div>
+                            <div class="settings-hint">Delay before visualization updates while typing</div>
+                        </div>
+                    </section>
+
+                    <!-- Formatting Settings -->
+                    <section class="settings-section">
+                        <h3 class="settings-heading">Formatting</h3>
+
+                        <div class="settings-item">
+                            <label class="settings-label" for="setting-date-format">Date Format</label>
+                            <div class="settings-control">
+                                <select id="setting-date-format" class="settings-select">
+                                    <option value="smart">Smart (relative times)</option>
+                                    <option value="locale">Locale (browser default)</option>
+                                    <option value="iso">ISO 8601</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-item" id="custom-date-format-item" style="display: none;">
+                            <label class="settings-label" for="setting-custom-date-format">Custom Format</label>
+                            <div class="settings-control">
+                                <input type="text" id="setting-custom-date-format" class="settings-input" value="yyyy-MM-dd HH:mm" placeholder="yyyy-MM-dd HH:mm" />
+                            </div>
+                            <div class="settings-hint">
+                                Tokens: yyyy (year), MM (month), dd (day), HH (24h), hh (12h), mm (min), ss (sec), a/A (am/pm)
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Actions -->
+                    <div class="settings-actions">
+                        <button class="btn btn-modal primary" id="settings-apply-btn" title="Apply and save settings">Apply</button>
+                        <button class="btn btn-modal" id="settings-reset-btn" title="Reset to default settings">Reset to Defaults</button>
+                        <button class="btn btn-modal" id="settings-cancel-btn" title="Cancel without saving">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
 
+    <script src="src/js/user-settings.js"></script>
     <script src="src/js/config.js"></script>
     <script src="src/js/snippet-manager.js"></script>
     <script src="src/js/dataset-manager.js"></script>

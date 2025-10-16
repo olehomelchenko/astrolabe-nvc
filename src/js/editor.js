@@ -111,7 +111,14 @@ function debouncedRender() {
     }
 
     clearTimeout(renderTimeout);
-    renderTimeout = setTimeout(renderVisualization, 1500);
+    const debounceTime = getSetting('performance.renderDebounce') || 1500;
+    renderTimeout = setTimeout(renderVisualization, debounceTime);
+}
+
+// Update render debounce setting (called when settings are changed)
+function updateRenderDebounce(newDebounce) {
+    // The next render will automatically use the new debounce time
+    // No need to do anything special here
 }
 
 // Load Vega libraries dynamically with UMD builds
