@@ -128,6 +128,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const donateLink = document.getElementById('donate-link');
+    if (donateLink) {
+        donateLink.addEventListener('click', function () {
+            openDonateModal();
+        });
+    }
+
     // Dataset Manager
     const datasetsLink = document.getElementById('datasets-link');
     const toggleDatasetsBtn = document.getElementById('toggle-datasets');
@@ -252,6 +259,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Donate Modal
+    const donateModal = document.getElementById('donate-modal');
+    const donateModalClose = document.getElementById('donate-modal-close');
+
+    if (donateModalClose) {
+        donateModalClose.addEventListener('click', closeDonateModal);
+    }
+
+    // Close on overlay click
+    if (donateModal) {
+        donateModal.addEventListener('click', function (e) {
+            if (e.target === donateModal) {
+                closeDonateModal();
+            }
+        });
+    }
+
     // View mode toggle buttons
     document.getElementById('view-draft').addEventListener('click', () => {
         switchViewMode('draft');
@@ -364,6 +388,7 @@ const KeyboardActions = {
         const helpModal = document.getElementById('help-modal');
         const datasetModal = document.getElementById('dataset-modal');
         const extractModal = document.getElementById('extract-modal');
+        const donateModal = document.getElementById('donate-modal');
 
         if (helpModal && helpModal.style.display === 'flex') {
             closeHelpModal();
@@ -375,6 +400,10 @@ const KeyboardActions = {
         }
         if (extractModal && extractModal.style.display === 'flex') {
             hideExtractModal();
+            return true;
+        }
+        if (donateModal && donateModal.style.display === 'flex') {
+            closeDonateModal();
             return true;
         }
         return false;
@@ -444,6 +473,21 @@ function openHelpModal() {
 
 function closeHelpModal() {
     const modal = document.getElementById('help-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Donate modal functions
+function openDonateModal() {
+    const modal = document.getElementById('donate-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeDonateModal() {
+    const modal = document.getElementById('donate-modal');
     if (modal) {
         modal.style.display = 'none';
     }

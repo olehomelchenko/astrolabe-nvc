@@ -23,6 +23,7 @@
             <span class="header-link" id="export-link" title="Export all snippets to JSON file">Export</span>
             <span class="header-link" id="datasets-link" title="Open dataset manager (Cmd/Ctrl+K)">Datasets</span>
             <span class="header-link" id="help-link" title="View keyboard shortcuts and help">Help</span>
+            <span class="header-link" id="donate-link" title="Support Astrolabe creators">Donate 🇺🇦</span>
             <input type="file" id="import-file-input" accept=".json" style="display: none;" />
         </div>
     </div>
@@ -431,6 +432,93 @@
                             <li><strong>Linked datasets</strong> — The metadata panel shows which datasets a snippet uses, and the Dataset Manager shows which snippets reference each dataset.</li>
                             <li><strong>URL datasets</strong> — Reference remote data by URL. Astrolabe fetches and caches it for preview, but the URL is what gets stored.</li>
                         </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donate Modal -->
+    <div id="donate-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="height: auto;">
+            <div class="modal-header">
+                <span class="modal-title"></span>
+                <button class="btn btn-icon" id="donate-modal-close" title="Close (Escape)">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-content">
+                    <section class="help-section">
+                        <h3 class="help-heading">Why Donate?</h3>
+                        <p class="help-text">
+                            Astrolabe is a free open-source project built by a Ukrainian in Kyiv, Ukraine. 
+                            If you're thinking of donating, I should be transparent about where that money actually goes - it doesn't go to me or the project. 
+                            It goes to something I care about much more. Right now, while I've been building this passion project, there are people I know - my relatives, friends, colleagues - who took arms and joined Ukraine's Armed Forces. They're defending their country against Russian invasion. 
+                            Most of them were civilians before this. They're still civilians, really, just doing something they had to do.
+                            I feel deep gratitude to them. So my goal is to support these brave people however I can.
+                        </p>
+                        <p class="help-text">
+                            You might wonder if the military really needs donations.
+                            The honest answer: yes. The government and Ministry of Defense cover basics, but when you're on the frontlines, every small thing matters.
+                            Better equipment, better protection, better conditions - these things can make a difference between life and death.
+                        </p>
+                        <p class="help-text">
+                            If you have concerns about donating to the military: I get it. Not everyone is comfortable with that for various reasons, and I respect that.
+                            The good news is that many of the organizations below also run humanitarian projects for civilians affected by the war. So you have options.
+                        </p>
+                    </section>
+                    <div class="donate-two-column">
+                        <section class="help-section">
+                            <h3 class="help-heading">Where to Donate</h3>
+                            <p class="help-text">
+                                <ul class="help-list">
+                                    <li>
+
+                                <strong><a href="https://bank.gov.ua/en/news/all/natsionalniy-bank-vidkriv-spetsrahunok-dlya-zboru-koshtiv-na-potrebi-armiyi">
+                                    National Bank of Ukraine's special account for Ukraine's Armed Forces
+                                </a> - Direct government channel</strong>
+                                    </li>
+                                    <li>
+                                <strong><a href="https://savelife.in.ua/en/donate-en/#donate-army-card-once">
+                                    Come Back Alive Foundation</a></strong> - One of the biggest and most trusted. They've been around since 2014 and share <a href="https://savelife.in.ua/en/reporting-en/">detailed reports</a> of where money goes.
+                                    </li>
+                                    <li>
+                                <strong><a href="https://macpaw.foundation/">
+                                    MacPaw Foundation</a></strong> - Founded by MacPaw (where I work). Started in 2016, shifted focus in 2022 to support the Defence Forces.
+                                    </li>
+                                    <li>
+                                <strong><a href="https://foundation.kse.ua/en/humanitarian-projects/">
+                                    KSE Foundation</a></strong>. Kyiv School of Economics (where I teach). Focuses on both education and humanitarian support for people and defenders
+                                    </li>
+                                    <li>
+                                <strong><a href="https://standforukraine.com/">
+                                    Stand for Ukraine</a></strong> - Not a foundation, but an aggregator of reliable organizations.
+                                    The list of fundraisers goes beyond military and covers recovery of veterans & victims of war, shelter for the refugees and many more.
+                                    </li>
+                                </ul>
+                            </p>
+                        </section>
+
+                        <section class="help-section">
+                            <h3 class="help-heading">Other Ways to Support</h3>
+                            <p class="help-text">
+                                Not able to donate? You can still help by:
+                            </p>
+                            <ul class="help-list">
+                                <li>Sharing Astrolabe with colleagues and friends</li>
+                                <li>Reporting bugs and suggesting improvements</li>
+                                <li>Contributing code or documentation</li>
+                                <li>Writing about your experience using Astrolabe</li>
+                            </ul>
+                        </section>
+                    </div>
+
+                    <section class="help-section">
+                        <p class="help-text" style="text-align: center; font-style: italic; color: var(--win-gray-darker);">
+                            Thank you for considering this.
+                        </p>
+                        <p class="help-text" style="text-align: center; font-style: italic; color: var(--win-gray-darker);">
+                            Oleh Omelchenko
+                        </p>
                     </section>
                 </div>
             </div>
