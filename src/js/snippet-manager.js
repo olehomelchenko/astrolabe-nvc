@@ -835,6 +835,9 @@ function createNewSnippet() {
     renderSnippetList();
     selectSnippet(newSnippet.id);
 
+    // Track event
+    Analytics.track('snippet-create', 'Create new snippet');
+
     return newSnippet;
 }
 
@@ -859,6 +862,9 @@ function duplicateSnippet(snippetId) {
     // Show success message
     Toast.success('Snippet duplicated successfully');
 
+    // Track event
+    Analytics.track('snippet-duplicate', 'Duplicate snippet');
+
     return newSnippet;
 }
 
@@ -880,6 +886,9 @@ function createSnippetFromDataset(datasetName) {
     // Refresh the list and select the new snippet
     renderSnippetList();
     selectSnippet(newSnippet.id);
+
+    // Track event
+    Analytics.track('snippet-from-dataset', 'Create snippet from dataset');
 
     return newSnippet;
 }
@@ -992,6 +1001,9 @@ async function extractToDataset() {
 
         // Show success message
         Toast.success(`Dataset "${datasetName}" created successfully!`);
+
+        // Track event
+        Analytics.track('dataset-extract', 'Extract inline data to dataset');
     } catch (error) {
         errorEl.textContent = `Failed to create dataset: ${error.message}`;
     }
@@ -1031,6 +1043,9 @@ function deleteSnippet(snippetId) {
 
         // Show success message
         Toast.success('Snippet deleted');
+
+        // Track event
+        Analytics.track('snippet-delete', 'Delete snippet');
 
         return true;
     }
@@ -1121,6 +1136,9 @@ function publishDraft() {
 
     // Show success message
     Toast.success('Snippet published successfully!');
+
+    // Track event
+    Analytics.track('snippet-publish', 'Publish draft');
 }
 
 // Revert draft to published spec
@@ -1146,6 +1164,9 @@ function revertDraft() {
 
         // Show success message
         Toast.success('Draft reverted to published version');
+
+        // Track event
+        Analytics.track('snippet-revert', 'Revert draft');
     }
 }
 
@@ -1212,6 +1233,9 @@ function exportSnippets() {
 
     // Show success message
     Toast.success(`Exported ${snippets.length} snippet${snippets.length !== 1 ? 's' : ''}`);
+
+    // Track event
+    Analytics.track('snippets-export', `Export ${snippets.length} snippets`);
 }
 
 // Normalize external snippet format to Astrolabe format
@@ -1296,6 +1320,9 @@ function importSnippets(fileInput) {
             if (SnippetStorage.saveSnippets(existingSnippets)) {
                 Toast.success(`Successfully imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''}`);
                 renderSnippetList();
+
+                // Track event
+                Analytics.track('snippets-import', `Import ${importedCount} snippets`);
             }
 
         } catch (error) {

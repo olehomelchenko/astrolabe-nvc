@@ -468,6 +468,8 @@ function openHelpModal() {
     const modal = document.getElementById('help-modal');
     if (modal) {
         modal.style.display = 'flex';
+        // Track event
+        Analytics.track('modal-help', 'Open Help modal');
     }
 }
 
@@ -483,6 +485,8 @@ function openDonateModal() {
     const modal = document.getElementById('donate-modal');
     if (modal) {
         modal.style.display = 'flex';
+        // Track event
+        Analytics.track('modal-donate', 'Open Donate modal');
     }
 }
 

@@ -785,6 +785,9 @@ function openDatasetManager(updateURL = true) {
     if (updateURL) {
         URLState.update({ view: 'datasets', snippetId: null, datasetId: null });
     }
+
+    // Track event
+    Analytics.track('modal-datasets', 'Open Dataset Manager');
 }
 
 // Close dataset manager modal
@@ -1139,6 +1142,9 @@ async function saveNewDataset() {
 
         hideNewDatasetForm();
         await renderDatasetList();
+
+        // Track event
+        Analytics.track('dataset-create', `Create dataset (${source})`);
     } catch (error) {
         errorEl.textContent = `Failed to save dataset: ${error.message}`;
     }
@@ -1167,6 +1173,9 @@ async function deleteCurrentDataset() {
 
         // Show success message
         Toast.success('Dataset deleted');
+
+        // Track event
+        Analytics.track('dataset-delete', 'Delete dataset');
     }
 }
 
@@ -1295,6 +1304,9 @@ async function exportCurrentDataset() {
         // Show success message
         Toast.success(`Dataset "${dataset.name}" exported successfully`);
 
+        // Track event
+        Analytics.track('dataset-export', `Export dataset (${dataset.format})`);
+
     } catch (error) {
         Toast.error(`Failed to export dataset: ${error.message}`);
     }
@@ -1393,6 +1405,9 @@ async function importDatasetFromFile(fileInput) {
         } else {
             Toast.success(`Dataset "${datasetName}" imported successfully!`);
         }
+
+        // Track event
+        Analytics.track('dataset-import', `Import dataset (${format})`);
 
     } catch (error) {
         Toast.error(`Failed to import dataset: ${error.message}`);

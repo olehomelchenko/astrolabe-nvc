@@ -210,6 +210,20 @@ const Toast = {
     }
 };
 
+// Analytics utility: Track events with GoatCounter
+const Analytics = {
+    track(eventName, title) {
+        // Only track if GoatCounter is loaded
+        if (window.goatcounter && window.goatcounter.count) {
+            window.goatcounter.count({
+                path: eventName,
+                title: title || eventName,
+                event: true,
+            });
+        }
+    }
+};
+
 // Shared utility: Format bytes for display
 function formatBytes(bytes) {
     if (bytes === null || bytes === undefined) return 'N/A';
