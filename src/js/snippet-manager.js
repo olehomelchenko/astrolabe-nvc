@@ -225,6 +225,12 @@ const SnippetStorage = {
                 case 'created':
                     comparison = new Date(a.created) - new Date(b.created);
                     break;
+                case 'size':
+                    // Calculate size for both snippets
+                    const sizeA = new Blob([JSON.stringify(a)]).size;
+                    const sizeB = new Blob([JSON.stringify(b)]).size;
+                    comparison = sizeA - sizeB;
+                    break;
                 case 'modified':
                 default:
                     comparison = new Date(a.modified) - new Date(b.modified);
