@@ -41,7 +41,7 @@ body { font-family: var(--font-main); height: 100vh; overflow: hidden; backgroun
 /* Header */
 .header { background: var(--win-gray); border-bottom: 2px solid var(--win-gray-dark); padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; height: 36px; flex-shrink: 0; }
 .header-left { display: flex; align-items: center; gap: 10px; }
-.header-icon { font-size: 20px; }
+.header-icon { width: 24px; height: 24px; display: block; flex-shrink: 0; }
 .header-title { font-size: 14px; font-weight: bold; }
 .header-links { display: flex; gap: 16px; }
 .header-link { font-size: 12px; text-decoration: underline; cursor: pointer; color: var(--text-primary); }
