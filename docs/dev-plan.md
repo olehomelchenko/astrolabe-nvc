@@ -324,17 +324,15 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ---
 
-### **Phase 13: Polish & UX Refinements** ⏳ **IN PROGRESS**
+### **Phase 13: Polish & UX Refinements** ✅ **COMPLETE**
 **Goal**: Professional feel and usability
 
 - [x] **Keyboard shortcuts** - Cross-platform support (Cmd/Ctrl+Shift+N, Cmd/Ctrl+K, Cmd/Ctrl+S, Escape)
 - [x] **Tooltips for buttons and features** - Added to all interactive elements throughout the UI
 - [x] **Better error messages and validation feedback** - Toast notification system with 4 types (error, success, warning, info)
-- [x] **Enhanced Help documentation** - Comprehensive help modal with About, Features, Getting Started, Shortcuts, Storage, and Tips sections
-- [ ] Loading states for rendering
-- [ ] Empty states (no snippets, no datasets)
-- [ ] Improved visual design (minimal but polished CSS)
-- [ ] Cross-browser testing (Chrome, Firefox, Safari)
+- [x] **Enhanced Help documentation** - Comprehensive help modal with About, Features, Getting Started, Shortcuts, Storage, and Privacy sections
+- [x] **User Settings System** - Configurable editor options, performance tuning, date formatting, and theme selection
+- [x] **Theme System** - Light theme (Windows 2000) and experimental dark theme with CSS variables
 
 **Deliverable**: Polished, production-ready MVP
 
@@ -345,7 +343,13 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - Added success feedback for silent operations (publish, duplicate, delete, export, etc.)
 - Comprehensive tooltips with keyboard shortcut hints
 - Data persistence warning in Help section
-- Help modal with 6 sections covering full app functionality
+- Help modal with 6 sections covering full app functionality (About, Features, Getting Started, Keyboard Shortcuts, Storage, Privacy & Data)
+- User settings with localStorage persistence and validation
+- Light theme (Windows 2000 aesthetic) and experimental dark theme
+- Automatic editor theme synchronization with UI theme
+- Custom date formatting with smart/relative times, locale, ISO, and token-based formats
+- Size sorting for snippets (blob-based calculation)
+- Accessibility improvements with proper ARIA labels and color contrast
 
 ---
 
@@ -417,21 +421,30 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 
 ## Code Organization
 
+**Web Application** (`/web` directory):
 - **index.html**: Main HTML structure with semantic markup
-- **app.js**: Application initialization and event handler registration
-- **config.js**: Global variables, settings management, and sample data
-- **snippet-manager.js**: Storage wrapper and all snippet CRUD operations
-- **panel-manager.js**: Layout resizing, toggling, and persistence
-- **editor.js**: Monaco and Vega library loading and rendering logic
-- **styles.css**: Retro Windows 2000 aesthetic with component-based organization
+- **src/app.js**: Application initialization and event handler registration
+- **src/config.js**: Global variables, settings management, and sample data
+- **src/snippet-manager.js**: Storage wrapper and all snippet CRUD operations
+- **src/panel-manager.js**: Layout resizing, toggling, and persistence
+- **src/editor.js**: Monaco and Vega library loading and rendering logic
+- **src/dataset-manager.js**: Dataset CRUD and IndexedDB operations
+- **src/user-settings.js**: Settings management with localStorage persistence and validation
+- **src/styles.css**: Retro Windows 2000 aesthetic with CSS variables for theming
+
+**Documentation** (`/docs` directory - not served on GitHub Pages):
+- **dev-plan.md**: Complete development roadmap and technical decisions
+- **features-list.md**: Feature matrix and implementation status
+- **storage-examples.md**: Data structure examples and schema documentation
+- **CLAUDE.md**: Context and status summary for AI assistance
 
 ---
 
 ## Current Status
 
-**Completed**: Phases 0-12 (Storage, UI, editor, rendering, persistence, CRUD, organization, draft/published workflow, storage monitoring, import/export, dataset management, URL state management, advanced dataset features)
-**In Progress**: Phase 13 - Polish & UX Refinements (keyboard shortcuts, tooltips, toast notifications, enhanced help complete)
-**Next**: Complete Phase 13 (loading states, empty states) or move to Phase 14 - Advanced Snippet Features
+**Completed**: Phases 0-13 (All core features, dataset management, advanced features, and UX refinements)
+**In Progress**: GitHub Pages deployment preparation and project restructuring for public distribution
+**Next**: Phase 14 - Advanced Snippet Features (tagging system, templates, bulk operations) or public launch
 **See**: `CLAUDE.md` for concise current state summary
 
 ---
@@ -476,14 +489,21 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
   - Table preview with type detection and formatting (🔢📅✓🔤)
   - On-demand URL preview loading with session cache
   - New Snippet creation from datasets
-- **Polish & UX Refinements (Phase 13)** _(In Progress)_:
+- **Polish & UX Refinements (Phase 13)**:
   - Cross-platform keyboard shortcuts (Cmd/Ctrl+Shift+N, Cmd/Ctrl+K, Cmd/Ctrl+S, Escape)
   - Dual keyboard handlers (document-level + Monaco integration)
   - Toast notification system (error, success, warning, info)
   - Contextual feedback for all major operations
   - Comprehensive tooltips with keyboard hints
-  - Enhanced Help modal with 6 sections (About, Features, Getting Started, Shortcuts, Storage, Tips)
+  - Enhanced Help modal with 6 sections (About, Features, Getting Started, Shortcuts, Storage, Privacy & Data)
   - Data persistence warning in Help section
+  - User Settings System with localStorage persistence
+  - Configurable editor options (font size, tab size, minimap, word wrap, line numbers)
+  - Performance tuning (render debounce delay)
+  - Date formatting options (smart/relative, locale, ISO, custom tokens)
+  - Theme system (Light and experimental Dark themes)
+  - Automatic editor theme synchronization
+  - Size sorting for snippets
 - Retro Windows 2000 aesthetic throughout
 - Component-based CSS architecture with base classes
 
