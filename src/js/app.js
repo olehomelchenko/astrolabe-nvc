@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize user settings
     initSettings();
 
+    // Apply saved theme immediately on page load
+    const theme = getSetting('ui.theme') || 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+
     // Initialize snippet storage and render list
     initializeSnippetsStorage();
 
@@ -628,6 +632,12 @@ function closeSettingsModal() {
 function loadSettingsIntoUI() {
     const settings = getSettings();
 
+    // Appearance settings
+    const uiThemeSelect = document.getElementById('setting-ui-theme');
+    if (uiThemeSelect) {
+        uiThemeSelect.value = settings.ui.theme;
+    }
+
     // Editor settings
     const fontSizeSlider = document.getElementById('setting-font-size');
     const fontSizeValue = document.getElementById('setting-font-size-value');
@@ -636,9 +646,9 @@ function loadSettingsIntoUI() {
         fontSizeValue.textContent = settings.editor.fontSize + 'px';
     }
 
-    const themeSelect = document.getElementById('setting-theme');
-    if (themeSelect) {
-        themeSelect.value = settings.editor.theme;
+    const editorThemeSelect = document.getElementById('setting-editor-theme');
+    if (editorThemeSelect) {
+        editorThemeSelect.value = settings.editor.theme;
     }
 
     const tabSizeSelect = document.getElementById('setting-tab-size');
@@ -688,8 +698,9 @@ function loadSettingsIntoUI() {
 function applySettings() {
     // Collect values from UI
     const newSettings = {
+        'ui.theme': document.getElementById('setting-ui-theme').value,
         'editor.fontSize': parseInt(document.getElementById('setting-font-size').value),
-        'editor.theme': document.getElementById('setting-theme').value,
+        'editor.theme': document.getElementById('setting-editor-theme').value,
         'editor.tabSize': parseInt(document.getElementById('setting-tab-size').value),
         'editor.minimap': document.getElementById('setting-minimap').checked,
         'editor.wordWrap': document.getElementById('setting-word-wrap').checked ? 'on' : 'off',
@@ -716,17 +727,28 @@ function applySettings() {
 
     // Save settings
     if (updateSettings(newSettings)) {
+        // Apply theme to document
+        const uiTheme = newSettings['ui.theme'];
+        document.documentElement.setAttribute('data-theme', uiTheme);
+
+        // Sync editor theme with UI theme
+        const editorTheme = uiTheme === 'experimental' ? 'vs-dark' : 'vs-light';
+        newSettings['editor.theme'] = editorTheme;
+
         // Apply editor settings immediately
         if (editor) {
             editor.updateOptions({
                 fontSize: newSettings['editor.fontSize'],
-                theme: newSettings['editor.theme'],
+                theme: editorTheme,
                 tabSize: newSettings['editor.tabSize'],
                 minimap: { enabled: newSettings['editor.minimap'] },
                 wordWrap: newSettings['editor.wordWrap'],
                 lineNumbers: newSettings['editor.lineNumbers']
             });
         }
+
+        // Update the editor theme in settings
+        updateSetting('editor.theme', editorTheme);
 
         // Update debounced render function
         if (typeof updateRenderDebounce === 'function') {

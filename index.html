@@ -551,10 +551,10 @@
                     </div>
 
                     <section class="help-section">
-                        <p class="help-text" style="text-align: center; font-style: italic; color: var(--win-gray-darker);">
+                        <p class="help-text" style="text-align: center; font-style: italic;">
                             Thank you for considering this.
                         </p>
-                        <p class="help-text" style="text-align: center; font-style: italic; color: var(--win-gray-darker);">
+                        <p class="help-text" style="text-align: center; font-style: italic;">
                             Oleh Omelchenko
                         </p>
                     </section>
@@ -572,6 +572,21 @@
             </div>
             <div class="modal-body">
                 <div class="settings-content">
+                    <!-- Appearance Settings -->
+                    <section class="settings-section">
+                        <h3 class="settings-heading">Appearance</h3>
+
+                        <div class="settings-item">
+                            <label class="settings-label" for="setting-ui-theme">Theme</label>
+                            <div class="settings-control">
+                                <select id="setting-ui-theme" class="settings-select">
+                                    <option value="light">Light</option>
+                                    <option value="experimental">Dark (Experimental)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- Editor Settings -->
                     <section class="settings-section">
                         <h3 class="settings-heading">Editor</h3>
@@ -585,9 +600,9 @@
                         </div>
 
                         <div class="settings-item">
-                            <label class="settings-label" for="setting-theme">Theme</label>
+                            <label class="settings-label" for="setting-editor-theme">Editor Theme</label>
                             <div class="settings-control">
-                                <select id="setting-theme" class="settings-select">
+                                <select id="setting-editor-theme" class="settings-select">
                                     <option value="vs-light">Light</option>
                                     <option value="vs-dark">Dark</option>
                                     <option value="hc-black">High Contrast</option>

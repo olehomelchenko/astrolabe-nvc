@@ -19,6 +19,10 @@ const DEFAULT_SETTINGS = {
         renderDebounce: 1500       // 300-3000ms - delay before visualization renders
     },
 
+    ui: {
+        theme: 'light'             // 'light' | 'experimental'
+    },
+
     formatting: {
         dateFormat: 'smart',       // 'smart' | 'locale' | 'iso' | 'custom'
         customDateFormat: 'yyyy-MM-dd HH:mm'  // Used when dateFormat === 'custom'
@@ -281,6 +285,13 @@ function validateSetting(path, value) {
         const validFormats = ['smart', 'locale', 'iso', 'custom'];
         if (!validFormats.includes(value)) {
             errors.push('Invalid date format value');
+        }
+    }
+
+    if (path === 'ui.theme') {
+        const validThemes = ['light', 'experimental'];
+        if (!validThemes.includes(value)) {
+            errors.push('Invalid theme value');
         }
     }
 
