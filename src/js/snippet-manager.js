@@ -341,7 +341,9 @@ function renderSnippetList(searchQuery = null) {
     `;
 
     const currentSort = AppSettings.get('sortBy');
-    const snippetItems = snippets.map(snippet => {
+
+    // Use generic formatter
+    const formatSnippetItem = (snippet) => {
         // Show appropriate date based on current sort
         let dateText;
         if (currentSort === 'created') {
@@ -364,7 +366,7 @@ function renderSnippetList(searchQuery = null) {
         const datasetIconHTML = usesDatasets ? '<span class="snippet-dataset-icon" title="Uses external dataset">📁</span>' : '';
 
         return `
-            <li class="snippet-item" data-snippet-id="${snippet.id}">
+            <li class="snippet-item" data-item-id="${snippet.id}">
                 <div class="snippet-info">
                     <div class="snippet-name">${snippet.name}${datasetIconHTML}</div>
                     <div class="snippet-date">${dateText}</div>
@@ -373,8 +375,9 @@ function renderSnippetList(searchQuery = null) {
                 <div class="snippet-status ${statusClass}"></div>
             </li>
         `;
-    }).join('');
+    };
 
+    const snippetItems = snippets.map(formatSnippetItem).join('');
     snippetList.innerHTML = ghostCard + snippetItems;
 
     // Re-attach event listeners for snippet selection
@@ -484,7 +487,7 @@ function performSearch() {
 
     // Clear selection if current snippet is no longer visible
     if (window.currentSnippetId) {
-        const selectedItem = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+        const selectedItem = document.querySelector(`[data-item-id="${window.currentSnippetId}"]`);
         if (!selectedItem) {
             clearSelection();
         } else {
@@ -522,7 +525,7 @@ function getCurrentSnippet() {
 // Helper: Restore visual selection state for current snippet
 function restoreSnippetSelection() {
     if (window.currentSnippetId) {
-        const item = document.querySelector(`[data-snippet-id="${window.currentSnippetId}"]`);
+        const item = document.querySelector(`[data-item-id="${window.currentSnippetId}"]`);
         if (item) {
             item.classList.add('selected');
             return item;
@@ -569,7 +572,7 @@ function attachSnippetEventListeners() {
 
         // Left click to select
         item.addEventListener('click', function () {
-            const snippetId = parseFloat(this.dataset.snippetId);
+            const snippetId = parseFloat(this.dataset.itemId);
             selectSnippet(snippetId);
         });
     });
@@ -584,7 +587,10 @@ function selectSnippet(snippetId, updateURL = true) {
     document.querySelectorAll('.snippet-item').forEach(item => {
         item.classList.remove('selected');
     });
-    document.querySelector(`[data-snippet-id="${snippetId}"]`).classList.add('selected');
+    const selectedItem = document.querySelector(`[data-item-id="${snippetId}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+    }
 
     // Load spec based on current view mode
     loadSnippetIntoEditor(snippet);
@@ -631,43 +637,24 @@ function selectSnippet(snippetId, updateURL = true) {
 
 // Update linked datasets display in metadata panel
 function updateLinkedDatasets(snippet) {
-    const datasetsSection = document.getElementById('snippet-datasets-section');
-    const datasetsContainer = document.getElementById('snippet-datasets');
-
-    if (!datasetsSection || !datasetsContainer) return;
-
-    // Get dataset references from snippet
     const datasetRefs = snippet.datasetRefs || [];
 
-    if (datasetRefs.length === 0) {
-        datasetsSection.style.display = 'none';
-        return;
-    }
-
-    // Show section and populate with dataset references
-    datasetsSection.style.display = 'block';
-
-    const datasetItems = datasetRefs.map(datasetName => {
-        return `
+    updateGenericLinkedItems(
+        datasetRefs,
+        'snippet-datasets',
+        'snippet-datasets-section',
+        (datasetName) => `
             <div class="meta-info-item">
                 <span class="meta-info-label">📁</span>
                 <span class="meta-info-value">
-                    <a href="#" class="dataset-link" data-dataset-name="${datasetName}">${datasetName}</a>
+                    <a href="#" class="dataset-link" data-linked-item-id="${datasetName}">${datasetName}</a>
                 </span>
             </div>
-        `;
-    }).join('');
-
-    datasetsContainer.innerHTML = datasetItems;
-
-    // Attach click handlers to dataset links
-    datasetsContainer.querySelectorAll('.dataset-link').forEach(link => {
-        link.addEventListener('click', async function(e) {
-            e.preventDefault();
-            const datasetName = this.dataset.datasetName;
+        `,
+        async (datasetName) => {
             await openDatasetByName(datasetName);
-        });
-    });
+        }
+    );
 }
 
 // Open dataset manager and select dataset by name
@@ -1048,7 +1035,7 @@ function deleteSnippet(snippetId) {
     const snippet = SnippetStorage.getSnippet(snippetId);
     if (!snippet) return;
 
-    if (confirm(`Delete snippet "${snippet.name}"? This action cannot be undone.`)) {
+    const confirmed = confirmGenericDeletion(snippet.name, null, () => {
         SnippetStorage.deleteSnippet(snippetId);
 
         // If we deleted the currently selected snippet, clear selection
@@ -1063,12 +1050,10 @@ function deleteSnippet(snippetId) {
         Toast.success('Snippet deleted');
 
         // Track event
-        Analytics.track('snippet-delete', 'Delete snippet');
+        trackEventIfAvailable('snippet-delete', 'Delete snippet');
+    });
 
-        return true;
-    }
-
-    return false;
+    return confirmed;
 }
 
 // Load snippet into editor based on view mode

@@ -288,7 +288,7 @@ async function renderDatasetList() {
     // Sort by modified date (most recent first)
     datasets.sort((a, b) => new Date(b.modified) - new Date(a.modified));
 
-    const html = datasets.map(dataset => {
+    const formatDatasetItem = (dataset) => {
         let metaText;
         if (dataset.source === 'url') {
             // Show metadata if available, otherwise just URL and format
@@ -308,7 +308,7 @@ async function renderDatasetList() {
             : '';
 
         return `
-            <div class="dataset-item" data-dataset-id="${dataset.id}">
+            <div class="dataset-item" data-item-id="${dataset.id}">
                 <div class="dataset-info">
                     <div class="dataset-name">${dataset.name}</div>
                     <div class="dataset-meta">${metaText}</div>
@@ -316,14 +316,15 @@ async function renderDatasetList() {
                 ${usageBadge}
             </div>
         `;
-    }).join('');
+    };
 
+    const html = datasets.map(formatDatasetItem).join('');
     listContainer.innerHTML = html;
 
     // Attach click handlers
     document.querySelectorAll('.dataset-item').forEach(item => {
         item.addEventListener('click', function() {
-            const datasetId = parseFloat(this.dataset.datasetId);
+            const datasetId = parseFloat(this.dataset.itemId);
             selectDataset(datasetId);
         });
     });
@@ -338,7 +339,10 @@ async function selectDataset(datasetId, updateURL = true) {
     document.querySelectorAll('.dataset-item').forEach(item => {
         item.classList.remove('selected');
     });
-    document.querySelector(`[data-dataset-id="${datasetId}"]`).classList.add('selected');
+    const selectedItem = document.querySelector(`[data-item-id="${datasetId}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+    }
 
     // Show details panel
     const detailsPanel = document.getElementById('dataset-details');
@@ -722,46 +726,28 @@ function showTablePreview(dataset) {
 
 // Update linked snippets display in dataset details panel
 function updateLinkedSnippets(dataset) {
-    const snippetsSection = document.getElementById('dataset-snippets-section');
-    const snippetsContainer = document.getElementById('dataset-snippets');
-
-    if (!snippetsSection || !snippetsContainer) return;
-
     // Find all snippets that reference this dataset
     const snippets = SnippetStorage.loadSnippets();
     const linkedSnippets = snippets.filter(snippet =>
         snippet.datasetRefs && snippet.datasetRefs.includes(dataset.name)
     );
 
-    if (linkedSnippets.length === 0) {
-        snippetsSection.style.display = 'none';
-        return;
-    }
-
-    // Show section and populate with snippet links
-    snippetsSection.style.display = 'block';
-
-    const snippetItems = linkedSnippets.map(snippet => {
-        return `
+    updateGenericLinkedItems(
+        linkedSnippets,
+        'dataset-snippets',
+        'dataset-snippets-section',
+        (snippet) => `
             <div class="stat-item">
                 <span class="stat-label">📄</span>
                 <span>
-                    <a href="#" class="snippet-link" data-snippet-id="${snippet.id}">${snippet.name}</a>
+                    <a href="#" class="snippet-link" data-linked-item-id="${snippet.id}">${snippet.name}</a>
                 </span>
             </div>
-        `;
-    }).join('');
-
-    snippetsContainer.innerHTML = snippetItems;
-
-    // Attach click handlers to snippet links
-    snippetsContainer.querySelectorAll('.snippet-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const snippetId = parseFloat(this.dataset.snippetId);
+        `,
+        (snippetId) => {
             openSnippetFromDataset(snippetId);
-        });
-    });
+        }
+    );
 }
 
 // Close dataset manager and open snippet
@@ -1157,15 +1143,11 @@ async function deleteCurrentDataset() {
 
     // Check if dataset is in use
     const usageCount = countSnippetUsage(dataset.name);
-    let confirmMessage = `Delete dataset "${dataset.name}"?`;
+    const warningMessage = usageCount > 0
+        ? `⚠️ Warning: Dataset "${dataset.name}" is currently used by ${usageCount} snippet${usageCount !== 1 ? 's' : ''}.\n\nDeleting this dataset will break those visualizations.`
+        : null;
 
-    if (usageCount > 0) {
-        confirmMessage = `⚠️ Warning: Dataset "${dataset.name}" is currently used by ${usageCount} snippet${usageCount !== 1 ? 's' : ''}.\n\nDeleting this dataset will break those visualizations. Are you sure you want to delete it?`;
-    } else {
-        confirmMessage += ' This action cannot be undone.';
-    }
-
-    if (confirm(confirmMessage)) {
+    confirmGenericDeletion(dataset.name, warningMessage, async () => {
         await DatasetStorage.deleteDataset(dataset.id);
         document.getElementById('dataset-details').style.display = 'none';
         window.currentDatasetId = null;
@@ -1175,8 +1157,8 @@ async function deleteCurrentDataset() {
         Toast.success('Dataset deleted');
 
         // Track event
-        Analytics.track('dataset-delete', 'Delete dataset');
-    }
+        trackEventIfAvailable('dataset-delete', 'Delete dataset');
+    });
 }
 
 // Copy dataset reference to clipboard
