@@ -647,7 +647,7 @@ function updateLinkedDatasets(snippet) {
             <div class="meta-info-item">
                 <span class="meta-info-label">📁</span>
                 <span class="meta-info-value">
-                    <a href="#" class="dataset-link" data-linked-item-id="${datasetName}">${datasetName}</a>
+                    <a href="#datasets" class="dataset-link" data-linked-item-id="${datasetName}" title="Open dataset manager and view this dataset">${datasetName}</a>
                 </span>
             </div>
         `,

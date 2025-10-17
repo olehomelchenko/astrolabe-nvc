@@ -740,7 +740,7 @@ function updateLinkedSnippets(dataset) {
             <div class="stat-item">
                 <span class="stat-label">📄</span>
                 <span>
-                    <a href="#" class="snippet-link" data-linked-item-id="${snippet.id}">${snippet.name}</a>
+                    <a href="#snippet-${snippet.id}" class="snippet-link" data-linked-item-id="${snippet.id}">${snippet.name}</a>
                 </span>
             </div>
         `,
