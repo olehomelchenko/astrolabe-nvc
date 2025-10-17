@@ -378,6 +378,19 @@ document.addEventListener('DOMContentLoaded', function () {
         switchViewMode('published');
     });
 
+    // Preview fit mode buttons
+    document.getElementById('preview-fit-default').addEventListener('click', () => {
+        setPreviewFitMode('default');
+    });
+
+    document.getElementById('preview-fit-width').addEventListener('click', () => {
+        setPreviewFitMode('width');
+    });
+
+    document.getElementById('preview-fit-full').addEventListener('click', () => {
+        setPreviewFitMode('full');
+    });
+
     // Publish and Revert buttons
     document.getElementById('publish-btn').addEventListener('click', publishDraft);
     document.getElementById('revert-btn').addEventListener('click', revertDraft);

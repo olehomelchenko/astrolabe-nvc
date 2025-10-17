@@ -1,3 +1,34 @@
+// Track preview fit mode
+let previewFitMode = 'default'; // 'default', 'width', or 'full'
+
+// Apply fit mode to spec dimensions
+function applyPreviewFitMode(spec, fitMode) {
+    if (!spec || typeof spec !== 'object') return spec;
+
+    // Clone to avoid mutation
+    const modifiedSpec = JSON.parse(JSON.stringify(spec));
+
+    if (fitMode === 'width') {
+        // Fit to width - get preview pane width
+        const previewPane = document.getElementById('vega-preview');
+        if (previewPane) {
+            const containerWidth = previewPane.offsetWidth;
+            modifiedSpec.width = containerWidth - 10; // 10px padding for scroll
+            // Keep original aspect ratio by not setting height
+        }
+    } else if (fitMode === 'full') {
+        // Fit to full pane - get both dimensions
+        const previewPane = document.getElementById('vega-preview');
+        if (previewPane) {
+            modifiedSpec.width = previewPane.offsetWidth - 10; // 10px padding
+            modifiedSpec.height = previewPane.offsetHeight - 10; // 10px padding
+        }
+    }
+    // 'default' mode leaves original dimensions untouched
+
+    return modifiedSpec;
+}
+
 // Resolve dataset references in a spec
 async function resolveDatasetReferences(spec) {
     // If spec has data.name, look it up
@@ -83,11 +114,17 @@ async function renderVisualization() {
         // Resolve dataset references
         spec = await resolveDatasetReferences(spec);
 
+        // Apply preview fit mode
+        spec = applyPreviewFitMode(spec, previewFitMode);
+
         // Render with Vega-Embed (use global variable)
         await window.vegaEmbed('#vega-preview', spec, {
             actions: false, // Hide action menu for cleaner look
             renderer: 'svg' // Use SVG for better quality
         });
+
+        // Hide overlay after successful render
+        hidePreviewOverlay();
 
     } catch (error) {
         // Handle rendering errors gracefully
@@ -99,6 +136,9 @@ async function renderVisualization() {
                         <em>Check your JSON syntax and Vega-Lite specification.</em>
                     </div>
                 `;
+
+        // Hide overlay after error
+        hidePreviewOverlay();
     }
 }
 
@@ -110,6 +150,9 @@ function debouncedRender() {
         return;
     }
 
+    // Show overlay to indicate rendering is pending
+    showPreviewOverlay();
+
     clearTimeout(renderTimeout);
     const debounceTime = getSetting('performance.renderDebounce') || 1500;
     renderTimeout = setTimeout(renderVisualization, debounceTime);
@@ -119,6 +162,42 @@ function debouncedRender() {
 function updateRenderDebounce(newDebounce) {
     // The next render will automatically use the new debounce time
     // No need to do anything special here
+}
+
+// Set preview fit mode and update button states
+function setPreviewFitMode(mode) {
+    previewFitMode = mode;
+
+    // Update button states
+    document.getElementById('preview-fit-default').classList.toggle('active', mode === 'default');
+    document.getElementById('preview-fit-width').classList.toggle('active', mode === 'width');
+    document.getElementById('preview-fit-full').classList.toggle('active', mode === 'full');
+
+    // Re-render with new fit mode
+    renderVisualization();
+}
+
+// Show preview overlay (dims the visualization)
+function showPreviewOverlay() {
+    const overlay = document.getElementById('preview-overlay');
+    if (overlay) {
+        overlay.style.display = 'block';
+        // Trigger reflow to enable transition
+        void overlay.offsetHeight;
+        overlay.classList.add('active');
+    }
+}
+
+// Hide preview overlay
+function hidePreviewOverlay() {
+    const overlay = document.getElementById('preview-overlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        // Wait for transition to finish before hiding
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 200);
+    }
 }
 
 // Load Vega libraries dynamically with UMD builds

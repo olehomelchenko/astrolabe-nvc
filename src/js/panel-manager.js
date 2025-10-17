@@ -148,6 +148,11 @@ function initializeResize() {
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
 
+            // Show overlay if resizing preview panel (in non-default fit mode)
+            if (typeof previewFitMode !== 'undefined' && previewFitMode !== 'default') {
+                showPreviewOverlay();
+            }
+
             e.preventDefault();
         });
     });
@@ -194,6 +199,11 @@ function initializeResize() {
             updatePanelMemory();
 
             saveLayoutToStorage();
+
+            // Re-render preview if fit mode is not 'default' (adaptive re-render on resize)
+            if (typeof previewFitMode !== 'undefined' && previewFitMode !== 'default') {
+                debouncedRender();
+            }
         }
     });
 }

@@ -160,10 +160,19 @@
             <!-- Preview Panel -->
             <div class="panel preview-panel" id="preview-panel">
                 <div class="panel-header">
-                    Preview
+                    <span>Preview</span>
+                    <div class="preview-controls">
+                        <span class="view-label">Fit:</span>
+                        <div class="view-toggle-group">
+                            <button class="btn btn-toggle active" id="preview-fit-default" title="Display at original spec dimensions">Original</button>
+                            <button class="btn btn-toggle" id="preview-fit-width" title="Scale to fit preview pane width">Width</button>
+                            <button class="btn btn-toggle" id="preview-fit-full" title="Scale to fit entire preview pane">Full</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="panel-content">
-                    <div id="vega-preview" style="height: 100%; width: 100%; overflow: auto;"></div>
+                <div class="panel-content" style="position: relative;">
+                    <div id="vega-preview" style="height: 100%; width: 100%; overflow: auto; display: flex; align-items: center; justify-content: center;"></div>
+                    <div id="preview-overlay" class="preview-overlay" style="display: none;"></div>
                 </div>
             </div>
         </div>
