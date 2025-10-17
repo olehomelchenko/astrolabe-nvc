@@ -16,6 +16,31 @@ function generateSnippetName() {
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 }
 
+// Nested spec keys for recursive traversal
+const NESTED_SPEC_KEYS = ['layer', 'concat', 'hconcat', 'vconcat', 'spec'];
+
+// Generic spec traversal helper - executes callback on each spec object
+// Returns first non-undefined result, or defaultReturn if no match found
+function traverseSpec(spec, callback, defaultReturn = null) {
+    if (!spec || typeof spec !== 'object') return defaultReturn;
+
+    const result = callback(spec);
+    if (result !== undefined) return result;
+
+    for (const key of NESTED_SPEC_KEYS) {
+        if (Array.isArray(spec[key])) {
+            for (const item of spec[key]) {
+                const result = traverseSpec(item, callback, undefined);
+                if (result !== undefined) return result;
+            }
+        } else if (spec[key] && typeof spec[key] === 'object') {
+            const result = traverseSpec(spec[key], callback, undefined);
+            if (result !== undefined) return result;
+        }
+    }
+    return defaultReturn;
+}
+
 // Extract dataset references from Vega-Lite spec
 function extractDatasetRefs(spec) {
     const datasetNames = new Set();
@@ -42,56 +67,39 @@ function extractDatasetRefs(spec) {
 
 // Detect if spec has inline data (data.values)
 function hasInlineData(spec) {
-    if (!spec || typeof spec !== 'object') return false;
-
-    // Check top-level data.values
-    if (spec.data && Array.isArray(spec.data.values)) {
-        return true;
-    }
-
-    // Check common nested locations (layer, concat, hconcat, vconcat, facet)
-    const nestedKeys = ['layer', 'concat', 'hconcat', 'vconcat', 'spec'];
-    for (const key of nestedKeys) {
-        if (Array.isArray(spec[key])) {
-            for (const item of spec[key]) {
-                if (hasInlineData(item)) {
-                    return true;
-                }
-            }
-        } else if (spec[key] && typeof spec[key] === 'object') {
-            if (hasInlineData(spec[key])) {
+    return traverseSpec(spec, (s) => {
+        if (s.data && s.data.values) {
+            if (Array.isArray(s.data.values) || typeof s.data.values === 'string') {
                 return true;
             }
         }
-    }
-
-    return false;
+        return undefined;
+    }, false) === true;
 }
 
 // Extract inline data from spec (finds first occurrence)
 function extractInlineDataFromSpec(spec) {
-    if (!spec || typeof spec !== 'object') return null;
-
-    // Check top-level data.values
-    if (spec.data && Array.isArray(spec.data.values)) {
-        return spec.data.values;
-    }
-
-    // Check nested locations
-    const nestedKeys = ['layer', 'concat', 'hconcat', 'vconcat', 'spec'];
-    for (const key of nestedKeys) {
-        if (Array.isArray(spec[key])) {
-            for (const item of spec[key]) {
-                const data = extractInlineDataFromSpec(item);
-                if (data) return data;
+    return traverseSpec(spec, (s) => {
+        if (s.data && s.data.values) {
+            if (Array.isArray(s.data.values) || typeof s.data.values === 'string') {
+                return s.data.values;
             }
-        } else if (spec[key] && typeof spec[key] === 'object') {
-            const data = extractInlineDataFromSpec(spec[key]);
-            if (data) return data;
         }
-    }
+        return undefined;
+    }, null);
+}
 
-    return null;
+// Detect inline data format from spec
+function detectInlineDataFormat(spec) {
+    return traverseSpec(spec, (s) => {
+        if (s.data && s.data.format && s.data.format.type) {
+            const formatType = s.data.format.type.toLowerCase();
+            if (formatType === 'csv' || formatType === 'tsv' || formatType === 'json' || formatType === 'topojson') {
+                return formatType;
+            }
+        }
+        return undefined;
+    }, 'json');
 }
 
 // Replace inline data with dataset reference
@@ -100,30 +108,31 @@ function replaceInlineDataWithReference(spec, datasetName) {
 
     // Clone the spec to avoid mutation
     const newSpec = JSON.parse(JSON.stringify(spec));
+    let replaced = false;
 
-    function replaceData(obj) {
-        if (!obj || typeof obj !== 'object') return;
+    // Traverse and replace first occurrence of inline data
+    (function traverseAndReplace(obj) {
+        if (replaced || !obj || typeof obj !== 'object') return;
 
-        // Replace top-level data.values with data.name
-        if (obj.data && Array.isArray(obj.data.values)) {
+        if (obj.data && obj.data.values && (Array.isArray(obj.data.values) || typeof obj.data.values === 'string')) {
             obj.data = { name: datasetName };
-            return; // Stop after first replacement
+            replaced = true;
+            return;
         }
 
-        // Check nested locations
-        const nestedKeys = ['layer', 'concat', 'hconcat', 'vconcat', 'spec'];
-        for (const key of nestedKeys) {
+        for (const key of NESTED_SPEC_KEYS) {
+            if (replaced) return;
             if (Array.isArray(obj[key])) {
                 for (const item of obj[key]) {
-                    replaceData(item);
+                    traverseAndReplace(item);
+                    if (replaced) return;
                 }
             } else if (obj[key] && typeof obj[key] === 'object') {
-                replaceData(obj[key]);
+                traverseAndReplace(obj[key]);
             }
         }
-    }
+    })(newSpec);
 
-    replaceData(newSpec);
     return newSpec;
 }
 
@@ -899,9 +908,9 @@ function showExtractModal() {
         return;
     }
 
-    // Extract the inline data
+    // Extract the inline data and its format
     const inlineData = extractInlineDataFromSpec(spec);
-    if (!inlineData || inlineData.length === 0) {
+    if (!inlineData || (Array.isArray(inlineData) && inlineData.length === 0) || (typeof inlineData === 'string' && inlineData.trim() === '')) {
         Toast.warning('No inline data could be extracted.');
         return;
     }
@@ -916,10 +925,24 @@ function showExtractModal() {
     const errorEl = document.getElementById('extract-form-error');
 
     nameInput.value = defaultName;
-    previewEl.textContent = JSON.stringify(inlineData.slice(0, 10), null, 2);
-    if (inlineData.length > 10) {
-        previewEl.textContent += `\n\n... (${inlineData.length - 10} more rows)`;
+
+    // Generate preview based on data type
+    if (typeof inlineData === 'string') {
+        // CSV/TSV data - show first few lines
+        const lines = inlineData.trim().split('\n');
+        const previewLines = lines.slice(0, 11); // Header + 10 data rows
+        previewEl.textContent = previewLines.join('\n');
+        if (lines.length > 11) {
+            previewEl.textContent += `\n\n... (${lines.length - 11} more rows)`;
+        }
+    } else {
+        // JSON data (array)
+        previewEl.textContent = JSON.stringify(inlineData.slice(0, 10), null, 2);
+        if (inlineData.length > 10) {
+            previewEl.textContent += `\n\n... (${inlineData.length - 10} more rows)`;
+        }
     }
+
     errorEl.textContent = '';
 
     modal.style.display = 'flex';
@@ -962,8 +985,11 @@ async function extractToDataset() {
     }
 
     try {
+        // Detect the data format (json, csv, tsv, etc.)
+        const format = detectInlineDataFormat(snippet.draftSpec);
+
         // Create dataset in IndexedDB
-        await DatasetStorage.createDataset(datasetName, inlineData, 'json', 'inline', `Extracted from snippet: ${snippet.name}`);
+        await DatasetStorage.createDataset(datasetName, inlineData, format, 'inline', `Extracted from snippet: ${snippet.name}`);
 
         // Replace inline data with dataset reference in draft spec
         snippet.draftSpec = replaceInlineDataWithReference(snippet.draftSpec, datasetName);
@@ -1272,6 +1298,28 @@ function normalizeSnippet(externalSnippet) {
     };
 }
 
+// Calculate size of data in bytes
+function calculateDataSize(data) {
+    return new Blob([JSON.stringify(data)]).size;
+}
+
+// Estimate if import would fit in storage (before attempting to save)
+function estimateImportFit(existingSnippets, newSnippets) {
+    const currentSize = calculateDataSize(existingSnippets);
+    const newDataSize = calculateDataSize(newSnippets);
+    const totalSize = currentSize + newDataSize;
+    const available = STORAGE_LIMIT_BYTES - currentSize;
+
+    return {
+        currentSize: currentSize,
+        newDataSize: newDataSize,
+        totalSize: totalSize,
+        available: available,
+        willFit: totalSize <= STORAGE_LIMIT_BYTES,
+        overageBytes: Math.max(0, totalSize - STORAGE_LIMIT_BYTES)
+    };
+}
+
 // Import snippets from JSON file
 function importSnippets(fileInput) {
     const file = fileInput.files[0];
@@ -1295,6 +1343,8 @@ function importSnippets(fileInput) {
             const existingIds = new Set(existingSnippets.map(s => s.id));
 
             let importedCount = 0;
+            const normalizedSnippets = [];
+
             snippetsToImport.forEach(snippet => {
                 const normalized = normalizeSnippet(snippet);
 
@@ -1303,18 +1353,45 @@ function importSnippets(fileInput) {
                     normalized.id = generateSnippetId();
                 }
 
-                existingSnippets.push(normalized);
+                normalizedSnippets.push(normalized);
                 existingIds.add(normalized.id);
                 importedCount++;
             });
 
-            // Save all snippets
-            if (SnippetStorage.saveSnippets(existingSnippets)) {
-                Toast.success(`Successfully imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''}`);
+            // Estimate fit before attempting save
+            const fit = estimateImportFit(existingSnippets, normalizedSnippets);
+
+            if (!fit.willFit) {
+                // Still try to load - let user decide if they want to proceed
+                Toast.warning(
+                    `⚠️ Import is ${formatBytes(fit.overageBytes)} over the 5 MB limit. Attempting to load...`,
+                    5000
+                );
+            }
+
+            // Merge snippets
+            const allSnippets = existingSnippets.concat(normalizedSnippets);
+
+            // Attempt to save
+            if (SnippetStorage.saveSnippets(allSnippets)) {
+                const message = fit.willFit
+                    ? `Successfully imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''}`
+                    : `Imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''} (Storage: ${formatBytes(fit.totalSize)} / 5 MB)`;
+
+                Toast.success(message);
                 renderSnippetList();
+                updateStorageMonitor();
 
                 // Track event
                 Analytics.track('snippets-import', `Import ${importedCount} snippets`);
+            } else {
+                // Save failed - show detailed error
+                const overageBytes = fit.overageBytes > 0 ? fit.overageBytes : calculateDataSize(allSnippets) - STORAGE_LIMIT_BYTES;
+                const overageSize = formatBytes(overageBytes);
+                Toast.error(
+                    `Storage quota exceeded by ${overageSize}. Please delete some snippets and try again.`,
+                    6000
+                );
             }
 
         } catch (error) {
