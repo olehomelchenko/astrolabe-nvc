@@ -410,14 +410,6 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
     └── storage-examples.md   # Data model specifications
 ```
 
-## Development Principles
-
-- **Iterative**: Each phase produces working, testable functionality
-- **Lean**: No frameworks, no build step, minimal dependencies
-- **Data-first**: Storage schema designed upfront for extensibility
-- **User-focused**: Auto-save, clear state, forgiving UX
-- **Maintainable**: Clean code organization with logical separation of concerns
-- **Simple**: Favor code removal over addition; avoid over-engineering
 
 ## Code Organization
 
