@@ -315,42 +315,28 @@ function renderSnippetList(searchQuery = null) {
     }
 
     const snippets = SnippetStorage.listSnippets(null, null, searchQuery);
-    const snippetList = document.querySelector('.snippet-list');
     const placeholder = document.querySelector('.placeholder');
 
+    // Handle empty state with placeholder
     if (snippets.length === 0) {
-        snippetList.innerHTML = '';
+        document.querySelector('.snippet-list').innerHTML = '';
         placeholder.style.display = 'block';
-
-        // Show different message for search vs empty state
-        if (searchQuery && searchQuery.trim()) {
-            placeholder.textContent = 'No snippets match your search';
-        } else {
-            placeholder.textContent = 'No snippets found';
-        }
+        placeholder.textContent = searchQuery && searchQuery.trim()
+            ? 'No snippets match your search'
+            : 'No snippets found';
         return;
     }
 
     placeholder.style.display = 'none';
 
-    const ghostCard = `
-        <li class="snippet-item ghost-card" id="new-snippet-card">
-            <div class="snippet-name">+ Create New Snippet</div>
-            <div class="snippet-date">Click to create</div>
-        </li>
-    `;
-
     const currentSort = AppSettings.get('sortBy');
 
-    // Use generic formatter
+    // Format individual snippet items
     const formatSnippetItem = (snippet) => {
         // Show appropriate date based on current sort
-        let dateText;
-        if (currentSort === 'created') {
-            dateText = formatSnippetDate(snippet.created);
-        } else {
-            dateText = formatSnippetDate(snippet.modified);
-        }
+        const dateText = currentSort === 'created'
+            ? formatSnippetDate(snippet.created)
+            : formatSnippetDate(snippet.modified);
 
         // Calculate snippet size
         const snippetSize = new Blob([JSON.stringify(snippet)]).size;
@@ -377,11 +363,20 @@ function renderSnippetList(searchQuery = null) {
         `;
     };
 
-    const snippetItems = snippets.map(formatSnippetItem).join('');
-    snippetList.innerHTML = ghostCard + snippetItems;
+    // Ghost card for creating new snippets
+    const ghostCard = `
+        <li class="snippet-item ghost-card" id="new-snippet-card">
+            <div class="snippet-name">+ Create New Snippet</div>
+            <div class="snippet-date">Click to create</div>
+        </li>
+    `;
 
-    // Re-attach event listeners for snippet selection
-    attachSnippetEventListeners();
+    // Use generic list renderer
+    renderGenericList('snippet-list', snippets, formatSnippetItem, selectSnippet, {
+        ghostCard: ghostCard,
+        onGhostCardClick: createNewSnippet,
+        itemSelector: '.snippet-item'
+    });
 }
 
 // Initialize sort controls
@@ -556,26 +551,6 @@ function clearSelection() {
         placeholder.style.display = 'block';
         placeholder.textContent = 'Click to select a snippet';
     }
-}
-
-// Attach event listeners to snippet items
-function attachSnippetEventListeners() {
-    const snippetItems = document.querySelectorAll('.snippet-item');
-    snippetItems.forEach(item => {
-        // Handle ghost card for new snippet creation
-        if (item.id === 'new-snippet-card') {
-            item.addEventListener('click', function () {
-                createNewSnippet();
-            });
-            return;
-        }
-
-        // Left click to select
-        item.addEventListener('click', function () {
-            const snippetId = parseFloat(this.dataset.itemId);
-            selectSnippet(snippetId);
-        });
-    });
 }
 
 // Select and load a snippet into the editor

@@ -278,16 +278,16 @@ async function fetchURLMetadata(url, format) {
 // Render dataset list in modal
 async function renderDatasetList() {
     const datasets = await DatasetStorage.listDatasets();
-    const listContainer = document.getElementById('dataset-list');
 
     if (datasets.length === 0) {
-        listContainer.innerHTML = '<div class="dataset-empty">No datasets yet. Click "New Dataset" to create one.</div>';
+        document.getElementById('dataset-list').innerHTML = '<div class="dataset-empty">No datasets yet. Click "New Dataset" to create one.</div>';
         return;
     }
 
     // Sort by modified date (most recent first)
     datasets.sort((a, b) => new Date(b.modified) - new Date(a.modified));
 
+    // Format individual dataset items
     const formatDatasetItem = (dataset) => {
         let metaText;
         if (dataset.source === 'url') {
@@ -318,15 +318,10 @@ async function renderDatasetList() {
         `;
     };
 
-    const html = datasets.map(formatDatasetItem).join('');
-    listContainer.innerHTML = html;
-
-    // Attach click handlers
-    document.querySelectorAll('.dataset-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const datasetId = parseFloat(this.dataset.itemId);
-            selectDataset(datasetId);
-        });
+    // Use generic list renderer
+    renderGenericList('dataset-list', datasets, formatDatasetItem, selectDataset, {
+        emptyMessage: 'No datasets yet. Click "New Dataset" to create one.',
+        itemSelector: '.dataset-item'
     });
 }
 

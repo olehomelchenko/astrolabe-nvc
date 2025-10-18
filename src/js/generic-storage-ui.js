@@ -3,29 +3,56 @@
 // Used by both snippet-manager.js and dataset-manager.js
 
 /**
- * Generic list rendering function
+ * Generic list rendering function with support for ghost cards and custom selectors
  * @param {string} containerId - ID of container to render list into
  * @param {Array} items - Array of items to render
  * @param {Function} formatItem - Function that takes item and returns HTML string
  * @param {Function} onSelectItem - Callback when item is selected, receives item ID
- * @param {string} emptyMessage - Message to show when list is empty
+ * @param {Object} options - Optional configuration
+ *   - emptyMessage: Message when list is empty
+ *   - ghostCard: HTML string for "create new" card (prepended to list)
+ *   - onGhostCardClick: Callback for ghost card click
+ *   - itemSelector: CSS selector for clickable items (default: '[data-item-id]')
+ *   - ghostCardSelector: CSS selector for ghost card (default: '.ghost-card')
+ *   - parseId: Function to parse ID from string (default: parseFloat)
  */
-function renderGenericList(containerId, items, formatItem, onSelectItem, emptyMessage = 'No items found') {
+function renderGenericList(containerId, items, formatItem, onSelectItem, options = {}) {
+    const {
+        emptyMessage = 'No items found',
+        ghostCard = null,
+        onGhostCardClick = null,
+        itemSelector = '[data-item-id]',
+        ghostCardSelector = '.ghost-card',
+        parseId = parseFloat
+    } = options;
+
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    if (items.length === 0) {
+    if (items.length === 0 && !ghostCard) {
         container.innerHTML = `<div class="list-empty">${emptyMessage}</div>`;
         return;
     }
 
-    const html = items.map(formatItem).join('');
-    container.innerHTML = html;
+    // Render ghost card + items
+    const itemsHtml = items.map(formatItem).join('');
+    container.innerHTML = (ghostCard || '') + itemsHtml;
 
-    // Attach click handlers to items
-    container.querySelectorAll('[data-item-id]').forEach(item => {
+    // Attach click handler to ghost card
+    if (ghostCard && onGhostCardClick) {
+        const ghostElement = container.querySelector(ghostCardSelector);
+        if (ghostElement) {
+            ghostElement.addEventListener('click', onGhostCardClick);
+        }
+    }
+
+    // Attach click handlers to regular items
+    container.querySelectorAll(itemSelector).forEach(item => {
+        // Skip ghost cards
+        if (item.matches(ghostCardSelector)) return;
+
         item.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
+            const itemId = parseId(this.dataset.itemId);
             onSelectItem(itemId);
         });
     });
