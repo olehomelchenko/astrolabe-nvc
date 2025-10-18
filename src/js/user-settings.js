@@ -20,7 +20,8 @@ const DEFAULT_SETTINGS = {
     },
 
     ui: {
-        theme: 'light'             // 'light' | 'experimental'
+        theme: 'light',            // 'light' | 'experimental'
+        previewFitMode: 'default'  // 'default' | 'width' | 'full'
     },
 
     formatting: {

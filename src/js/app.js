@@ -104,6 +104,10 @@ document.addEventListener('DOMContentLoaded', function () {
         // Initial render
         renderVisualization();
 
+        // Load saved preview fit mode from settings
+        const savedPreviewFitMode = getSetting('ui.previewFitMode') || 'default';
+        setPreviewFitMode(savedPreviewFitMode);
+
         // Initialize auto-save functionality
         initializeAutoSave();
 

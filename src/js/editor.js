@@ -173,6 +173,11 @@ function setPreviewFitMode(mode) {
     document.getElementById('preview-fit-width').classList.toggle('active', mode === 'width');
     document.getElementById('preview-fit-full').classList.toggle('active', mode === 'full');
 
+    // Save to settings
+    if (typeof updateSetting === 'function') {
+        updateSetting('ui.previewFitMode', mode);
+    }
+
     // Re-render with new fit mode
     renderVisualization();
 }
