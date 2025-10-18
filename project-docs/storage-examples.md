@@ -1,6 +1,13 @@
+# Astrolabe - Storage Examples
 
+> **Data structure examples and schema documentation**
+>
+> For technical architecture, see [architecture.md](architecture.md)
+> For feature inventory, see [features-list.md](features-list.md)
 
-Snippet example: 
+---
+
+## Snippet Schema Example 
 ```json
 
 {

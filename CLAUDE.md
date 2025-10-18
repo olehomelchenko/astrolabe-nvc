@@ -10,58 +10,57 @@ Instructions for Claude Code when working on this project.
 
 - **Frontend-only**: HTML/CSS/JavaScript with CDN dependencies (Monaco Editor, Vega-Embed)
 - **Storage**:
-  - **Snippets**: localStorage with Phase 0 schema (id, name, created, modified, spec, draftSpec, comment, tags, datasetRefs, meta)
+  - **Snippets**: localStorage (id, name, created, modified, spec, draftSpec, comment, tags, datasetRefs, meta)
   - **Datasets**: IndexedDB (unlimited size, multi-format: JSON/CSV/TSV/TopoJSON, inline & URL sources)
 - **Structure**: Three resizable panels (snippet library, Monaco editor, live preview) + Dataset Manager modal
-- **Deployment**: Web app files in `/web` folder; `/docs` folder contains development documentation only
+- **Deployment**: Web app files in `/web` folder; `/project-docs` folder contains development documentation
 - **No build tools**: Open `web/index.html` directly in browser (needs local server for IndexedDB)
 
 ## Current Status
 
-**Completed**: Phases 0-13 (Core functionality + Dataset Management + Advanced Dataset Features + Polish & UX Refinements)
-**In Progress**: GitHub Pages deployment preparation
-**Next**: Phase 14 - Advanced Snippet Features or additional refinements
+**Version**: 1.0.0 (Feature-complete MVP)
+**Deployment**: Live at astrolabe-viz.com
+**Mode**: Maintenance and iterative improvements
 
-### Key Features Implemented
-- ✅ Snippet management with draft/published workflow
-- ✅ Multi-field sorting and real-time search
-- ✅ Storage monitoring and import/export
-- ✅ **Dataset management with IndexedDB**
-  - Multi-format support (JSON, CSV, TSV, TopoJSON)
-  - Multi-source support (inline data, URL references)
-  - Automatic metadata calculation and URL fetching
-  - Dataset reference resolution in Vega-Lite specs
-  - Modal UI with button-group selectors
-- ✅ **Advanced Dataset Features (Phase 12)**
-  - Bidirectional snippet ↔ dataset linking with usage tracking
-  - Extract inline data to datasets
-  - Import/Export datasets with auto-format detection
-  - Table preview with type detection (🔢📅🔤✓)
-  - On-demand URL preview loading with caching
-- ✅ **Polish & UX Features (Phase 13)**
-  - Cross-platform keyboard shortcuts (Cmd/Ctrl+Shift+N, Cmd/Ctrl+K, Cmd/Ctrl+S, Escape)
-  - Toast notification system (error, success, warning, info)
-  - Comprehensive tooltips on all interactive elements
-  - Enhanced Help modal with 6 sections (About, Features, Getting Started, Shortcuts, Storage, Privacy)
-  - Data persistence warnings
-  - **User Settings System**
-    - Configurable editor options (font size 10-18px, tab size, minimap, word wrap, line numbers)
-    - Performance tuning (render debounce delay 300-3000ms)
-    - Date formatting options (smart/relative, locale, ISO, custom with tokens)
-    - UI theme selection (Light, Dark Experimental)
-  - **Theme System**
-    - Light theme (Windows 2000 classic aesthetic)
-    - Experimental dark theme with CSS variables for theming
-    - Automatic editor theme synchronization with UI theme
+### Core Capabilities
+- Snippet management with draft/published workflow
+- Dataset library (IndexedDB) with multi-format support (JSON, CSV, TSV, TopoJSON)
+- Dataset reference resolution in Vega-Lite specs
+- User settings and theme system (Light, Dark Experimental)
+- Import/export functionality for snippets and datasets
+- Real-time search and multi-field sorting
+- Cross-platform keyboard shortcuts
+- Toast notification system
+- Storage monitoring with visual warnings
+- URL state management (shareable links, browser navigation)
+- Bidirectional snippet ↔ dataset linking
+- Table preview with type detection
+- Extract inline data to datasets
 
-See `docs/dev-plan.md` for complete roadmap and technical details.
+See `project-docs/architecture.md` for complete technical details.
+
+## Development Mode
+
+Development is **iterative** based on:
+- Bug reports and fixes
+- User feedback and feature requests
+- Performance optimization
+- Cross-browser compatibility improvements
+- Code quality enhancements
+
+When implementing changes:
+- Treat each issue/enhancement as an independent task
+- Group related bugfixes in a single commit
+- Update CHANGELOG.md for user-facing changes
+- Test thoroughly across different browsers when possible
+- Maintain backward compatibility with existing data
 
 ## Development Principles
 
-- **Iterative**: Each phase produces working, testable functionality
 - **Lean**: No frameworks, no build step, minimal dependencies
 - **Maintainable**: Clean code organization with logical separation of concerns
 - **Simple**: Favor code removal over addition; avoid over-engineering
+- **Local-first**: All data stored in browser, no server dependencies
 
 ## General coding instructions 
 Astrolabe is a project with minimalistic philosophy; it tries to avoid external dependencies and complexity, if possible.

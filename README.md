@@ -75,10 +75,11 @@ A lightweight, browser-based snippet manager for Vega-Lite visualizations. Organ
 
 ## Documentation
 
-- **`docs/dev-plan.md`** – Complete development roadmap, architecture decisions, and implementation details (13 phases)
-- **`docs/features-list.md`** – Feature matrix and implementation status
-- **`docs/storage-examples.md`** – Data structure examples and storage schema
-- **`CLAUDE.md`** – Project context and current status (for AI assistants)
+- **`project-docs/architecture.md`** – Technical reference: data schemas, implementation patterns, and system architecture
+- **`project-docs/features-list.md`** – Complete feature inventory and code organization
+- **`project-docs/storage-examples.md`** – Data structure examples and storage schema
+- **`CHANGELOG.md`** – Version history and release notes
+- **`CLAUDE.md`** – Project context and development guidelines (for AI assistants)
 
 ## Known Limitations & Feedback
 
@@ -133,7 +134,28 @@ This project uses MIT license.
 
 ## Future Roadmap
 
-- Authentication & Cloud Sync (optional backend integration) - will not be done via AI editors as it poses high risk of messing up with people's personal data. Contributors welcome for this milestone!
+Planned improvements based on user feedback:
+
+**Short-term** (Maintenance & Polish):
+- Cross-browser compatibility testing and fixes
+- Dark theme visibility improvements
+- Performance optimization for large datasets
+- Additional keyboard shortcuts and UX refinements
+
+**Medium-term** (Feature Enhancements):
+- Advanced tagging system with tag filtering
+- Snippet templates and starter library
+- Bulk operations (delete multiple, export selected)
+- Drag-and-drop import for snippets and datasets
+
+**Long-term** (Major Features):
+- Authentication & cloud sync (optional backend integration)
+  - **Note**: Will not be implemented via AI editors due to security concerns with personal data. Contributors welcome for this milestone!
+- Snippet sharing via URL
+- Public snippet gallery (optional)
+- Collaborative editing
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed roadmap and [GitHub Issues](https://github.com/olehomelchenko/astrolabe-nvc/issues) for active feature requests and bug reports.
 
 ---
 

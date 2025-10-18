@@ -1,13 +1,14 @@
-# Astrolabe - Current Features List
+# Astrolabe - Feature Reference
 
-> **Purpose**: Comprehensive inventory of all implemented features for code review and optimization
-> **Created**: 2025-10-15
-> **Updated**: 2025-10-16
-> **Status**: Phases 0-12 Complete, Phase 13 In Progress (Keyboard Shortcuts, Notifications, Tooltips, Help Documentation)
+> **Comprehensive inventory of all implemented features for code review and maintenance**
+> Version 1.0.0 | Updated 2025-10-19
+>
+> For technical details, see [architecture.md](architecture.md)
+> For data structures, see [storage-examples.md](storage-examples.md)
 
 ---
 
-## 🔭 **ASTROLABE - Current Features Inventory**
+## Feature Inventory
 
 ### **1. Layout & UI Structure**
 - Three-panel resizable layout (Snippet Library | Editor | Preview)
@@ -201,7 +202,7 @@
 
 ---
 
-### **13. Advanced Dataset Features (Phase 12)**
+### **13. Advanced Dataset Features**
 - **Dataset Dependencies & Linking**:
   - Recursive dataset reference extraction from Vega-Lite specs
   - Bidirectional snippet ↔ dataset linking with clickable links
@@ -293,7 +294,7 @@ src/
 
 ---
 
-### **13. Polish & UX Refinements (Phase 13)** ⏳ _In Progress_
+### **14. Polish & UX Refinements**
 
 **Keyboard Shortcuts**:
 - Cmd/Ctrl+Shift+N: Create new snippet
@@ -329,16 +330,31 @@ src/
 
 ---
 
-## 📝 **Next Steps**
+## Potential Enhancements
 
-### Phase 13 In Progress! Keyboard shortcuts, notifications, tooltips, and help documentation complete.
+Based on user feedback and feature requests, potential improvements include:
 
-**Remaining Phase 13 Tasks**:
-- [ ] Loading states for rendering
-- [ ] Empty states (no snippets, no datasets)
-- [ ] Improved visual design polish
-- [ ] Cross-browser testing
+**User Experience**:
+- Loading states for rendering
+- Enhanced empty states (no snippets, no datasets)
+- Visual design refinements
+- Additional keyboard shortcuts
 
-**Future Phases**:
-- **Phase 14**: Advanced Snippet Features (tagging system, templates, bulk operations)
-- **Phase 15**: Authentication & Backend (cloud sync, sharing)
+**Features**:
+- Advanced tagging system with tag filtering
+- Snippet templates and starter library
+- Bulk operations (delete multiple, export selected)
+- Drag-and-drop import
+
+**Technical**:
+- Cross-browser compatibility testing and fixes
+- Performance optimization for large datasets
+- Dark theme visibility improvements
+- Code refactoring and modularization
+
+**Future Major Features**:
+- Authentication and cloud sync
+- Snippet sharing via URL
+- Collaborative editing
+
+See [CHANGELOG.md](../CHANGELOG.md) for planned roadmap and [GitHub Issues](https://github.com/olehomelchenko/astrolabe-nvc/issues) for active feature requests.
