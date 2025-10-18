@@ -146,34 +146,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (helpLink) {
-        helpLink.addEventListener('click', function () {
-            openHelpModal();
-        });
+        helpLink.addEventListener('click', () => ModalManager.open('help-modal'));
     }
 
     const donateLink = document.getElementById('donate-link');
     if (donateLink) {
-        donateLink.addEventListener('click', function () {
-            openDonateModal();
-        });
+        donateLink.addEventListener('click', () => ModalManager.open('donate-modal'));
     }
 
     // Settings Modal
     const settingsLink = document.getElementById('settings-link');
-    const settingsModal = document.getElementById('settings-modal');
-    const settingsModalClose = document.getElementById('settings-modal-close');
     const settingsApplyBtn = document.getElementById('settings-apply-btn');
     const settingsResetBtn = document.getElementById('settings-reset-btn');
     const settingsCancelBtn = document.getElementById('settings-cancel-btn');
 
     if (settingsLink) {
-        settingsLink.addEventListener('click', function () {
-            openSettingsModal();
-        });
-    }
-
-    if (settingsModalClose) {
-        settingsModalClose.addEventListener('click', closeSettingsModal);
+        settingsLink.addEventListener('click', openSettingsModal);
     }
 
     if (settingsCancelBtn) {
@@ -194,14 +182,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Close on overlay click
-    if (settingsModal) {
-        settingsModal.addEventListener('click', function (e) {
-            if (e.target === settingsModal) {
-                closeSettingsModal();
-            }
-        });
-    }
 
     // Settings UI interactions
     const fontSizeSlider = document.getElementById('setting-font-size');
@@ -235,8 +215,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Dataset Manager
     const datasetsLink = document.getElementById('datasets-link');
     const toggleDatasetsBtn = document.getElementById('toggle-datasets');
-    const datasetModal = document.getElementById('dataset-modal');
-    const datasetModalClose = document.getElementById('dataset-modal-close');
     const newDatasetBtn = document.getElementById('new-dataset-btn');
     const cancelDatasetBtn = document.getElementById('cancel-dataset-btn');
     const saveDatasetBtn = document.getElementById('save-dataset-btn');
@@ -249,20 +227,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (toggleDatasetsBtn) {
         toggleDatasetsBtn.addEventListener('click', openDatasetManager);
-    }
-
-    // Close dataset manager
-    if (datasetModalClose) {
-        datasetModalClose.addEventListener('click', closeDatasetManager);
-    }
-
-    // Close on overlay click
-    if (datasetModal) {
-        datasetModal.addEventListener('click', function (e) {
-            if (e.target === datasetModal) {
-                closeDatasetManager();
-            }
-        });
     }
 
     // New dataset button
@@ -339,39 +303,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Help Modal
-    const helpModal = document.getElementById('help-modal');
-    const helpModalClose = document.getElementById('help-modal-close');
+    // Global modal event delegation - handles close buttons and overlay clicks
+    document.addEventListener('click', function(e) {
+        // Handle modal close buttons (×)
+        if (e.target.id && e.target.id.endsWith('-modal-close')) {
+            const modalId = e.target.id.replace('-close', '');
+            ModalManager.close(modalId);
+            return;
+        }
 
-    if (helpModalClose) {
-        helpModalClose.addEventListener('click', closeHelpModal);
-    }
-
-    // Close on overlay click
-    if (helpModal) {
-        helpModal.addEventListener('click', function (e) {
-            if (e.target === helpModal) {
-                closeHelpModal();
-            }
-        });
-    }
-
-    // Donate Modal
-    const donateModal = document.getElementById('donate-modal');
-    const donateModalClose = document.getElementById('donate-modal-close');
-
-    if (donateModalClose) {
-        donateModalClose.addEventListener('click', closeDonateModal);
-    }
-
-    // Close on overlay click
-    if (donateModal) {
-        donateModal.addEventListener('click', function (e) {
-            if (e.target === donateModal) {
-                closeDonateModal();
-            }
-        });
-    }
+        // Handle overlay clicks (clicking outside modal content)
+        if (e.target.classList.contains('modal')) {
+            ModalManager.close(e.target.id);
+            return;
+        }
+    });
 
     // View mode toggle buttons
     document.getElementById('view-draft').addEventListener('click', () => {
@@ -406,14 +352,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Extract modal buttons
-    const extractModalClose = document.getElementById('extract-modal-close');
     const extractCancelBtn = document.getElementById('extract-cancel-btn');
     const extractCreateBtn = document.getElementById('extract-create-btn');
-    const extractModal = document.getElementById('extract-modal');
-
-    if (extractModalClose) {
-        extractModalClose.addEventListener('click', hideExtractModal);
-    }
 
     if (extractCancelBtn) {
         extractCancelBtn.addEventListener('click', hideExtractModal);
@@ -421,15 +361,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (extractCreateBtn) {
         extractCreateBtn.addEventListener('click', extractToDataset);
-    }
-
-    // Close modal on overlay click
-    if (extractModal) {
-        extractModal.addEventListener('click', function (e) {
-            if (e.target === extractModal) {
-                hideExtractModal();
-            }
-        });
     }
 });
 
@@ -495,8 +426,7 @@ const KeyboardActions = {
     },
 
     toggleSettings: function() {
-        const modal = document.getElementById('settings-modal');
-        if (modal && modal.style.display === 'flex') {
+        if (ModalManager.isOpen('settings-modal')) {
             closeSettingsModal();
         } else {
             openSettingsModal();
@@ -504,30 +434,19 @@ const KeyboardActions = {
     },
 
     closeAnyModal: function() {
-        const helpModal = document.getElementById('help-modal');
-        const datasetModal = document.getElementById('dataset-modal');
-        const extractModal = document.getElementById('extract-modal');
-        const donateModal = document.getElementById('donate-modal');
-        const settingsModal = document.getElementById('settings-modal');
-
-        if (helpModal && helpModal.style.display === 'flex') {
-            closeHelpModal();
+        // Try ModalManager first for standard modals
+        if (ModalManager.closeAny()) {
             return true;
         }
-        if (datasetModal && datasetModal.style.display === 'flex') {
-            closeDatasetManager();
-            return true;
-        }
-        if (extractModal && extractModal.style.display === 'flex') {
+        // Handle special modals with custom close logic
+        if (ModalManager.isOpen('extract-modal')) {
             hideExtractModal();
             return true;
         }
-        if (donateModal && donateModal.style.display === 'flex') {
-            closeDonateModal();
-            return true;
-        }
-        if (settingsModal && settingsModal.style.display === 'flex') {
-            closeSettingsModal();
+        // Dataset manager has special close logic (URL state)
+        const datasetModal = document.getElementById('dataset-modal');
+        if (datasetModal && datasetModal.style.display === 'flex') {
+            closeDatasetManager();
             return true;
         }
         return false;
@@ -594,56 +513,14 @@ function registerMonacoKeyboardShortcuts() {
         KeyboardActions.publishDraft);
 }
 
-// Help modal functions
-function openHelpModal() {
-    const modal = document.getElementById('help-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        // Track event
-        Analytics.track('modal-help', 'Open Help modal');
-    }
-}
-
-function closeHelpModal() {
-    const modal = document.getElementById('help-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Donate modal functions
-function openDonateModal() {
-    const modal = document.getElementById('donate-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        // Track event
-        Analytics.track('modal-donate', 'Open Donate modal');
-    }
-}
-
-function closeDonateModal() {
-    const modal = document.getElementById('donate-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Settings modal functions
+// Settings modal functions (special handling for loading settings into UI)
 function openSettingsModal() {
     loadSettingsIntoUI();
-    const modal = document.getElementById('settings-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        // Track event
-        Analytics.track('modal-settings', 'Open Settings modal');
-    }
+    ModalManager.open('settings-modal');
 }
 
 function closeSettingsModal() {
-    const modal = document.getElementById('settings-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    ModalManager.close('settings-modal');
 }
 
 function loadSettingsIntoUI() {

@@ -87,42 +87,24 @@ function getSettings() {
 }
 
 // Get a specific setting by path (e.g., 'editor.fontSize')
+// Simplified: assumes 2-level structure (section.key)
 function getSetting(path) {
     const settings = getSettings();
-    const parts = path.split('.');
-    let value = settings;
-
-    for (const part of parts) {
-        if (value && typeof value === 'object' && part in value) {
-            value = value[part];
-        } else {
-            return undefined;
-        }
-    }
-
-    return value;
+    const [section, key] = path.split('.');
+    return settings?.[section]?.[key];
 }
 
 // Update a specific setting by path
+// Simplified: assumes 2-level structure (section.key)
 function updateSetting(path, value) {
     const settings = getSettings();
-    const parts = path.split('.');
-    let target = settings;
+    const [section, key] = path.split('.');
 
-    // Navigate to the parent object
-    for (let i = 0; i < parts.length - 1; i++) {
-        const part = parts[i];
-        if (!target[part] || typeof target[part] !== 'object') {
-            target[part] = {};
-        }
-        target = target[part];
+    if (settings[section]) {
+        settings[section][key] = value;
+        return saveSettings();
     }
-
-    // Set the value
-    const lastPart = parts[parts.length - 1];
-    target[lastPart] = value;
-
-    return saveSettings();
+    return false;
 }
 
 // Update multiple settings at once
@@ -130,19 +112,10 @@ function updateSettings(updates) {
     const settings = getSettings();
 
     for (const path in updates) {
-        const parts = path.split('.');
-        let target = settings;
-
-        for (let i = 0; i < parts.length - 1; i++) {
-            const part = parts[i];
-            if (!target[part] || typeof target[part] !== 'object') {
-                target[part] = {};
-            }
-            target = target[part];
+        const [section, key] = path.split('.');
+        if (settings[section]) {
+            settings[section][key] = updates[path];
         }
-
-        const lastPart = parts[parts.length - 1];
-        target[lastPart] = updates[path];
     }
 
     return saveSettings();
@@ -152,23 +125,6 @@ function updateSettings(updates) {
 function resetSettings() {
     userSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
     return saveSettings();
-}
-
-// Export settings as JSON
-function exportSettings() {
-    return JSON.stringify(getSettings(), null, 2);
-}
-
-// Import settings from JSON string
-function importSettings(jsonString) {
-    try {
-        const imported = JSON.parse(jsonString);
-        userSettings = mergeWithDefaults(imported);
-        return saveSettings();
-    } catch (error) {
-        console.error('Error importing settings:', error);
-        return false;
-    }
 }
 
 // Format date according to user settings
@@ -253,48 +209,16 @@ function formatCustomDate(date, format) {
     return result;
 }
 
-// Validate setting value
+// Validate setting value - simplified with inline validation rules
 function validateSetting(path, value) {
-    const errors = [];
+    const rules = {
+        'editor.fontSize': () => typeof value === 'number' && value >= 10 && value <= 18 ? [] : ['Font size must be between 10 and 18'],
+        'editor.theme': () => ['vs-light', 'vs-dark', 'hc-black'].includes(value) ? [] : ['Invalid editor theme'],
+        'editor.tabSize': () => typeof value === 'number' && value >= 2 && value <= 8 ? [] : ['Tab size must be between 2 and 8'],
+        'performance.renderDebounce': () => typeof value === 'number' && value >= 300 && value <= 3000 ? [] : ['Render debounce must be between 300-3000ms'],
+        'formatting.dateFormat': () => ['smart', 'locale', 'iso', 'custom'].includes(value) ? [] : ['Invalid date format'],
+        'ui.theme': () => ['light', 'experimental'].includes(value) ? [] : ['Invalid UI theme']
+    };
 
-    if (path === 'editor.fontSize') {
-        if (typeof value !== 'number' || value < 10 || value > 18) {
-            errors.push('Font size must be between 10 and 18');
-        }
-    }
-
-    if (path === 'editor.theme') {
-        const validThemes = ['vs-light', 'vs-dark', 'hc-black'];
-        if (!validThemes.includes(value)) {
-            errors.push('Invalid theme value');
-        }
-    }
-
-    if (path === 'editor.tabSize') {
-        if (typeof value !== 'number' || value < 2 || value > 8) {
-            errors.push('Tab size must be between 2 and 8');
-        }
-    }
-
-    if (path === 'performance.renderDebounce') {
-        if (typeof value !== 'number' || value < 300 || value > 3000) {
-            errors.push('Render debounce must be between 300 and 3000ms');
-        }
-    }
-
-    if (path === 'formatting.dateFormat') {
-        const validFormats = ['smart', 'locale', 'iso', 'custom'];
-        if (!validFormats.includes(value)) {
-            errors.push('Invalid date format value');
-        }
-    }
-
-    if (path === 'ui.theme') {
-        const validThemes = ['light', 'experimental'];
-        if (!validThemes.includes(value)) {
-            errors.push('Invalid theme value');
-        }
-    }
-
-    return errors;
+    return rules[path] ? rules[path]() : [];
 }

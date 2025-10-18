@@ -224,6 +224,52 @@ const Analytics = {
     }
 };
 
+// Modal Manager - Generic modal control utility
+const ModalManager = {
+    // Track which events to send to analytics when opening modals
+    trackingMap: {
+        'help-modal': ['modal-help', 'Open Help modal'],
+        'donate-modal': ['modal-donate', 'Open Donate modal'],
+        'settings-modal': ['modal-settings', 'Open Settings modal'],
+        'dataset-modal': ['modal-dataset', 'Open Dataset Manager']
+    },
+
+    open(modalId, shouldTrack = true) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+            if (shouldTrack && this.trackingMap[modalId]) {
+                const [event, title] = this.trackingMap[modalId];
+                Analytics.track(event, title);
+            }
+        }
+    },
+
+    close(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    },
+
+    isOpen(modalId) {
+        const modal = document.getElementById(modalId);
+        return modal && modal.style.display === 'flex';
+    },
+
+    // Close any open modal (for ESC key handler)
+    closeAny() {
+        const modalIds = ['help-modal', 'donate-modal', 'settings-modal', 'dataset-modal', 'extract-modal'];
+        for (const modalId of modalIds) {
+            if (this.isOpen(modalId)) {
+                this.close(modalId);
+                return true;
+            }
+        }
+        return false;
+    }
+};
+
 // Shared utility: Format bytes for display
 function formatBytes(bytes) {
     if (bytes === null || bytes === undefined) return 'N/A';
