@@ -757,7 +757,7 @@ function openSnippetFromDataset(snippetId) {
 
     // Small delay to ensure UI is ready
     setTimeout(() => {
-        selectSnippet(snippetId);
+        selectSnippet(parseFloat(snippetId));
     }, 100);
 }
 
