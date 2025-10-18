@@ -62,9 +62,8 @@ When implementing changes:
 - **Simple**: Favor code removal over addition; avoid over-engineering
 - **Local-first**: All data stored in browser, no server dependencies
 
-## General coding instructions 
-Astrolabe is a project with minimalistic philosophy; it tries to avoid external dependencies and complexity, if possible.
-This means that whatever new feature, refactor, or bug fix is being considered, the solution should not be over-engineered unless absolutely necessary. The importance and complexity of a feature defines allowed number of lines of code dedicated to it.
-Pay attention to the existing code base style and approaches and try to adhere to the existing style instead of bringing your own vision.
-When updating documentation, do not record intermediate changes - write them always as a matter-of-fact information.
-When working on the code, if you notice any opportunities to better bring the project to the state above - bring this to user's attention and ask for approval to implement the suggested changes.
+## General coding instructions (important)
+- Astrolabe is a project with minimalistic philosophy; it tries to avoid external dependencies and complexity, if possible. This means that whatever new feature, refactor, or bug fix is being considered, the solution should not be over-engineered unless absolutely necessary. The importance and complexity of a feature defines allowed number of lines of code dedicated to it.
+- Pay attention to the existing code base style and approaches and try to adhere to the existing style instead of bringing your own vision.
+- When updating documentation, do not record intermediate changes - write them always as a matter-of-fact information.
+- When working on the code, if you notice any opportunities to better bring the project to the state above - bring this to user's attention and ask for approval to implement the suggested changes.
