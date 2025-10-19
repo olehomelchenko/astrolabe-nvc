@@ -8,27 +8,27 @@ document.addEventListener('DOMContentLoaded', function () {
     const theme = getSetting('ui.theme') || 'light';
     document.documentElement.setAttribute('data-theme', theme);
 
-    // Initialize snippet storage and render list
-    initializeSnippetsStorage();
+    // Initialize snippet storage and render list (async)
+    initializeSnippetsStorage().then(() => {
+        // Initialize sort controls
+        initializeSortControls();
 
-    // Initialize sort controls
-    initializeSortControls();
+        // Initialize search controls
+        initializeSearchControls();
 
-    // Initialize search controls
-    initializeSearchControls();
+        renderSnippetList();
 
-    renderSnippetList();
+        // Update storage monitor
+        updateStorageMonitor();
 
-    // Update storage monitor
-    updateStorageMonitor();
-
-    // Auto-select first snippet on page load (only if no hash in URL)
-    if (!window.location.hash) {
-        const firstSnippet = SnippetStorage.listSnippets()[0];
-        if (firstSnippet) {
-            selectSnippet(firstSnippet.id);
+        // Auto-select first snippet on page load (only if no hash in URL)
+        if (!window.location.hash) {
+            const firstSnippet = SnippetStorage.listSnippets()[0];
+            if (firstSnippet) {
+                selectSnippet(firstSnippet.id);
+            }
         }
-    }
+    });
 
     // Load saved layout
     loadLayoutFromStorage();

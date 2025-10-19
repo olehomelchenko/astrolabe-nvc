@@ -280,12 +280,27 @@ const SnippetStorage = {
     }
 };
 
-// Initialize storage with default snippet if empty
-function initializeSnippetsStorage() {
+// Initialize storage with sample data from JSON file if empty
+async function initializeSnippetsStorage() {
     const existingSnippets = SnippetStorage.loadSnippets();
 
     if (existingSnippets.length === 0) {
-        // Create default snippet using the sample spec from config
+        // Try loading sample data from JSON file
+        try {
+            const response = await fetch('sample-data.json');
+            if (response.ok) {
+                const sampleData = await response.json();
+                const result = await processImportedData(sampleData, { silent: true });
+
+                if (result.success) {
+                    return result.normalizedSnippets;
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load sample-data.json, using fallback:', error);
+        }
+
+        // Fallback: create default snippet using the sample spec from config
         const defaultSnippet = createSnippet(sampleSpec, "Sample Bar Chart");
         defaultSnippet.comment = "A simple bar chart showing category values";
 
@@ -1296,6 +1311,139 @@ function estimateImportFit(existingSnippets, newSnippets) {
     };
 }
 
+// Core logic to process imported data (shared between file import and initial sample data)
+async function processImportedData(importedData, options = {}) {
+    const { silent = false } = options;
+
+    // Detect format: legacy (array) or unified (object with version)
+    let snippetsToImport = [];
+    let datasetsToImport = [];
+
+    if (Array.isArray(importedData)) {
+        // Legacy format: array of snippets only
+        snippetsToImport = importedData;
+    } else if (importedData.version && importedData.snippets) {
+        // New unified format
+        snippetsToImport = importedData.snippets || [];
+        datasetsToImport = importedData.datasets || [];
+    } else {
+        // Single snippet object
+        snippetsToImport = [importedData];
+    }
+
+    if (snippetsToImport.length === 0) {
+        if (!silent) Toast.info('No snippets found in file');
+        return { success: false };
+    }
+
+    // Import datasets first (if any)
+    let datasetsImported = 0;
+    const renamedDatasets = []; // Track renamed datasets for warning
+
+    for (const datasetData of datasetsToImport) {
+        try {
+            let datasetName = datasetData.name;
+            const originalName = datasetName;
+
+            // Handle name conflicts by renaming
+            if (await DatasetStorage.nameExists(datasetName)) {
+                const timestamp = Date.now().toString().slice(-6);
+                datasetName = `${originalName}_${timestamp}`;
+
+                // Unlikely, but ensure uniqueness
+                let counter = 1;
+                while (await DatasetStorage.nameExists(datasetName)) {
+                    datasetName = `${originalName}_${timestamp}_${counter}`;
+                    counter++;
+                }
+
+                renamedDatasets.push({ from: originalName, to: datasetName });
+            }
+
+            await DatasetStorage.createDataset(
+                datasetName,
+                datasetData.data,
+                datasetData.format,
+                datasetData.source,
+                datasetData.comment || ''
+            );
+            datasetsImported++;
+        } catch (error) {
+            console.warn(`Failed to import dataset ${datasetData.name}:`, error);
+        }
+    }
+
+    // Import snippets (existing normalization logic)
+    const existingSnippets = SnippetStorage.loadSnippets();
+    const existingIds = new Set(existingSnippets.map(s => s.id));
+
+    let snippetsImported = 0;
+    const normalizedSnippets = [];
+
+    snippetsToImport.forEach(snippet => {
+        const normalized = normalizeSnippet(snippet);
+
+        // Ensure no ID conflicts
+        while (existingIds.has(normalized.id)) {
+            normalized.id = generateSnippetId();
+        }
+
+        normalizedSnippets.push(normalized);
+        existingIds.add(normalized.id);
+        snippetsImported++;
+    });
+
+    // Estimate storage fit
+    const fit = estimateImportFit(existingSnippets, normalizedSnippets);
+
+    if (!fit.willFit && !silent) {
+        Toast.warning(
+            `⚠️ Import is ${formatBytes(fit.overageBytes)} over the 5 MB limit. Attempting to load...`,
+            5000
+        );
+    }
+
+    // Save snippets
+    const allSnippets = existingSnippets.concat(normalizedSnippets);
+
+    if (SnippetStorage.saveSnippets(allSnippets)) {
+        if (!silent) {
+            let message = `Imported ${snippetsImported} snippet${snippetsImported !== 1 ? 's' : ''}`;
+            if (datasetsImported > 0) {
+                message += ` and ${datasetsImported} dataset${datasetsImported !== 1 ? 's' : ''}`;
+            }
+
+            // Warn about renamed datasets
+            if (renamedDatasets.length > 0) {
+                const renameList = renamedDatasets.map(r => `"${r.from}" → "${r.to}"`).join(', ');
+                Toast.warning(
+                    `${message}. Some datasets were renamed due to conflicts: ${renameList}. You may need to update dataset references in affected snippets.`,
+                    8000
+                );
+            } else {
+                Toast.success(message);
+            }
+
+            // Track event
+            Analytics.track('project-import', `Import ${snippetsImported} snippets, ${datasetsImported} datasets`);
+        }
+
+        renderSnippetList();
+        updateStorageMonitor();
+
+        return { success: true, snippetsImported, datasetsImported, normalizedSnippets };
+    } else {
+        const overageBytes = fit.overageBytes > 0 ? fit.overageBytes : calculateDataSize(allSnippets) - STORAGE_LIMIT_BYTES;
+        if (!silent) {
+            Toast.error(
+                `Storage quota exceeded by ${formatBytes(overageBytes)}. Please delete some snippets and try again.`,
+                6000
+            );
+        }
+        return { success: false };
+    }
+}
+
 // Import snippets and datasets from JSON file
 function importSnippets(fileInput) {
     const file = fileInput.files[0];
@@ -1305,128 +1453,7 @@ function importSnippets(fileInput) {
     reader.onload = async function(e) {
         try {
             const importedData = JSON.parse(e.target.result);
-
-            // Detect format: legacy (array) or unified (object with version)
-            let snippetsToImport = [];
-            let datasetsToImport = [];
-
-            if (Array.isArray(importedData)) {
-                // Legacy format: array of snippets only
-                snippetsToImport = importedData;
-            } else if (importedData.version && importedData.snippets) {
-                // New unified format
-                snippetsToImport = importedData.snippets || [];
-                datasetsToImport = importedData.datasets || [];
-            } else {
-                // Single snippet object
-                snippetsToImport = [importedData];
-            }
-
-            if (snippetsToImport.length === 0) {
-                Toast.info('No snippets found in file');
-                return;
-            }
-
-            // Import datasets first (if any)
-            let datasetsImported = 0;
-            const renamedDatasets = []; // Track renamed datasets for warning
-
-            for (const datasetData of datasetsToImport) {
-                try {
-                    let datasetName = datasetData.name;
-                    const originalName = datasetName;
-
-                    // Handle name conflicts by renaming
-                    if (await DatasetStorage.nameExists(datasetName)) {
-                        const timestamp = Date.now().toString().slice(-6);
-                        datasetName = `${originalName}_${timestamp}`;
-
-                        // Unlikely, but ensure uniqueness
-                        let counter = 1;
-                        while (await DatasetStorage.nameExists(datasetName)) {
-                            datasetName = `${originalName}_${timestamp}_${counter}`;
-                            counter++;
-                        }
-
-                        renamedDatasets.push({ from: originalName, to: datasetName });
-                    }
-
-                    await DatasetStorage.createDataset(
-                        datasetName,
-                        datasetData.data,
-                        datasetData.format,
-                        datasetData.source,
-                        datasetData.comment || ''
-                    );
-                    datasetsImported++;
-                } catch (error) {
-                    console.warn(`Failed to import dataset ${datasetData.name}:`, error);
-                }
-            }
-
-            // Import snippets (existing normalization logic)
-            const existingSnippets = SnippetStorage.loadSnippets();
-            const existingIds = new Set(existingSnippets.map(s => s.id));
-
-            let snippetsImported = 0;
-            const normalizedSnippets = [];
-
-            snippetsToImport.forEach(snippet => {
-                const normalized = normalizeSnippet(snippet);
-
-                // Ensure no ID conflicts
-                while (existingIds.has(normalized.id)) {
-                    normalized.id = generateSnippetId();
-                }
-
-                normalizedSnippets.push(normalized);
-                existingIds.add(normalized.id);
-                snippetsImported++;
-            });
-
-            // Estimate storage fit
-            const fit = estimateImportFit(existingSnippets, normalizedSnippets);
-
-            if (!fit.willFit) {
-                Toast.warning(
-                    `⚠️ Import is ${formatBytes(fit.overageBytes)} over the 5 MB limit. Attempting to load...`,
-                    5000
-                );
-            }
-
-            // Save snippets
-            const allSnippets = existingSnippets.concat(normalizedSnippets);
-
-            if (SnippetStorage.saveSnippets(allSnippets)) {
-                let message = `Imported ${snippetsImported} snippet${snippetsImported !== 1 ? 's' : ''}`;
-                if (datasetsImported > 0) {
-                    message += ` and ${datasetsImported} dataset${datasetsImported !== 1 ? 's' : ''}`;
-                }
-
-                // Warn about renamed datasets
-                if (renamedDatasets.length > 0) {
-                    const renameList = renamedDatasets.map(r => `"${r.from}" → "${r.to}"`).join(', ');
-                    Toast.warning(
-                        `${message}. Some datasets were renamed due to conflicts: ${renameList}. You may need to update dataset references in affected snippets.`,
-                        8000
-                    );
-                } else {
-                    Toast.success(message);
-                }
-
-                renderSnippetList();
-                updateStorageMonitor();
-
-                // Track event
-                Analytics.track('project-import', `Import ${snippetsImported} snippets, ${datasetsImported} datasets`);
-            } else {
-                const overageBytes = fit.overageBytes > 0 ? fit.overageBytes : calculateDataSize(allSnippets) - STORAGE_LIMIT_BYTES;
-                Toast.error(
-                    `Storage quota exceeded by ${formatBytes(overageBytes)}. Please delete some snippets and try again.`,
-                    6000
-                );
-            }
-
+            await processImportedData(importedData);
         } catch (error) {
             console.error('Import error:', error);
             Toast.error('Failed to import. Please check that the file is valid JSON.');
