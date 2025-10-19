@@ -815,6 +815,7 @@ function duplicateSnippet(snippetId) {
     const newSnippet = createSnippet(duplicateSpec, duplicateName);
     newSnippet.comment = originalSnippet.comment;
     newSnippet.tags = [...originalSnippet.tags];
+    newSnippet.datasetRefs = extractDatasetRefs(duplicateSpec);
 
     SnippetStorage.saveSnippet(newSnippet);
 

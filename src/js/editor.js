@@ -8,20 +8,46 @@ function applyPreviewFitMode(spec, fitMode) {
     // Clone to avoid mutation
     const modifiedSpec = JSON.parse(JSON.stringify(spec));
 
-    if (fitMode === 'width') {
-        // Fit to width - get preview pane width
+    if (fitMode === 'width' || fitMode === 'full') {
         const previewPane = document.getElementById('vega-preview');
         if (previewPane) {
-            const containerWidth = previewPane.offsetWidth;
-            modifiedSpec.width = containerWidth - 10; // 10px padding for scroll
-            // Keep original aspect ratio by not setting height
-        }
-    } else if (fitMode === 'full') {
-        // Fit to full pane - get both dimensions
-        const previewPane = document.getElementById('vega-preview');
-        if (previewPane) {
-            modifiedSpec.width = previewPane.offsetWidth - 10; // 10px padding
-            modifiedSpec.height = previewPane.offsetHeight - 10; // 10px padding
+            const containerWidth = previewPane.offsetWidth - 10; // 10px padding for scroll
+            const containerHeight = previewPane.offsetHeight - 10; // 10px padding
+
+            // Apply dimensions recursively to handle nested specs
+            function applyDimensions(s) {
+                if (!s || typeof s !== 'object') return;
+
+                // Set dimensions at current level if this is a unit spec or has width/height
+                if (fitMode === 'width') {
+                    s.width = containerWidth;
+                    delete s.height; // Remove height to preserve aspect ratio
+                } else if (fitMode === 'full') {
+                    s.width = containerWidth;
+                    s.height = containerHeight;
+                }
+
+                // Recursively apply to nested specs
+                // For facet specs
+                if (s.spec) {
+                    applyDimensions(s.spec);
+                }
+                // For layer, concat, hconcat, vconcat
+                if (Array.isArray(s.layer)) {
+                    s.layer.forEach(applyDimensions);
+                }
+                if (Array.isArray(s.concat)) {
+                    s.concat.forEach(applyDimensions);
+                }
+                if (Array.isArray(s.hconcat)) {
+                    s.hconcat.forEach(applyDimensions);
+                }
+                if (Array.isArray(s.vconcat)) {
+                    s.vconcat.forEach(applyDimensions);
+                }
+            }
+
+            applyDimensions(modifiedSpec);
         }
     }
     // 'default' mode leaves original dimensions untouched

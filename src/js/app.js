@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Toggle panel buttons
-    document.querySelectorAll('.toggle-btn').forEach(button => {
+    document.querySelectorAll('[id^="toggle-"][id$="-panel"]').forEach(button => {
         button.addEventListener('click', function () {
             const panelId = this.id.replace('toggle-', '');
             togglePanel(panelId);
