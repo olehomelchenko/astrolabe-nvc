@@ -1184,8 +1184,8 @@ function updateStorageMonitor() {
     }
 }
 
-// Export all snippets to JSON file
-function exportSnippets() {
+// Export all snippets and datasets to JSON file
+async function exportSnippets() {
     const snippets = SnippetStorage.loadSnippets();
 
     if (snippets.length === 0) {
@@ -1193,15 +1193,27 @@ function exportSnippets() {
         return;
     }
 
+    // Get ALL datasets for complete backup
+    const datasets = await DatasetStorage.listDatasets();
+
+    // Create unified export format
+    const exportData = {
+        version: "1.0",
+        exportedAt: new Date().toISOString(),
+        exportedBy: "Astrolabe",
+        snippets: snippets,
+        datasets: datasets
+    };
+
     // Create JSON blob
-    const jsonString = JSON.stringify(snippets, null, 2);
+    const jsonString = JSON.stringify(exportData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
 
     // Create download link
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `astrolabe-snippets-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `astrolabe-project-${new Date().toISOString().slice(0, 10)}.json`;
 
     // Trigger download
     document.body.appendChild(link);
@@ -1210,10 +1222,13 @@ function exportSnippets() {
     URL.revokeObjectURL(url);
 
     // Show success message
-    Toast.success(`Exported ${snippets.length} snippet${snippets.length !== 1 ? 's' : ''}`);
+    const count = datasets.length > 0
+        ? `${snippets.length} snippet${snippets.length !== 1 ? 's' : ''} and ${datasets.length} dataset${datasets.length !== 1 ? 's' : ''}`
+        : `${snippets.length} snippet${snippets.length !== 1 ? 's' : ''}`;
+    Toast.success(`Exported ${count}`);
 
     // Track event
-    Analytics.track('snippets-export', `Export ${snippets.length} snippets`);
+    Analytics.track('project-export', `Export ${snippets.length} snippets, ${datasets.length} datasets`);
 }
 
 // Normalize external snippet format to Astrolabe format
@@ -1280,29 +1295,79 @@ function estimateImportFit(existingSnippets, newSnippets) {
     };
 }
 
-// Import snippets from JSON file
+// Import snippets and datasets from JSON file
 function importSnippets(fileInput) {
     const file = fileInput.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const importedData = JSON.parse(e.target.result);
 
-            // Handle both single snippet and array of snippets
-            const snippetsToImport = Array.isArray(importedData) ? importedData : [importedData];
+            // Detect format: legacy (array) or unified (object with version)
+            let snippetsToImport = [];
+            let datasetsToImport = [];
+
+            if (Array.isArray(importedData)) {
+                // Legacy format: array of snippets only
+                snippetsToImport = importedData;
+            } else if (importedData.version && importedData.snippets) {
+                // New unified format
+                snippetsToImport = importedData.snippets || [];
+                datasetsToImport = importedData.datasets || [];
+            } else {
+                // Single snippet object
+                snippetsToImport = [importedData];
+            }
 
             if (snippetsToImport.length === 0) {
                 Toast.info('No snippets found in file');
                 return;
             }
 
-            // Normalize and merge with existing snippets
+            // Import datasets first (if any)
+            let datasetsImported = 0;
+            const renamedDatasets = []; // Track renamed datasets for warning
+
+            for (const datasetData of datasetsToImport) {
+                try {
+                    let datasetName = datasetData.name;
+                    const originalName = datasetName;
+
+                    // Handle name conflicts by renaming
+                    if (await DatasetStorage.nameExists(datasetName)) {
+                        const timestamp = Date.now().toString().slice(-6);
+                        datasetName = `${originalName}_${timestamp}`;
+
+                        // Unlikely, but ensure uniqueness
+                        let counter = 1;
+                        while (await DatasetStorage.nameExists(datasetName)) {
+                            datasetName = `${originalName}_${timestamp}_${counter}`;
+                            counter++;
+                        }
+
+                        renamedDatasets.push({ from: originalName, to: datasetName });
+                    }
+
+                    await DatasetStorage.createDataset(
+                        datasetName,
+                        datasetData.data,
+                        datasetData.format,
+                        datasetData.source,
+                        datasetData.comment || ''
+                    );
+                    datasetsImported++;
+                } catch (error) {
+                    console.warn(`Failed to import dataset ${datasetData.name}:`, error);
+                }
+            }
+
+            // Import snippets (existing normalization logic)
             const existingSnippets = SnippetStorage.loadSnippets();
             const existingIds = new Set(existingSnippets.map(s => s.id));
 
-            let importedCount = 0;
+            let snippetsImported = 0;
             const normalizedSnippets = [];
 
             snippetsToImport.forEach(snippet => {
@@ -1315,48 +1380,55 @@ function importSnippets(fileInput) {
 
                 normalizedSnippets.push(normalized);
                 existingIds.add(normalized.id);
-                importedCount++;
+                snippetsImported++;
             });
 
-            // Estimate fit before attempting save
+            // Estimate storage fit
             const fit = estimateImportFit(existingSnippets, normalizedSnippets);
 
             if (!fit.willFit) {
-                // Still try to load - let user decide if they want to proceed
                 Toast.warning(
                     `⚠️ Import is ${formatBytes(fit.overageBytes)} over the 5 MB limit. Attempting to load...`,
                     5000
                 );
             }
 
-            // Merge snippets
+            // Save snippets
             const allSnippets = existingSnippets.concat(normalizedSnippets);
 
-            // Attempt to save
             if (SnippetStorage.saveSnippets(allSnippets)) {
-                const message = fit.willFit
-                    ? `Successfully imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''}`
-                    : `Imported ${importedCount} snippet${importedCount !== 1 ? 's' : ''} (Storage: ${formatBytes(fit.totalSize)} / 5 MB)`;
+                let message = `Imported ${snippetsImported} snippet${snippetsImported !== 1 ? 's' : ''}`;
+                if (datasetsImported > 0) {
+                    message += ` and ${datasetsImported} dataset${datasetsImported !== 1 ? 's' : ''}`;
+                }
 
-                Toast.success(message);
+                // Warn about renamed datasets
+                if (renamedDatasets.length > 0) {
+                    const renameList = renamedDatasets.map(r => `"${r.from}" → "${r.to}"`).join(', ');
+                    Toast.warning(
+                        `${message}. Some datasets were renamed due to conflicts: ${renameList}. You may need to update dataset references in affected snippets.`,
+                        8000
+                    );
+                } else {
+                    Toast.success(message);
+                }
+
                 renderSnippetList();
                 updateStorageMonitor();
 
                 // Track event
-                Analytics.track('snippets-import', `Import ${importedCount} snippets`);
+                Analytics.track('project-import', `Import ${snippetsImported} snippets, ${datasetsImported} datasets`);
             } else {
-                // Save failed - show detailed error
                 const overageBytes = fit.overageBytes > 0 ? fit.overageBytes : calculateDataSize(allSnippets) - STORAGE_LIMIT_BYTES;
-                const overageSize = formatBytes(overageBytes);
                 Toast.error(
-                    `Storage quota exceeded by ${overageSize}. Please delete some snippets and try again.`,
+                    `Storage quota exceeded by ${formatBytes(overageBytes)}. Please delete some snippets and try again.`,
                     6000
                 );
             }
 
         } catch (error) {
             console.error('Import error:', error);
-            Toast.error('Failed to import snippets. Please check that the file is valid JSON.');
+            Toast.error('Failed to import. Please check that the file is valid JSON.');
         }
 
         // Clear file input
