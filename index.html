@@ -213,33 +213,47 @@
                                 <textarea id="dataset-detail-comment" class="input textarea" placeholder="Add a comment..." rows="3"></textarea>
 
                                 <div class="dataset-detail-header-row">
-                                    <span class="dataset-detail-header">Statistics</span>
+                                    <span class="dataset-detail-header">Overview</span>
                                     <button class="btn btn-icon large" id="refresh-metadata-btn" style="display: none;" title="Refresh metadata from URL">🔄</button>
                                 </div>
-                                <div class="stats-box">
-                                    <div class="stat-item">
-                                        <span class="stat-label">Rows:</span>
-                                        <span id="dataset-detail-rows">0</span>
+                                <div class="dataset-overview-grid">
+                                    <div class="overview-section">
+                                        <div class="overview-section-title">Statistics</div>
+                                        <div class="stats-box">
+                                            <div class="stat-item">
+                                                <span class="stat-label">Rows:</span>
+                                                <span id="dataset-detail-rows">0</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <span class="stat-label">Columns:</span>
+                                                <span id="dataset-detail-columns">0</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <span class="stat-label">Size:</span>
+                                                <span id="dataset-detail-size">0 B</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">Columns:</span>
-                                        <span id="dataset-detail-columns">0</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">Size:</span>
-                                        <span id="dataset-detail-size">0 B</span>
-                                    </div>
-                                </div>
 
-                                <div class="dataset-detail-header">Timestamps</div>
-                                <div class="stats-box">
-                                    <div class="stat-item">
-                                        <span class="stat-label">Created:</span>
-                                        <span id="dataset-detail-created">-</span>
+                                    <div class="overview-section" id="columns-section" style="display: none;">
+                                        <div class="overview-section-title">Columns</div>
+                                        <div class="columns-list" id="dataset-detail-columns-list">
+                                            <!-- Dynamically populated with column names and types -->
+                                        </div>
                                     </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">Modified:</span>
-                                        <span id="dataset-detail-modified">-</span>
+
+                                    <div class="overview-section">
+                                        <div class="overview-section-title">Timestamps</div>
+                                        <div class="stats-box">
+                                            <div class="stat-item">
+                                                <span class="stat-label">Created:</span>
+                                                <span id="dataset-detail-created">-</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <span class="stat-label">Modified:</span>
+                                                <span id="dataset-detail-modified">-</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

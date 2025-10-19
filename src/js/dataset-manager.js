@@ -40,21 +40,32 @@ function calculateDatasetStats(data, format, source) {
     let rowCount = 0;
     let columnCount = 0;
     let columns = [];
+    let columnTypes = [];
     let size = 0;
 
     // For URL sources, we can't calculate stats without fetching
     if (source === 'url') {
-        return { rowCount: null, columnCount: null, columns: [], size: null };
+        return { rowCount: null, columnCount: null, columns: [], columnTypes: [], size: null };
     }
 
     if (format === 'json' || format === 'topojson') {
         if (!Array.isArray(data) || data.length === 0) {
-            return { rowCount: 0, columnCount: 0, columns: [], size: 0 };
+            return { rowCount: 0, columnCount: 0, columns: [], columnTypes: [], size: 0 };
         }
         rowCount = data.length;
         const firstRow = data[0];
         columns = typeof firstRow === 'object' ? Object.keys(firstRow) : [];
         columnCount = columns.length;
+
+        // Infer column types
+        if (columns.length > 0) {
+            columnTypes = columns.map(col => {
+                const values = data.map(row => row[col]);
+                const type = detectColumnType(values);
+                return { name: col, type };
+            });
+        }
+
         size = new Blob([JSON.stringify(data)]).size;
     } else if (format === 'csv' || format === 'tsv') {
         // For CSV/TSV, data is stored as raw text
@@ -64,11 +75,23 @@ function calculateDatasetStats(data, format, source) {
             const separator = format === 'csv' ? ',' : '\t';
             columns = lines[0].split(separator).map(h => h.trim().replace(/^"|"$/g, ''));
             columnCount = columns.length;
+
+            // Infer column types from all rows
+            if (columns.length > 0 && lines.length > 1) {
+                columnTypes = columns.map((col, colIndex) => {
+                    const values = lines.slice(1).map(line => {
+                        const cells = line.split(separator);
+                        return cells[colIndex] ? cells[colIndex].trim().replace(/^"|"$/g, '') : '';
+                    });
+                    const type = detectColumnType(values);
+                    return { name: col, type };
+                });
+            }
         }
         size = new Blob([data]).size;
     }
 
-    return { rowCount, columnCount, columns, size };
+    return { rowCount, columnCount, columns, columnTypes, size };
 }
 
 // Dataset Storage API
@@ -243,6 +266,7 @@ async function fetchURLMetadata(url, format) {
         let rowCount = 0;
         let columnCount = 0;
         let columns = [];
+        let columnTypes = [];
         let size = contentLength ? parseInt(contentLength) : new Blob([text]).size;
 
         // Parse based on format
@@ -253,6 +277,15 @@ async function fetchURLMetadata(url, format) {
                 if (data.length > 0 && typeof data[0] === 'object') {
                     columns = Object.keys(data[0]);
                     columnCount = columns.length;
+
+                    // Infer column types
+                    if (columns.length > 0) {
+                        columnTypes = columns.map(col => {
+                            const values = data.map(row => row[col]);
+                            const type = detectColumnType(values);
+                            return { name: col, type };
+                        });
+                    }
                 }
             }
         } else if (format === 'csv' || format === 'tsv') {
@@ -262,6 +295,18 @@ async function fetchURLMetadata(url, format) {
                 const separator = format === 'csv' ? ',' : '\t';
                 columns = lines[0].split(separator).map(h => h.trim().replace(/^"|"$/g, ''));
                 columnCount = columns.length;
+
+                // Infer column types from all rows
+                if (columns.length > 0 && lines.length > 1) {
+                    columnTypes = columns.map((col, colIndex) => {
+                        const values = lines.slice(1).map(line => {
+                            const cells = line.split(separator);
+                            return cells[colIndex] ? cells[colIndex].trim().replace(/^"|"$/g, '') : '';
+                        });
+                        const type = detectColumnType(values);
+                        return { name: col, type };
+                    });
+                }
             }
         } else if (format === 'topojson') {
             // TopoJSON structure is complex, just note it exists
@@ -269,7 +314,7 @@ async function fetchURLMetadata(url, format) {
             columnCount = null;
         }
 
-        return { rowCount, columnCount, columns, size };
+        return { rowCount, columnCount, columns, columnTypes, size };
     } catch (error) {
         throw new Error(`Failed to fetch URL metadata: ${error.message}`);
     }
@@ -361,6 +406,29 @@ async function selectDataset(datasetId, updateURL = true) {
     document.getElementById('dataset-detail-size').textContent = formatBytes(dataset.size);
     document.getElementById('dataset-detail-created').textContent = new Date(dataset.created).toLocaleString();
     document.getElementById('dataset-detail-modified').textContent = new Date(dataset.modified).toLocaleString();
+
+    // Populate columns list with types
+    const columnsSection = document.getElementById('columns-section');
+    const columnsList = document.getElementById('dataset-detail-columns-list');
+
+    if (dataset.columnTypes && dataset.columnTypes.length > 0) {
+        columnsSection.style.display = 'block';
+
+        const columnsHTML = dataset.columnTypes.map(col => {
+            const icon = getTypeIcon(col.type);
+            return `
+                <div class="column-item">
+                    <span class="column-type-icon">${icon}</span>
+                    <span class="column-name">${col.name}</span>
+                    <span class="column-type">${col.type}</span>
+                </div>
+            `;
+        }).join('');
+
+        columnsList.innerHTML = columnsHTML;
+    } else {
+        columnsSection.style.display = 'none';
+    }
 
     // Show/hide preview toggle based on data type
     const toggleGroup = document.getElementById('preview-toggle-group');
