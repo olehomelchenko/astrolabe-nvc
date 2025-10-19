@@ -30,11 +30,11 @@ function traverseSpec(spec, callback, defaultReturn = null) {
     for (const key of NESTED_SPEC_KEYS) {
         if (Array.isArray(spec[key])) {
             for (const item of spec[key]) {
-                const result = traverseSpec(item, callback, undefined);
+                const result = traverseSpec(item, callback, defaultReturn);
                 if (result !== undefined) return result;
             }
         } else if (spec[key] && typeof spec[key] === 'object') {
-            const result = traverseSpec(spec[key], callback, undefined);
+            const result = traverseSpec(spec[key], callback, defaultReturn);
             if (result !== undefined) return result;
         }
     }

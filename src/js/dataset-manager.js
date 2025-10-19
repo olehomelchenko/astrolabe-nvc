@@ -290,15 +290,17 @@ async function renderDatasetList() {
     // Format individual dataset items
     const formatDatasetItem = (dataset) => {
         let metaText;
+        const formatLabel = dataset.format ? dataset.format.toUpperCase() : 'UNKNOWN';
+
         if (dataset.source === 'url') {
             // Show metadata if available, otherwise just URL and format
             if (dataset.rowCount !== null && dataset.size !== null) {
-                metaText = `URL • ${dataset.rowCount} rows • ${dataset.format.toUpperCase()} • ${formatBytes(dataset.size)}`;
+                metaText = `URL • ${dataset.rowCount} rows • ${formatLabel} • ${formatBytes(dataset.size)}`;
             } else {
-                metaText = `URL • ${dataset.format.toUpperCase()}`;
+                metaText = `URL • ${formatLabel}`;
             }
         } else {
-            metaText = `${dataset.rowCount} rows • ${dataset.format.toUpperCase()} • ${formatBytes(dataset.size)}`;
+            metaText = `${dataset.rowCount} rows • ${formatLabel} • ${formatBytes(dataset.size)}`;
         }
 
         // Count snippet usage and create badge
