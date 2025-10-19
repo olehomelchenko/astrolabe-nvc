@@ -67,4 +67,5 @@ When implementing changes:
 - Pay attention to the existing code base style and approaches and try to adhere to the existing style instead of bringing your own vision.
 - When updating documentation, do not record intermediate changes - write them always as a matter-of-fact information.
 - When working on the code, if you notice any opportunities to better bring the project to the state above - bring this to user's attention and ask for approval to implement the suggested changes.
+- When attempting to implement a new feature, research whether a similar method or fuction already exists elsewhere. Propose to either enhance existing one, or create a new method in such cases.
 - Testing: The user always tests changes manually. Do not start local servers or attempt to run the application.

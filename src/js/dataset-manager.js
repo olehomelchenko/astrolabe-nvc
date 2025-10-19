@@ -35,6 +35,33 @@ function generateDatasetId() {
     return Date.now() + Math.random() * 1000;
 }
 
+// Replace dataset name references in a Vega-Lite spec
+function replaceDatasetNameInSpec(spec, oldName, newName) {
+    if (!spec || typeof spec !== 'object') return spec;
+
+    // Clone the spec to avoid mutation
+    const newSpec = JSON.parse(JSON.stringify(spec));
+
+    // Recursively traverse and replace dataset name references
+    (function traverse(obj) {
+        if (!obj || typeof obj !== 'object') return;
+
+        // Check if this is a data object with a name property matching oldName
+        if (obj.data && typeof obj.data === 'object' && obj.data.name === oldName) {
+            obj.data.name = newName;
+        }
+
+        // Recursively check all properties
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                traverse(obj[key]);
+            }
+        }
+    })(newSpec);
+
+    return newSpec;
+}
+
 // Calculate dataset statistics
 function calculateDatasetStats(data, format, source) {
     let rowCount = 0;
@@ -464,6 +491,9 @@ async function selectDataset(datasetId, updateURL = true) {
 
     // Update linked snippets display
     updateLinkedSnippets(dataset);
+
+    // Initialize auto-save for detail fields
+    initializeDatasetDetailAutoSave();
 
     // Update URL state (URLState.update will add 'dataset-' prefix)
     if (updateURL) {
@@ -1705,5 +1735,133 @@ async function importDatasetFromFile(fileInput) {
     } finally {
         // Reset file input
         fileInput.value = '';
+    }
+}
+
+// Auto-save dataset metadata (name and comment)
+async function autoSaveDatasetMeta() {
+    const nameField = document.getElementById('dataset-detail-name');
+    const commentField = document.getElementById('dataset-detail-comment');
+    if (!nameField || !commentField) return;
+
+    const dataset = await getCurrentDataset();
+    if (!dataset) return;
+
+    const newName = nameField.value.trim();
+    const newComment = commentField.value;
+
+    // Store old name for snippet reference updates
+    const oldName = dataset.name;
+    const nameChanged = newName !== dataset.name;
+
+    // Check if name has changed
+    if (nameChanged) {
+        // Validate name is not empty
+        if (!newName) {
+            Toast.error('Dataset name cannot be empty');
+            nameField.value = dataset.name; // Restore previous value
+            return;
+        }
+
+        // Check if new name already exists
+        if (await DatasetStorage.nameExists(newName)) {
+            Toast.error(`Dataset name "${newName}" already exists`);
+            nameField.value = dataset.name; // Restore previous value
+            return;
+        }
+
+        // Check if any snippets reference this dataset
+        const snippets = SnippetStorage.loadSnippets();
+        const affectedSnippets = snippets.filter(snippet =>
+            snippet.datasetRefs && snippet.datasetRefs.includes(dataset.name)
+        );
+
+        // Show warning if there are affected snippets
+        if (affectedSnippets.length > 0) {
+            const confirmed = confirm(
+                `⚠️ Warning: Renaming this dataset will update ${affectedSnippets.length} snippet${affectedSnippets.length > 1 ? 's' : ''} that reference it.\n\n` +
+                `We'll attempt to update all references automatically, but complex specs with nested data sources may require manual review.\n\n` +
+                `Affected snippets:\n${affectedSnippets.map(s => `• ${s.name}`).join('\n')}\n\n` +
+                `Continue with rename?`
+            );
+
+            if (!confirmed) {
+                nameField.value = dataset.name; // Restore previous value
+                return;
+            }
+        }
+    }
+
+    // Update dataset
+    const updatedDataset = await DatasetStorage.updateDataset(dataset.id, {
+        name: newName || dataset.name,
+        comment: newComment
+    });
+
+    // If name changed, update all snippets that reference this dataset
+    if (nameChanged && newName) {
+        const snippets = SnippetStorage.loadSnippets();
+        const affectedSnippets = snippets.filter(snippet =>
+            snippet.datasetRefs && snippet.datasetRefs.includes(oldName)
+        );
+
+        affectedSnippets.forEach(snippet => {
+            // Update spec and draftSpec by replacing dataset name references
+            snippet.spec = replaceDatasetNameInSpec(snippet.spec, oldName, newName);
+            snippet.draftSpec = replaceDatasetNameInSpec(snippet.draftSpec, oldName, newName);
+
+            // Re-extract dataset references from updated specs
+            // extractDatasetRefs is a global function from snippet-manager.js
+            if (typeof extractDatasetRefs === 'function') {
+                snippet.datasetRefs = extractDatasetRefs(snippet.spec);
+            }
+
+            SnippetStorage.saveSnippet(snippet);
+        });
+
+        // Show success message
+        if (affectedSnippets.length > 0) {
+            Toast.success(`Updated ${affectedSnippets.length} snippet${affectedSnippets.length > 1 ? 's' : ''}`);
+        }
+
+        // Refresh linked snippets display
+        updateLinkedSnippets(updatedDataset);
+    }
+
+    // Update the modified timestamp in the UI
+    document.getElementById('dataset-detail-modified').textContent = new Date(updatedDataset.modified).toLocaleString();
+
+    // Update the dataset list display to reflect the new name
+    await renderDatasetList();
+
+    // Restore selection after re-render
+    const selectedItem = document.querySelector(`[data-item-id="${dataset.id}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+    }
+}
+
+// Debounced auto-save for dataset metadata
+let datasetMetaAutoSaveTimeout;
+function debouncedAutoSaveDatasetMeta() {
+    clearTimeout(datasetMetaAutoSaveTimeout);
+    datasetMetaAutoSaveTimeout = setTimeout(autoSaveDatasetMeta, 1000);
+}
+
+// Initialize auto-save for dataset detail fields
+function initializeDatasetDetailAutoSave() {
+    const nameField = document.getElementById('dataset-detail-name');
+    const commentField = document.getElementById('dataset-detail-comment');
+
+    if (nameField) {
+        // Remove any existing event listener to prevent duplicates
+        nameField.removeEventListener('input', debouncedAutoSaveDatasetMeta);
+        nameField.addEventListener('input', debouncedAutoSaveDatasetMeta);
+    }
+
+    if (commentField) {
+        // Remove any existing event listener to prevent duplicates
+        commentField.removeEventListener('input', debouncedAutoSaveDatasetMeta);
+        commentField.addEventListener('input', debouncedAutoSaveDatasetMeta);
     }
 }
