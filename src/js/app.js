@@ -216,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const datasetsLink = document.getElementById('datasets-link');
     const toggleDatasetsBtn = document.getElementById('toggle-datasets');
     const newDatasetBtn = document.getElementById('new-dataset-btn');
+    const editDatasetBtn = document.getElementById('edit-dataset-btn');
     const cancelDatasetBtn = document.getElementById('cancel-dataset-btn');
     const saveDatasetBtn = document.getElementById('save-dataset-btn');
     const deleteDatasetBtn = document.getElementById('delete-dataset-btn');
@@ -232,6 +233,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // New dataset button
     if (newDatasetBtn) {
         newDatasetBtn.addEventListener('click', showNewDatasetForm);
+    }
+
+    // Edit dataset button
+    if (editDatasetBtn) {
+        editDatasetBtn.addEventListener('click', async function() {
+            if (window.currentDatasetId) {
+                await showEditDatasetForm(window.currentDatasetId);
+            }
+        });
     }
 
     // Import dataset button and file input
@@ -375,10 +385,18 @@ function handleURLStateChange() {
         if (state.datasetId === 'new') {
             // Show new dataset form
             showNewDatasetForm(false);
+        } else if (state.datasetId && state.datasetId.startsWith('edit-')) {
+            // Show edit dataset form - extract numeric ID from "edit-123456"
+            const numericId = parseFloat(state.datasetId.replace('edit-', ''));
+            if (!isNaN(numericId)) {
+                showEditDatasetForm(numericId, false);
+            }
         } else if (state.datasetId) {
             // Extract numeric ID from "dataset-123456"
             const numericId = parseFloat(state.datasetId.replace('dataset-', ''));
-            selectDataset(numericId, false);
+            if (!isNaN(numericId)) {
+                selectDataset(numericId, false);
+            }
         }
     } else if (state.snippetId) {
         // Close dataset modal if open

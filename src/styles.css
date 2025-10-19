@@ -374,6 +374,12 @@ body { font-family: var(--font-main); height: 100vh; overflow: hidden; backgroun
 .detection-badges { display: flex; gap: 6px; align-items: center; }
 .detection-badge { background: var(--win-blue); color: var(--bg-white); padding: 2px 8px; font-size: 10px; font-weight: bold; border: 1px solid var(--win-blue-dark); border-radius: 2px; }
 .detected-confidence { font-size: 9px; padding: 2px 6px; border-radius: 2px; }
+
+/* Schema Warning */
+.dataset-schema-warning { margin: 12px 0; padding: 12px; background: #fff8dc; border: 2px solid #ffa500; border-radius: 4px; font-size: 11px; line-height: 1.6; color: #000; }
+:root[data-theme="experimental"] .dataset-schema-warning { background: #3a3020; border-color: #cc8800; color: #ffd966; }
+.dataset-schema-warning strong { font-weight: 600; }
+.dataset-schema-warning em { font-style: italic; opacity: 0.9; }
 .detected-confidence.high { background: #90ee90; border: 1px solid #60c060; }
 :root[data-theme="experimental"] .detected-confidence.high { background: #3a6a3a; color: #88ff88; border-color: #66dd66; }
 .detected-confidence.medium { background: #ffff90; border: 1px solid #d0d060; }

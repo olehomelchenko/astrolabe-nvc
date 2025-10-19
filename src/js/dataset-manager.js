@@ -997,10 +997,31 @@ function showDetectionConfirmation(detection, originalInput) {
     detectedConfidenceEl.className = `detected-confidence ${confidenceClass}`;
     detectedConfidenceEl.textContent = `${detection.confidence} confidence`;
 
-    // Show preview
+    // Calculate metadata for the detected data
+    let metadata = null;
+    if (detection.source === 'url' && detection.content) {
+        metadata = calculateDatasetStats(
+            detection.parsed || detection.content,
+            detection.format,
+            'inline'
+        );
+    } else if (detection.source === 'inline') {
+        metadata = calculateDatasetStats(
+            detection.parsed || originalInput,
+            detection.format,
+            'inline'
+        );
+    }
+
+    // Show preview with metadata
     let previewText = '';
+
     if (detection.source === 'url') {
         previewText = `URL: ${originalInput}\n\n`;
+        if (metadata && metadata.columns && metadata.columns.length > 0) {
+            previewText += `Columns (${metadata.columnCount}): ${metadata.columns.join(', ')}\n`;
+            previewText += `Rows: ${metadata.rowCount}\n\n`;
+        }
         if (detection.content) {
             const lines = detection.content.split('\n');
             previewText += `Preview (first 10 lines):\n${lines.slice(0, 10).join('\n')}`;
@@ -1009,8 +1030,12 @@ function showDetectionConfirmation(detection, originalInput) {
             }
         }
     } else {
+        if (metadata && metadata.columns && metadata.columns.length > 0) {
+            previewText = `Columns (${metadata.columnCount}): ${metadata.columns.join(', ')}\n`;
+            previewText += `Rows: ${metadata.rowCount}\n\n`;
+        }
         const lines = originalInput.split('\n');
-        previewText = lines.slice(0, 15).join('\n');
+        previewText += lines.slice(0, 15).join('\n');
         if (lines.length > 15) {
             previewText += `\n... (${lines.length - 15} more lines)`;
         }
@@ -1020,7 +1045,8 @@ function showDetectionConfirmation(detection, originalInput) {
     // Store detection data for later use
     window.currentDetection = {
         ...detection,
-        originalInput
+        originalInput,
+        metadata
     };
 }
 
@@ -1031,14 +1057,92 @@ function hideDetectionConfirmation() {
     window.currentDetection = null;
 }
 
+// Setup input handler for dataset form (handles both create and edit)
+function setupDatasetInputHandler() {
+    const inputEl = document.getElementById('dataset-form-input');
+
+    // Remove existing listener if any
+    if (inputEl._datasetInputHandler) {
+        inputEl.removeEventListener('input', inputEl._datasetInputHandler);
+    }
+
+    // Create new handler
+    const handler = async function () {
+        const text = this.value.trim();
+        if (!text) {
+            hideDetectionConfirmation();
+            hideSchemaWarning();
+            return;
+        }
+
+        const errorEl = document.getElementById('dataset-form-error');
+        errorEl.textContent = '';
+
+        // Check if it's a URL
+        if (isURL(text)) {
+            errorEl.textContent = 'Fetching and analyzing URL...';
+
+            try {
+                const detection = await fetchAndDetectURL(text);
+                errorEl.textContent = '';
+
+                if (detection.format) {
+                    showDetectionConfirmation(detection, text);
+                    checkSchemaChanges();
+                } else {
+                    errorEl.textContent = 'Could not detect data format from URL. Please check the URL or try pasting the data directly.';
+                    hideDetectionConfirmation();
+                    hideSchemaWarning();
+                }
+            } catch (error) {
+                errorEl.textContent = error.message;
+                hideDetectionConfirmation();
+                hideSchemaWarning();
+            }
+        } else {
+            // Inline data - detect format
+            const detection = detectDataFormat(text);
+
+            if (detection.format) {
+                showDetectionConfirmation({
+                    ...detection,
+                    source: 'inline'
+                }, text);
+                checkSchemaChanges();
+            } else {
+                errorEl.textContent = 'Could not detect data format. Please ensure your data is valid JSON, CSV, or TSV.';
+                hideDetectionConfirmation();
+                hideSchemaWarning();
+            }
+        }
+    };
+
+    // Store reference to handler for cleanup
+    inputEl._datasetInputHandler = handler;
+
+    // Attach listener
+    inputEl.addEventListener('input', handler);
+}
+
 // Show new dataset form
 function showNewDatasetForm(updateURL = true) {
+    // Set mode to create
+    window.datasetFormMode = 'create';
+    window.editingDatasetId = null;
+    window.originalSchema = null;
+
     document.getElementById('dataset-list-view').style.display = 'none';
     document.getElementById('dataset-form-view').style.display = 'block';
     document.getElementById('dataset-form-name').value = '';
     document.getElementById('dataset-form-input').value = '';
     document.getElementById('dataset-form-comment').value = '';
     document.getElementById('dataset-form-error').textContent = '';
+
+    // Update form header
+    document.querySelector('.dataset-form-header').textContent = 'Create New Dataset';
+
+    // Hide schema warning
+    hideSchemaWarning();
 
     // Hide detection confirmation
     hideDetectionConfirmation();
@@ -1048,56 +1152,156 @@ function showNewDatasetForm(updateURL = true) {
         URLState.update({ view: 'datasets', snippetId: null, datasetId: 'new' });
     }
 
-    // Add paste handler if not already added
-    if (!window.datasetListenersAdded) {
-        const inputEl = document.getElementById('dataset-form-input');
+    // Setup input handler for detection
+    setupDatasetInputHandler();
+}
 
-        // Handle paste/input with auto-detection
-        inputEl.addEventListener('input', async function () {
-            const text = this.value.trim();
-            if (!text) {
-                hideDetectionConfirmation();
-                return;
-            }
+// Show edit dataset form
+async function showEditDatasetForm(datasetId, updateURL = true) {
+    const dataset = await DatasetStorage.getDataset(datasetId);
+    if (!dataset) return;
 
-            const errorEl = document.getElementById('dataset-form-error');
-            errorEl.textContent = '';
+    // Set mode to edit
+    window.datasetFormMode = 'edit';
+    window.editingDatasetId = datasetId;
 
-            // Check if it's a URL
-            if (isURL(text)) {
-                errorEl.textContent = 'Fetching and analyzing URL...';
+    // Store original schema for comparison
+    window.originalSchema = dataset.columns ? [...dataset.columns] : [];
 
-                try {
-                    const detection = await fetchAndDetectURL(text);
-                    errorEl.textContent = '';
+    document.getElementById('dataset-list-view').style.display = 'none';
+    document.getElementById('dataset-form-view').style.display = 'block';
 
-                    if (detection.format) {
-                        showDetectionConfirmation(detection, text);
-                    } else {
-                        errorEl.textContent = 'Could not detect data format from URL. Please check the URL or try pasting the data directly.';
-                        hideDetectionConfirmation();
-                    }
-                } catch (error) {
-                    errorEl.textContent = error.message;
-                    hideDetectionConfirmation();
-                }
-            } else {
-                // Inline data - detect format
-                const detection = detectDataFormat(text);
+    // Populate form with current values
+    document.getElementById('dataset-form-name').value = dataset.name;
+    document.getElementById('dataset-form-comment').value = dataset.comment || '';
 
-                if (detection.format) {
-                    showDetectionConfirmation({
-                        ...detection,
-                        source: 'inline'
-                    }, text);
-                } else {
-                    errorEl.textContent = 'Could not detect data format. Please ensure your data is valid JSON, CSV, or TSV.';
-                    hideDetectionConfirmation();
-                }
-            }
-        });
+    // Populate data input based on source
+    let inputValue;
+    if (dataset.source === 'url') {
+        inputValue = dataset.data; // The URL string
+    } else if (dataset.format === 'json' || dataset.format === 'topojson') {
+        inputValue = JSON.stringify(dataset.data, null, 2);
+    } else if (dataset.format === 'csv' || dataset.format === 'tsv') {
+        inputValue = dataset.data;
+    }
+    document.getElementById('dataset-form-input').value = inputValue;
 
-        window.datasetListenersAdded = true;
+    // Trigger detection to show current state
+    const inputEl = document.getElementById('dataset-form-input');
+    // Use setTimeout to ensure the value is set before triggering
+    setTimeout(() => {
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }, 0);
+
+    document.getElementById('dataset-form-error').textContent = '';
+
+    // Update form header
+    document.querySelector('.dataset-form-header').textContent = 'Edit Dataset';
+
+    // Hide schema warning initially
+    hideSchemaWarning();
+
+    // Update URL state
+    if (updateURL) {
+        URLState.update({ view: 'datasets', snippetId: null, datasetId: `edit-${datasetId}` });
+    }
+
+    // Setup input handler for detection
+    setupDatasetInputHandler();
+}
+
+// Hide schema warning
+function hideSchemaWarning() {
+    const warningEl = document.getElementById('dataset-schema-warning');
+    if (warningEl) {
+        warningEl.style.display = 'none';
+    }
+}
+
+// Show schema warning with details
+function showSchemaWarning(oldSchema, newSchema) {
+    let warningEl = document.getElementById('dataset-schema-warning');
+
+    // Create warning element if it doesn't exist
+    if (!warningEl) {
+        const confirmEl = document.getElementById('dataset-detection-confirm');
+        warningEl = document.createElement('div');
+        warningEl.id = 'dataset-schema-warning';
+        warningEl.className = 'dataset-schema-warning';
+        confirmEl.parentNode.insertBefore(warningEl, confirmEl.nextSibling);
+    }
+
+    // Determine what changed
+    const added = newSchema.filter(col => !oldSchema.includes(col));
+    const removed = oldSchema.filter(col => !newSchema.includes(col));
+
+    let message = '⚠️ Schema Change Detected<br/>';
+
+    if (removed.length > 0) {
+        message += `<strong>Removed columns:</strong> ${removed.join(', ')}<br/>`;
+    }
+    if (added.length > 0) {
+        message += `<strong>Added columns:</strong> ${added.join(', ')}<br/>`;
+    }
+
+    message += '<em>Saving will update the dataset schema. Linked snippets may be affected.</em>';
+
+    warningEl.innerHTML = message;
+    warningEl.style.display = 'block';
+}
+
+// Check for schema changes
+function checkSchemaChanges() {
+    // Only check in edit mode
+    if (window.datasetFormMode !== 'edit' || !window.originalSchema) {
+        return;
+    }
+
+    // Get current detection
+    const detection = window.currentDetection;
+    if (!detection || !detection.format) {
+        hideSchemaWarning();
+        return;
+    }
+
+    // Extract new schema from detected data
+    let newSchema = [];
+
+    if (detection.source === 'url' && detection.content) {
+        // Parse content to get schema
+        const tempStats = calculateDatasetStats(
+            detection.parsed || detection.content,
+            detection.format,
+            'inline'
+        );
+        newSchema = tempStats.columns || [];
+    } else if (detection.source === 'inline') {
+        const tempStats = calculateDatasetStats(
+            detection.parsed || detection.originalInput,
+            detection.format,
+            'inline'
+        );
+        newSchema = tempStats.columns || [];
+    }
+
+    // Compare schemas
+    const originalSchema = window.originalSchema || [];
+
+    if (newSchema.length === 0 && originalSchema.length === 0) {
+        hideSchemaWarning();
+        return;
+    }
+
+    // Check if schemas are different
+    const schemaChanged =
+        originalSchema.length !== newSchema.length ||
+        !originalSchema.every(col => newSchema.includes(col)) ||
+        !newSchema.every(col => originalSchema.includes(col));
+
+    if (schemaChanged) {
+        showSchemaWarning(originalSchema, newSchema);
+    } else {
+        hideSchemaWarning();
     }
 }
 
@@ -1105,9 +1309,13 @@ function showNewDatasetForm(updateURL = true) {
 function hideNewDatasetForm() {
     document.getElementById('dataset-list-view').style.display = 'block';
     document.getElementById('dataset-form-view').style.display = 'none';
+    window.datasetFormMode = null;
+    window.editingDatasetId = null;
+    window.originalSchema = null;
+    hideSchemaWarning();
 }
 
-// Save new dataset
+// Save new dataset (handles both create and edit modes)
 async function saveNewDataset() {
     const name = document.getElementById('dataset-form-name').value.trim();
     const comment = document.getElementById('dataset-form-comment').value.trim();
@@ -1173,29 +1381,65 @@ async function saveNewDataset() {
         }
     }
 
-    // Check if name already exists
-    if (await DatasetStorage.nameExists(name)) {
-        errorEl.textContent = 'A dataset with this name already exists';
-        return;
-    }
-
-    // Create dataset
     try {
-        const dataset = await DatasetStorage.createDataset(name, data, format, source, comment);
+        if (window.datasetFormMode === 'edit') {
+            // Edit mode - update existing dataset
+            const datasetId = window.editingDatasetId;
 
-        // If we have metadata from URL fetch, update the dataset
-        if (metadata) {
-            await DatasetStorage.updateDataset(dataset.id, {
-                data: data,
-                ...metadata
-            });
+            // Check if name already exists (excluding current dataset)
+            if (await DatasetStorage.nameExists(name, datasetId)) {
+                errorEl.textContent = 'A dataset with this name already exists';
+                return;
+            }
+
+            // Update dataset
+            const updates = {
+                name,
+                data,
+                format,
+                source,
+                comment
+            };
+
+            // Add metadata if available (for URL sources)
+            if (metadata) {
+                Object.assign(updates, metadata);
+            }
+
+            await DatasetStorage.updateDataset(datasetId, updates);
+
+            hideNewDatasetForm();
+            await renderDatasetList();
+            await selectDataset(datasetId);
+
+            Toast.success('Dataset updated successfully');
+
+            // Track event
+            Analytics.track('dataset-update', `Update dataset (${source})`);
+        } else {
+            // Create mode - create new dataset
+            // Check if name already exists
+            if (await DatasetStorage.nameExists(name)) {
+                errorEl.textContent = 'A dataset with this name already exists';
+                return;
+            }
+
+            const dataset = await DatasetStorage.createDataset(name, data, format, source, comment);
+
+            // If we have metadata from URL fetch, update the dataset
+            if (metadata) {
+                await DatasetStorage.updateDataset(dataset.id, {
+                    data: data,
+                    ...metadata
+                });
+            }
+
+            hideNewDatasetForm();
+            await renderDatasetList();
+
+            // Track event
+            Analytics.track('dataset-create', `Create dataset (${source})`);
         }
-
-        hideNewDatasetForm();
-        await renderDatasetList();
-
-        // Track event
-        Analytics.track('dataset-create', `Create dataset (${source})`);
     } catch (error) {
         errorEl.textContent = `Failed to save dataset: ${error.message}`;
     }
