@@ -852,7 +852,7 @@ function createSnippetFromDataset(datasetName) {
     const minimalSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "data": {"name": datasetName},
-        "mark": "point",
+        "mark": {"type": "point", "tooltip": true},
         "encoding": {}
     };
 

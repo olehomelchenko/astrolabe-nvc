@@ -39,8 +39,8 @@ const URLState = {
             if (parts[1] === 'new') {
                 return { view: 'datasets', snippetId: null, datasetId: 'new' };
             }
-            // #datasets/dataset-123456
-            if (parts[1].startsWith('dataset-')) {
+            // #datasets/edit-dataset-123456 or #datasets/dataset-123456
+            if (parts[1].startsWith('edit-') || parts[1].startsWith('dataset-')) {
                 return { view: 'datasets', snippetId: null, datasetId: parts[1] };
             }
         }
@@ -246,6 +246,12 @@ const ModalManager = {
     },
 
     close(modalId) {
+        // Special handling for dataset modal to ensure URL state is updated
+        if (modalId === 'dataset-modal' && typeof closeDatasetManager === 'function') {
+            closeDatasetManager();
+            return;
+        }
+
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'none';

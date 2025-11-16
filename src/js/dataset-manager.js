@@ -509,18 +509,7 @@ function showURLPreviewPrompt(dataset) {
     previewBox.style.display = 'block';
     tableContainer.style.display = 'none';
 
-    const promptHTML = `
-        <div style="text-align: center; padding: 20px;">
-            <div style="margin-bottom: 12px; font-size: 11px; color: #606060;">
-                URL: ${dataset.data}<br/>
-                Format: ${dataset.format.toUpperCase()}
-            </div>
-            <button class="btn btn-standard primary" id="load-preview-btn">Load Preview</button>
-            <div style="margin-top: 8px; font-size: 10px; color: #808080; font-style: italic;">
-                Data will be fetched but not saved
-            </div>
-        </div>
-    `;
+    const promptHTML = `<div style="text-align: center;"><div style="margin-bottom: 8px; font-size: 11px; color: #606060;">URL: ${dataset.data}<br/>Format: ${dataset.format.toUpperCase()}</div><button class="btn btn-standard primary" id="load-preview-btn">Load Preview</button><div style="margin-top: 6px; font-size: 10px; color: #808080; font-style: italic;">Data will be fetched but not saved</div></div>`;
 
     previewBox.innerHTML = promptHTML;
 
@@ -876,6 +865,12 @@ function closeDatasetManager(updateURL = true) {
     const modal = document.getElementById('dataset-modal');
     modal.style.display = 'none';
     window.currentDatasetId = null;
+
+    // Hide dataset form if it's open (without updating URL to avoid double update)
+    const formView = document.getElementById('dataset-form-view');
+    if (formView && formView.style.display !== 'none') {
+        hideNewDatasetForm(false);
+    }
 
     // Update URL state - restore snippet if one is selected
     if (updateURL) {
@@ -1336,13 +1331,18 @@ function checkSchemaChanges() {
 }
 
 // Hide new dataset form
-function hideNewDatasetForm() {
+function hideNewDatasetForm(updateURL = true) {
     document.getElementById('dataset-list-view').style.display = 'block';
     document.getElementById('dataset-form-view').style.display = 'none';
     window.datasetFormMode = null;
     window.editingDatasetId = null;
     window.originalSchema = null;
     hideSchemaWarning();
+
+    // Update URL to dataset list view
+    if (updateURL) {
+        URLState.update({ view: 'datasets', snippetId: null, datasetId: null });
+    }
 }
 
 // Save new dataset (handles both create and edit modes)
@@ -1444,6 +1444,11 @@ async function saveNewDataset() {
 
             Toast.success('Dataset updated successfully');
 
+            // Refresh visualization if a snippet is open
+            if (window.currentSnippetId && typeof renderVisualization === 'function') {
+                await renderVisualization();
+            }
+
             // Track event
             Analytics.track('dataset-update', `Update dataset (${source})`);
         } else {
@@ -1466,6 +1471,14 @@ async function saveNewDataset() {
 
             hideNewDatasetForm();
             await renderDatasetList();
+            await selectDataset(dataset.id);
+
+            Toast.success('Dataset created successfully');
+
+            // Refresh visualization if a snippet is open
+            if (window.currentSnippetId && typeof renderVisualization === 'function') {
+                await renderVisualization();
+            }
 
             // Track event
             Analytics.track('dataset-create', `Create dataset (${source})`);
@@ -1531,6 +1544,11 @@ async function refreshDatasetMetadata() {
         // Refresh the display
         await selectDataset(dataset.id);
         await renderDatasetList();
+
+        // Refresh visualization if a snippet is open
+        if (window.currentSnippetId && typeof renderVisualization === 'function') {
+            await renderVisualization();
+        }
 
         // Brief success indicator
         refreshBtn.textContent = '✓';
@@ -1838,6 +1856,11 @@ async function autoSaveDatasetMeta() {
     const selectedItem = document.querySelector(`[data-item-id="${dataset.id}"]`);
     if (selectedItem) {
         selectedItem.classList.add('selected');
+    }
+
+    // Refresh visualization if a snippet is open
+    if (window.currentSnippetId && typeof renderVisualization === 'function') {
+        await renderVisualization();
     }
 }
 
