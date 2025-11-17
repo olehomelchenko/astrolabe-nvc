@@ -158,6 +158,7 @@ web/
 │   │   ├── config.js         # Global variables, settings API, utilities
 │   │   ├── snippet-manager.js # Snippet CRUD, storage, search, sort
 │   │   ├── dataset-manager.js # Dataset CRUD, IndexedDB operations
+│   │   ├── chart-builder.js  # Visual chart builder for creating specs
 │   │   ├── panel-manager.js  # Layout resizing and persistence
 │   │   ├── editor.js         # Monaco and Vega library integration
 │   │   ├── user-settings.js  # Settings management
@@ -194,7 +195,17 @@ web/
 - Table preview rendering with type detection
 - Import/export with format conversion
 - Extract inline data to dataset
-- Usage tracking (snippet ↔ dataset linking)
+
+**chart-builder.js** (~457 lines)
+- Visual chart builder for creating Vega-Lite specs from datasets
+- Mark type selection (Bar, Line, Point, Area, Circle)
+- Encoding channel mapping (X, Y, Color, Size)
+- Data type selection (Quantitative, Ordinal, Nominal, Temporal)
+- Smart defaults based on column type detection
+- Live preview with debounced rendering
+- Width/Height dimension controls
+- Validation and error handling
+- Snippet creation with auto-generated metadata
 
 **panel-manager.js** (~200 lines)
 - Drag-to-resize implementation

@@ -278,100 +278,59 @@ The following should be tested manually:
 ### Event Flow
 
 ```
-User clicks "Build Chart"
-  → openChartBuilder(datasetId)
-  → Fetch dataset from IndexedDB
-  → Populate field dropdowns with columns
-  → Auto-select defaults (first 2 columns)
-  → Show modal
-  → Update URL to #datasets/dataset-123/build
+User clicks "Build Chart" → openChartBuilder(datasetId)
+  → Fetch dataset, populate dropdowns, auto-select defaults
+  → Show modal, update URL to #datasets/dataset-123/build
 
-User changes config (mark/field/type)
-  → Event handler captures change
-  → Update internal spec state
-  → Validate configuration
-  → Enable/disable "Create Snippet" button
-  → Debounced: updateChartBuilderPreview()
+User changes config → Update state → Debounced preview update
 
-User clicks "Create Snippet"
-  → validateChartConfig()
-  → generateVegaLiteSpec()
-  → Create snippet via SnippetStorage
-  → Close builder
-  → Close dataset modal
-  → Open snippet in editor
-  → Update URL to #snippet-123
+User clicks "Create Snippet" → Validate → Generate spec
+  → Create snippet → Close modals → Open in editor
 ```
 
-### Reusable Functions
+### Key Functions
 
-**From existing codebase:**
+- `openChartBuilder(datasetId)` - Initialize builder with dataset
+- `populateFieldDropdowns(dataset)` - Fill dropdowns with columns
+- `autoSelectDefaults(dataset)` - Smart defaults based on types
+- `setEncoding(channel, field, type)` - Update UI and state
+- `generateVegaLiteSpec()` - Build spec from UI state
+- `validateChartConfig()` - Check if config is valid
+- `renderChartBuilderPreview()` - Render preview with error handling
+- `createSnippetFromBuilder()` - Generate and save snippet
+- `closeChartBuilder()` - Close modal and cleanup
+
+### Reuses From Existing Codebase
+
 - `DatasetStorage.getDataset(id)` - Fetch dataset
-- `SnippetStorage.saveSnippet(snippet)` - Save new snippet
-- `createSnippet(spec, name)` - Generate snippet object
+- `resolveDatasetReferences(spec)` - Resolve data.name references
+- `SnippetStorage.saveSnippet()` - Save new snippet
+- `generateSnippetId()` / `generateSnippetName()` - Auto-generate IDs/names
 - `selectSnippet(id)` - Open snippet in editor
 - `URLState.update()` - Update URL state
-
-**To be refactored:**
-- `renderVegaSpec(containerId, spec, options)` - Generic Vega renderer
-
-**To be created:**
-- `openChartBuilder(datasetId)`
-- `closeChartBuilder()`
-- `generateVegaLiteSpec()`
-- `validateChartConfig()`
-- etc. (see Step 2 above)
+- `showToast()` - User notifications
+- `getSetting()` - Access user settings (debounce)
 
 ## Design Decisions
 
-### Why Vega-Lite Compatible Schema?
-- Keeps builder state directly mappable to output spec
-- No translation layer needed
-- Easy to serialize/debug
-- Can potentially expose spec editor later
+**Why Vega-Lite Compatible Schema?** - Direct mapping to output spec, no translation layer, easy to debug.
 
-### Why Type Toggle Buttons?
-- Matches existing UI patterns (Draft/Published)
-- Single-click interaction (vs dropdown)
-- Visual clarity for 4 options
-- Familiar to users who use editor
+**Why Type Toggle Buttons?** - Matches existing UI (Draft/Published buttons), single-click interaction, visual clarity.
 
-### Why Separate "Build Chart" from "New Snippet"?
-- Different workflows: guided vs manual
-- Both are valid entry points
-- Allows users to choose their preferred method
-- Doesn't force beginners into code
+**Why Separate "Build Chart" from "New Snippet"?** - Different workflows (guided vs manual), both valid entry points.
 
-### Why No Aggregations in v1?
-- Keeps UI simple and focused
-- Most common use case: direct field mapping
-- Aggregations add significant complexity
-- Users can add manually in editor after
+**Why No Aggregations in v1?** - Keeps UI simple, most common use case is direct mapping, users can add in editor.
 
-### Why Center Preview (Not Fit)?
-- Respects user's width/height choices
-- Consistent with main preview panel behavior
-- Avoids confusion about final size
-- Allows scrolling for large charts
+**Why Center Preview?** - Respects dimensions, consistent with main preview, allows scrolling for large charts.
 
 ## File Structure
 
-```
-/src
-  /js
-    - chart-builder.js         (NEW - ~400 lines)
-    - editor.js                (MODIFIED - refactor ~50 lines)
-    - dataset-manager.js       (MODIFIED - add button handler ~20 lines)
-    - app.js                   (MODIFIED - URL state + init ~30 lines)
-    - snippet-manager.js       (NO CHANGES)
-    - config.js                (NO CHANGES)
-  - styles.css                 (MODIFIED - added chart builder styles)
-
-/index.html                    (MODIFIED - added modal HTML + button)
-
-/project-docs
-  - chart-builder-implementation.md   (THIS FILE)
-```
+**Files Modified:**
+- `src/js/chart-builder.js` - NEW (~457 lines)
+- `src/js/config.js` - URL state support for `/build` action
+- `src/js/app.js` - URL handler for chart builder
+- `src/styles.css` - Chart builder styles (lines 491-547)
+- `index.html` - Chart builder modal HTML + "Build Chart" button
 
 ## Next Steps
 
@@ -382,28 +341,22 @@ User clicks "Create Snippet"
 5. **Test with real datasets** - READY FOR MANUAL TESTING
 6. **Document in CHANGELOG.md** - TODO after testing
 
-## Notes & Considerations
+## Notes
 
-- **Performance**: Preview rendering is debounced (use existing render debounce setting)
-- **Error Handling**: Invalid specs show error overlay in preview (reuse existing pattern)
-- **Accessibility**: All form controls have labels and proper IDs
-- **Keyboard Support**: Escape closes modal, Tab navigation works
-- **URL State**: Supports browser back/forward navigation
-- **Dark Theme**: All styles support experimental theme
-- **Empty State**: Placeholder text when no valid config yet
-- **Validation**: Clear error messages for invalid states
+- Performance: Debounced preview using existing render settings
+- Error Handling: Shows inline error messages with helpful text
+- Keyboard Support: ESC closes modal, Tab navigation
+- URL State: Browser back/forward navigation integrated
+- Dark Theme: Full support for experimental theme
 
-## Future Enhancements (Not in Scope)
+## Future Enhancements
 
-- Aggregation support (count, sum, mean, etc.)
-- Transform support (filter, calculate)
-- Faceting/composition (layer, concat, vconcat, hconcat)
-- Advanced mark properties (opacity, stroke, strokeWidth)
-- Axis/legend customization (title, format, scale)
-- Custom color schemes
-- Saved chart templates
+Potential improvements for future versions:
+- Aggregations (count, sum, mean), transforms (filter, calculate)
+- Layering, faceting, and composition
+- Advanced mark properties, axis/legend customization
+- Custom color schemes, saved templates
 - Chart recommendations based on data types
-- Export chart as PNG/SVG directly from builder
 
 ---
 

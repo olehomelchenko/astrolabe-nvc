@@ -5,6 +5,21 @@ All notable changes to Astrolabe will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+## [1.1.0] - 2025-11-17
+
+### Added
+- **Visual Chart Builder**: Create Vega-Lite visualizations without writing JSON
+  - Access via "Build Chart" button in dataset details panel
+  - Support for 5 mark types: Bar, Line, Point, Area, Circle
+  - Map dataset columns to encoding channels: X, Y, Color, Size
+  - 4 data type options per encoding: Quantitative, Ordinal, Nominal, Temporal
+  - Smart defaults based on column type detection
+  - Live preview with debounced rendering
+  - Width/Height dimension controls
+  - Validation with helpful error messages
+  - URL state support (`#datasets/dataset-123/build`)
+  - Browser back/forward navigation integrated
+  - Creates snippets with auto-generated names and dataset references
 
 ## [1.0.0] - 2025-10-15
 

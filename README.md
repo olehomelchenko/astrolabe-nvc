@@ -4,6 +4,7 @@ A lightweight, browser-based snippet manager for Vega-Lite visualizations. Organ
 
 ## Key Features
 
+- **Visual chart builder**: Create charts without writing JSON – select mark type, map fields to encodings, and see live preview
 - **Draft/published workflow**: Experiment safely without losing your working version
 - **Dataset library**: Store and reuse datasets across snippets (JSON, CSV, TSV, TopoJSON)
 - **Import/export**: Back up your work or move it between browsers
@@ -67,6 +68,7 @@ A lightweight, browser-based snippet manager for Vega-Lite visualizations. Organ
    - `app.js` – Application initialization and event handlers
    - `snippet-manager.js` – Snippet CRUD operations
    - `dataset-manager.js` – Dataset management with IndexedDB
+   - `chart-builder.js` – Visual chart builder for creating specs from datasets
    - `user-settings.js` – Settings persistence and validation
    - `editor.js` – Monaco Editor and Vega-Lite rendering
    - `panel-manager.js` – Resizable layout and persistence

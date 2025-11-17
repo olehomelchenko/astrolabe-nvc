@@ -243,23 +243,38 @@
   - Button in dataset details to create snippet
   - Auto-generated minimal Vega-Lite spec with dataset reference
   - Pre-populated comment and datasetRefs
+- **Visual Chart Builder**:
+  - "Build Chart" button in dataset details panel
+  - Modal interface with configuration (33%) and preview (67%) panels
+  - Mark type selection: Bar, Line, Point, Area, Circle
+  - Encoding channels: X, Y, Color, Size (all optional)
+  - Data type selection: Q (quantitative), O (ordinal), N (nominal), T (temporal)
+  - Smart defaults based on column type detection
+  - Live preview with debounced rendering
+  - Width/Height dimension controls
+  - Validation (requires at least one encoding)
+  - URL state support: `#datasets/dataset-123/build`
+  - Creates snippets with auto-generated names and metadata
 - **UI Enhancements**:
   - Larger modal (95% width, max 1200px, 85% height)
   - Actions moved to top of dataset details
   - Dataset list with usage badges
 
-**Files**: `dataset-manager.js` (lines 19-1165), `snippet-manager.js` (dataset tracking), `app.js` (event handlers), `index.html` (UI), `styles.css` (table styles)
+**Files**: `dataset-manager.js` (lines 19-1165), `chart-builder.js` (~457 lines), `snippet-manager.js` (dataset tracking), `app.js` (event handlers), `config.js` (URL state), `index.html` (UI), `styles.css` (table styles, chart builder)
 
 ---
 
 ## 📊 **Feature Statistics**
 
 - **Core Feature Groups**: 14
-- **Total Individual Capabilities**: ~100+
+- **Total Individual Capabilities**: ~110+
 - **Storage Systems**: 2 (localStorage for snippets, IndexedDB for datasets)
-- **UI Panels**: 3 main + 1 modal
+- **UI Panels**: 3 main + 2 modals (Dataset Manager, Chart Builder)
 - **Auto-save Points**: 3 (draft spec, name, comment)
 - **Data Formats**: 4 (JSON, CSV, TSV, TopoJSON)
+- **Chart Builder Mark Types**: 5 (Bar, Line, Point, Area, Circle)
+- **Chart Builder Encoding Channels**: 4 (X, Y, Color, Size)
+- **Chart Builder Data Types**: 4 (Quantitative, Ordinal, Nominal, Temporal)
 - **Data Sources**: 2 (inline, URL)
 - **Type Detection**: 4 types (number, date, boolean, text)
 - **Import/Export**: Snippets + Datasets
@@ -274,13 +289,14 @@ src/
 │   ├── config.js           # Global variables, settings, sample data
 │   ├── snippet-manager.js  # Snippet CRUD, storage, search, sort, extract (1,100+ lines)
 │   ├── dataset-manager.js  # Dataset CRUD, IndexedDB, preview, types (1,200+ lines)
+│   ├── chart-builder.js    # Visual chart builder for datasets (457 lines)
 │   ├── panel-manager.js    # Layout resizing, toggling, persistence (200 lines)
 │   ├── editor.js           # Monaco setup, Vega rendering, dataset resolution (150 lines)
 │   └── app.js              # Event handlers, initialization (250+ lines)
-└── styles.css              # Retro Windows 2000 aesthetic (280+ lines)
+└── styles.css              # Retro Windows 2000 aesthetic (330+ lines)
 ```
 
-**Total JS Lines**: ~2,900+ lines (excluding comments and blank lines)
+**Total JS Lines**: ~3,350+ lines (excluding comments and blank lines)
 
 ---
 
