@@ -487,3 +487,61 @@ body { font-family: var(--font-main); height: 100vh; overflow: hidden; backgroun
 :root[data-theme="experimental"] .toast-warning .toast-message { color: #ffdd99; }
 :root[data-theme="experimental"] .toast-info { background: #2a3a5a; border-color: #6699ff; }
 :root[data-theme="experimental"] .toast-info .toast-message { color: #88bbff; }
+
+/* Chart Builder */
+.chart-builder-view { display: flex; flex-direction: column; height: 100%; }
+.chart-builder-container { display: flex; gap: 16px; height: 100%; overflow: hidden; }
+
+/* Left Panel: Configuration */
+.chart-builder-config { flex: 0 0 33.33%; display: flex; flex-direction: column; gap: 16px; padding: 16px; overflow-y: auto; border-right: 1px solid var(--win-gray-dark); background: var(--bg-light); }
+.chart-builder-header { margin-bottom: 8px; }
+.chart-builder-section { display: flex; flex-direction: column; gap: 8px; }
+.chart-builder-label { font-size: 11px; font-weight: bold; color: var(--text-primary); }
+
+/* Mark Type Row */
+.mark-type-row { display: flex; align-items: center; gap: 12px; }
+.mark-toggle-group { display: flex; gap: 0; border: 1px solid var(--win-gray-dark); border-radius: 2px; background: var(--bg-white); flex: 1; }
+.mark-toggle-group .btn { flex: 1; border: none; border-radius: 0; border-right: 1px solid var(--win-gray-dark); font-size: 11px; font-weight: bold; min-width: 0; line-height: 1.4; }
+.mark-toggle-group .btn:last-child { border-right: none; }
+.mark-toggle-group .btn.active { background: var(--win-blue); color: var(--bg-white); }
+
+/* Dimensions */
+.chart-dimensions-group { display: flex; gap: 12px; }
+.dimension-input-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.dimension-label { font-size: 10px; color: var(--text-secondary); }
+
+/* Encodings */
+.encoding-group { background: var(--bg-white); border: 1px solid var(--win-gray-dark); padding: 12px; border-radius: 2px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.encoding-row { display: flex; align-items: center; gap: 8px; }
+.encoding-header { font-size: 11px; font-weight: bold; color: var(--text-primary); min-width: 70px; flex-shrink: 0; }
+.encoding-row select { flex: 1; }
+.encoding-type { display: flex; align-items: center; gap: 8px; }
+.encoding-type-label { font-size: 11px; font-weight: normal; color: var(--text-primary); min-width: 70px; flex-shrink: 0; }
+
+/* Type Toggle Group (similar to view-toggle-group) */
+.type-toggle-group { display: flex; gap: 0; border: 1px solid var(--win-gray-dark); border-radius: 2px; background: var(--bg-white); flex: 1; }
+.type-toggle-group .btn { flex: 1; border: none; border-radius: 0; border-right: 1px solid var(--win-gray-dark); font-size: 11px; font-weight: bold; line-height: 1.4; }
+.type-toggle-group .btn:last-child { border-right: none; }
+.type-toggle-group .btn.active { background: var(--win-blue); color: var(--bg-white); }
+
+/* Error and Actions */
+.chart-builder-error { font-size: 11px; color: #c62828; padding: 8px; background: #ffebee; border: 1px solid #c62828; border-radius: 2px; display: none; }
+.chart-builder-error:not(:empty) { display: block; }
+.chart-builder-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--win-gray-dark); }
+
+/* Right Panel: Preview */
+.chart-builder-preview { flex: 1; display: flex; flex-direction: column; background: var(--bg-white); }
+.chart-preview-header { font-size: 11px; font-weight: bold; padding: 8px 16px; background: var(--win-gray-light); border-bottom: 1px solid var(--win-gray-dark); color: var(--text-primary); }
+.chart-preview-container { flex: 1; display: flex; align-items: center; justify-content: center; overflow: auto; position: relative; }
+.chart-preview-placeholder { font-size: 11px; color: var(--text-secondary); text-align: center; padding: 20px; }
+
+/* Dark theme overrides */
+:root[data-theme="experimental"] .chart-builder-config { background: var(--bg-light); border-right-color: var(--win-gray-dark); }
+:root[data-theme="experimental"] .mark-toggle-group { background: var(--bg-white); border-color: var(--win-gray-dark); }
+:root[data-theme="experimental"] .mark-toggle-group .btn { border-right-color: var(--win-gray-dark); }
+:root[data-theme="experimental"] .encoding-group { background: var(--bg-white); border-color: var(--win-gray-dark); }
+:root[data-theme="experimental"] .type-toggle-group { background: var(--bg-white); border-color: var(--win-gray-dark); }
+:root[data-theme="experimental"] .type-toggle-group .btn { border-right-color: var(--win-gray-dark); }
+:root[data-theme="experimental"] .chart-builder-preview { background: var(--bg-white); }
+:root[data-theme="experimental"] .chart-preview-header { background: var(--win-gray-light); border-bottom-color: var(--win-gray-dark); }
+:root[data-theme="experimental"] .chart-builder-error { background: #5a2a2a; border-color: #ff6666; color: #ff8888; }

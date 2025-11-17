@@ -111,6 +111,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Initialize auto-save functionality
         initializeAutoSave();
 
+        // Initialize chart builder
+        initializeChartBuilder();
+
         // Initialize URL state management AFTER editor is ready
         initializeURLStateManagement();
     });
@@ -283,6 +286,16 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshMetadataBtn.addEventListener('click', refreshDatasetMetadata);
     }
 
+    // Build chart from dataset button
+    const buildChartBtn = document.getElementById('build-chart-btn');
+    if (buildChartBtn) {
+        buildChartBtn.addEventListener('click', async () => {
+            if (window.currentDatasetId) {
+                openChartBuilder(window.currentDatasetId);
+            }
+        });
+    }
+
     // New snippet from dataset button
     const newSnippetBtn = document.getElementById('new-snippet-btn');
     if (newSnippetBtn) {
@@ -396,6 +409,11 @@ function handleURLStateChange() {
             const numericId = parseFloat(state.datasetId.replace('dataset-', ''));
             if (!isNaN(numericId)) {
                 selectDataset(numericId, false);
+
+                // Handle chart builder action
+                if (state.action === 'build') {
+                    openChartBuilder(numericId);
+                }
             }
         }
     } else if (state.snippetId) {

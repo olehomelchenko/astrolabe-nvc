@@ -201,6 +201,7 @@
                             <div class="dataset-detail-section">
                                 <div class="dataset-actions">
                                     <button class="btn btn-modal primary" id="edit-dataset-btn" title="Edit this dataset contents">Edit Contents</button>
+                                    <button class="btn btn-modal primary" id="build-chart-btn" title="Build a chart using this dataset">Build Chart</button>
                                     <button class="btn btn-modal primary" id="new-snippet-btn" title="Create a new snippet using this dataset">New Snippet</button>
                                     <button class="btn btn-modal" id="export-dataset-btn" title="Export this dataset to file">Export</button>
                                     <button class="btn btn-modal" id="copy-reference-btn" title="Copy dataset reference to clipboard">Copy Reference</button>
@@ -352,6 +353,153 @@
                     <div class="dataset-form-actions">
                         <button class="btn btn-modal primary" id="extract-create-btn" title="Create dataset and update snippet reference">Create Dataset</button>
                         <button class="btn btn-modal" id="extract-cancel-btn" title="Cancel extraction">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Builder Modal -->
+    <div id="chart-builder-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Build Chart</span>
+                <button class="btn btn-icon" id="chart-builder-modal-close" title="Close chart builder (Escape)">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Chart Builder View -->
+                <div id="chart-builder-view" class="chart-builder-view">
+                    <div class="chart-builder-container">
+                        <!-- Left Panel: Configuration -->
+                        <div class="chart-builder-config">
+                            <div class="chart-builder-header">
+                                <button class="btn btn-modal" id="chart-builder-back-btn" title="Back to dataset details">← Back to Dataset</button>
+                            </div>
+
+                            <div class="chart-builder-section">
+                                <div class="mark-type-row">
+                                    <label class="chart-builder-label">Mark Type*</label>
+                                    <div class="mark-toggle-group">
+                                        <button class="btn btn-toggle small active" data-mark="bar" title="Bar chart">Bar</button>
+                                        <button class="btn btn-toggle small" data-mark="line" title="Line chart">Line</button>
+                                        <button class="btn btn-toggle small" data-mark="point" title="Point chart">Point</button>
+                                        <button class="btn btn-toggle small" data-mark="area" title="Area chart">Area</button>
+                                        <button class="btn btn-toggle small" data-mark="circle" title="Circle chart">Circle</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chart-builder-section">
+                                <label class="chart-builder-label">Encodings</label>
+
+                                <!-- X Axis -->
+                                <div class="encoding-group">
+                                    <div class="encoding-row">
+                                        <label class="encoding-header">X Axis</label>
+                                        <select id="encoding-x-field" class="input">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
+                                    <div class="encoding-type">
+                                        <label class="encoding-type-label">Type</label>
+                                        <div class="type-toggle-group">
+                                            <button class="btn btn-toggle small" data-encoding="x" data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small" data-encoding="x" data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small" data-encoding="x" data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small" data-encoding="x" data-type="temporal" title="Temporal">T</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Y Axis -->
+                                <div class="encoding-group">
+                                    <div class="encoding-row">
+                                        <label class="encoding-header">Y Axis</label>
+                                        <select id="encoding-y-field" class="input">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
+                                    <div class="encoding-type">
+                                        <label class="encoding-type-label">Type</label>
+                                        <div class="type-toggle-group">
+                                            <button class="btn btn-toggle small" data-encoding="y" data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small" data-encoding="y" data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small" data-encoding="y" data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small" data-encoding="y" data-type="temporal" title="Temporal">T</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Color -->
+                                <div class="encoding-group">
+                                    <div class="encoding-row">
+                                        <label class="encoding-header">Color</label>
+                                        <select id="encoding-color-field" class="input">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
+                                    <div class="encoding-type">
+                                        <label class="encoding-type-label">Type</label>
+                                        <div class="type-toggle-group">
+                                            <button class="btn btn-toggle small" data-encoding="color" data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small" data-encoding="color" data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small" data-encoding="color" data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small" data-encoding="color" data-type="temporal" title="Temporal">T</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Size -->
+                                <div class="encoding-group">
+                                    <div class="encoding-row">
+                                        <label class="encoding-header">Size</label>
+                                        <select id="encoding-size-field" class="input">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
+                                    <div class="encoding-type">
+                                        <label class="encoding-type-label">Type</label>
+                                        <div class="type-toggle-group">
+                                            <button class="btn btn-toggle small" data-encoding="size" data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small" data-encoding="size" data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small" data-encoding="size" data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small" data-encoding="size" data-type="temporal" title="Temporal">T</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chart-builder-section">
+                                <label class="chart-builder-label">Dimensions</label>
+                                <div class="chart-dimensions-group">
+                                    <div class="dimension-input-group">
+                                        <label class="dimension-label">Width</label>
+                                        <input type="number" id="chart-width" class="input small" placeholder="auto" min="1" />
+                                    </div>
+                                    <div class="dimension-input-group">
+                                        <label class="dimension-label">Height</label>
+                                        <input type="number" id="chart-height" class="input small" placeholder="auto" min="1" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chart-builder-error" id="chart-builder-error"></div>
+
+                            <div class="chart-builder-actions">
+                                <button class="btn btn-modal primary" id="chart-builder-create-btn" title="Create snippet from chart" disabled>Create Snippet</button>
+                                <button class="btn btn-modal" id="chart-builder-cancel-btn" title="Cancel and close">Cancel</button>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Preview -->
+                        <div class="chart-builder-preview">
+                            <div class="chart-preview-header">Preview</div>
+                            <div class="chart-preview-container" id="chart-builder-preview">
+                                <div class="chart-preview-placeholder">
+                                    Configure chart to see preview
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -723,6 +871,7 @@
     <script src="src/js/generic-storage-ui.js"></script>
     <script src="src/js/snippet-manager.js"></script>
     <script src="src/js/dataset-manager.js"></script>
+    <script src="src/js/chart-builder.js"></script>
     <script src="src/js/panel-manager.js"></script>
     <script src="src/js/editor.js"></script>
     <script src="src/js/app.js"></script>

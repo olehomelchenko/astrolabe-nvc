@@ -21,31 +21,35 @@ const URLState = {
     // Parse current hash into state object
     parse() {
         const hash = window.location.hash.slice(1); // Remove '#'
-        if (!hash) return { view: 'snippets', snippetId: null, datasetId: null };
+        if (!hash) return { view: 'snippets', snippetId: null, datasetId: null, action: null };
 
         const parts = hash.split('/');
 
         // #snippet-123456
         if (hash.startsWith('snippet-')) {
-            return { view: 'snippets', snippetId: hash, datasetId: null };
+            return { view: 'snippets', snippetId: hash, datasetId: null, action: null };
         }
 
         // #datasets
         if (parts[0] === 'datasets') {
             if (parts.length === 1) {
-                return { view: 'datasets', snippetId: null, datasetId: null };
+                return { view: 'datasets', snippetId: null, datasetId: null, action: null };
             }
             // #datasets/new
             if (parts[1] === 'new') {
-                return { view: 'datasets', snippetId: null, datasetId: 'new' };
+                return { view: 'datasets', snippetId: null, datasetId: 'new', action: null };
+            }
+            // #datasets/dataset-123456/build (chart builder)
+            if (parts.length === 3 && parts[2] === 'build' && parts[1].startsWith('dataset-')) {
+                return { view: 'datasets', snippetId: null, datasetId: parts[1], action: 'build' };
             }
             // #datasets/edit-dataset-123456 or #datasets/dataset-123456
             if (parts[1].startsWith('edit-') || parts[1].startsWith('dataset-')) {
-                return { view: 'datasets', snippetId: null, datasetId: parts[1] };
+                return { view: 'datasets', snippetId: null, datasetId: parts[1], action: null };
             }
         }
 
-        return { view: 'snippets', snippetId: null, datasetId: null };
+        return { view: 'snippets', snippetId: null, datasetId: null, action: null };
     },
 
     // Update URL hash without triggering hashchange
@@ -61,6 +65,11 @@ const URLState = {
                     ? state.datasetId
                     : `dataset-${state.datasetId}`;
                 hash = `#datasets/${datasetId}`;
+
+                // Add action suffix if present
+                if (state.action === 'build') {
+                    hash += '/build';
+                }
             } else {
                 hash = '#datasets';
             }
@@ -265,9 +274,14 @@ const ModalManager = {
 
     // Close any open modal (for ESC key handler)
     closeAny() {
-        const modalIds = ['help-modal', 'donate-modal', 'settings-modal', 'dataset-modal', 'extract-modal'];
+        const modalIds = ['chart-builder-modal', 'help-modal', 'donate-modal', 'settings-modal', 'dataset-modal', 'extract-modal'];
         for (const modalId of modalIds) {
             if (this.isOpen(modalId)) {
+                // Special handling for chart builder to properly update URL
+                if (modalId === 'chart-builder-modal' && typeof closeChartBuilder === 'function') {
+                    closeChartBuilder();
+                    return true;
+                }
                 this.close(modalId);
                 return true;
             }
