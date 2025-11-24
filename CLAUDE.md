@@ -13,8 +13,8 @@ Instructions for Claude Code when working on this project.
   - **Snippets**: localStorage (id, name, created, modified, spec, draftSpec, comment, tags, datasetRefs, meta)
   - **Datasets**: IndexedDB (unlimited size, multi-format: JSON/CSV/TSV/TopoJSON, inline & URL sources)
 - **Structure**: Three resizable panels (snippet library, Monaco editor, live preview) + Dataset Manager modal
-- **Deployment**: Web app files in `/web` folder; `/project-docs` folder contains development documentation
-- **No build tools**: Open `web/index.html` directly in browser (needs local server for IndexedDB)
+- **Deployment**: Root folder contains `index.html` and all app files; `/project-docs` folder contains development documentation
+- **No build tools**: Open `index.html` directly in browser (needs local server for service worker and IndexedDB)
 
 ## Current Status
 
@@ -26,6 +26,7 @@ Instructions for Claude Code when working on this project.
 - Snippet management with draft/published workflow
 - Dataset library (IndexedDB) with multi-format support (JSON, CSV, TSV, TopoJSON)
 - Dataset reference resolution in Vega-Lite specs
+- Progressive Web App with offline functionality and installability
 - User settings and theme system (Light, Dark Experimental)
 - Import/export functionality for snippets and datasets
 - Real-time search and multi-field sorting
@@ -69,3 +70,9 @@ When implementing changes:
 - When working on the code, if you notice any opportunities to better bring the project to the state above - bring this to user's attention and ask for approval to implement the suggested changes.
 - When attempting to implement a new feature, research whether a similar method or fuction already exists elsewhere. Propose to either enhance existing one, or create a new method in such cases.
 - Testing: The user always tests changes manually. Do not start local servers or attempt to run the application.
+
+## Documentation guidelines
+- **Conciseness**: Keep documentation compact and practical. Avoid verbose explanations or unnecessary code examples in technical docs.
+- **Code examples**: Only include code examples in documentation when they genuinely clarify complex concepts. Omit examples for straightforward implementations.
+- **User-facing content**: When updating help/about sections in the UI (like index.html modals), keep additions brief and integrated with existing content style.
+- **Technical docs**: Focus on "what" and "why" rather than "how" - developers can read the actual code for implementation details.
