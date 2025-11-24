@@ -99,11 +99,18 @@ Complete feature set for lightweight Vega-Lite snippet management.
 
 ## [Unreleased]
 
+### Added
+- **Progressive Web App (PWA) Support**: Install Astrolabe as standalone app with offline functionality
+  - Service worker caches all application files and CDN dependencies
+  - Full offline access after initial load
+  - Install button in browser for desktop/mobile installation
+  - Runs in standalone window without browser chrome
+  - "Add to Home Screen" support on iOS/Android
+  - Automatic cache updates when app version changes
+  - Works seamlessly with existing IndexedDB and localStorage
+
 ### Fixed
 - (Bugfixes will be listed here)
-
-### Added
-- (New features will be listed here)
 
 ### Changed
 - (Improvements and refinements will be listed here)

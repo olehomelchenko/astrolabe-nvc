@@ -7,6 +7,7 @@ A lightweight, browser-based snippet manager for Vega-Lite visualizations. Organ
 - **Visual chart builder**: Create charts without writing JSON – select mark type, map fields to encodings, and see live preview
 - **Draft/published workflow**: Experiment safely without losing your working version
 - **Dataset library**: Store and reuse datasets across snippets (JSON, CSV, TSV, TopoJSON)
+- **Progressive Web App**: Install as standalone app, works fully offline after first visit
 - **Import/export**: Back up your work or move it between browsers
 - **Search and ordering**: Find snippets by name, comment, or spec content
 - **Configurable settings**: Editor options, performance tuning, date formatting, light/dark themes
@@ -90,6 +91,7 @@ A lightweight, browser-based snippet manager for Vega-Lite visualizations. Organ
 - **Storage limits**: Snippets are limited to 5 MB total (shared localStorage). Datasets use IndexedDB and have much higher limits.
 - **Experimental dark theme**: Has minor visibility issues in some UI components.
 - **No cross-device sync**: Data doesn't sync between browsers or devices.
+- **Offline functionality**: PWA requires initial online visit to cache resources; subsequent visits work offline.
 
 ### We'd Love Your Feedback!
 

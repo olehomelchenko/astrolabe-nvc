@@ -14,6 +14,7 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 ## Design Principles
 
 - **Local-first**: All data stored in browser (localStorage for snippets, IndexedDB for datasets)
+- **Offline-capable**: Progressive Web App with service worker for full offline functionality
 - **Minimal dependencies**: Vanilla JavaScript, no build tools, direct CDN imports
 - **Developer-friendly**: Full JSON schema support, syntax validation, and intellisense
 - **Version-aware**: Draft/published workflow for safe experimentation
@@ -28,6 +29,7 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 - **Editor**: Monaco Editor v0.47.0 (via CDN)
 - **Visualization**: Vega-Embed v6 (includes Vega v5 & Vega-Lite v5)
 - **Storage**: localStorage (snippets) + IndexedDB (datasets)
+- **Offline**: Service Worker API with Cache API for PWA functionality
 - **Architecture**: Modular script organization with logical file separation
 - **Backend**: None (frontend-only application)
 
@@ -153,6 +155,10 @@ astrolabe:settings        # User preferences and UI state
 ```
 web/
 ├── index.html                 # Main HTML structure
+├── manifest.webmanifest       # PWA manifest (app metadata, icons, theme)
+├── sw.js                      # Service worker (offline caching)
+├── icon-192x192.png           # PWA icon (small)
+├── icon-512x512.png           # PWA icon (large)
 ├── src/
 │   ├── js/
 │   │   ├── config.js         # Global variables, settings API, utilities
@@ -230,13 +236,21 @@ web/
 - Performance tuning options
 - Settings modal UI logic
 
-**app.js** (~250 lines)
+**app.js** (~270 lines)
 - Application initialization sequence
+- Service worker registration for PWA
 - Event listener registration
 - Monaco editor setup
 - URL state management (hashchange listener)
 - Keyboard shortcut handlers
 - Modal management
+
+**sw.js** (~90 lines)
+- Service worker for Progressive Web App functionality
+- Cache management (install, activate, fetch events)
+- Offline-first strategy with network fallback
+- Automatic cache versioning and cleanup
+- CDN resource caching (Monaco, Vega, fonts)
 
 **styles.css** (~280 lines)
 - Windows 2000 aesthetic (classic gray, beveled borders)
@@ -362,6 +376,22 @@ const URLState = {
 - Browser back/forward navigation works naturally
 - Page refresh preserves user context
 - Multi-tab workflows supported
+
+### Progressive Web App Implementation
+
+Astrolabe uses a service worker to provide offline functionality and installability as a Progressive Web App.
+
+**Implementation**:
+- Service worker (`sw.js`) caches all local files and CDN dependencies (Monaco, Vega, fonts)
+- Cache-first strategy with network fallback
+- Cache versioning tied to app version for automatic updates
+- PWA manifest (`manifest.webmanifest`) defines app metadata, icons, and theme
+
+**Features**:
+- Full offline functionality after first visit
+- Browser shows install button for standalone app installation
+- Automatic cache updates (checks every 60 seconds)
+- Works seamlessly with IndexedDB and localStorage
 
 ### Type Detection Algorithm
 

@@ -8,6 +8,15 @@
     <link rel="stylesheet" href="src/styles.css">
     <link rel="icon" type="image/svg+xml" href="src/favicon.svg" />
 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#000080">
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Astrolabe">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
 
     <!-- Google Fonts - IBM Plex Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -526,6 +535,8 @@
                         <p class="help-text">
                             Everything runs locally in your browser—no server, no signup, no data leaving your machine.
                             Your snippets and datasets are stored using browser storage, so they persist across sessions.
+                            As a Progressive Web App, Astrolabe works fully offline after your first visit and can be installed
+                            as a standalone application.
                         </p>
                     </section>
 
@@ -536,6 +547,7 @@
                             <li><strong>Three-panel workspace</strong> — Snippet library, Monaco code editor with Vega-Lite schema validation, and live preview</li>
                             <li><strong>Draft/published workflow</strong> — Experiment safely without losing your working version</li>
                             <li><strong>Dataset library</strong> — Store and reuse datasets across multiple visualizations (supports JSON, CSV, TSV, TopoJSON)</li>
+                            <li><strong>Offline-capable</strong> — Works without internet connection after first visit; install as standalone app</li>
                             <li><strong>Import/export</strong> — Back up your work or move it between browsers</li>
                             <li><strong>Inline data extraction</strong> — Convert hardcoded data into reusable datasets</li>
                             <li><strong>Search and sorting</strong> — Find snippets by name, comment, or spec content</li>
