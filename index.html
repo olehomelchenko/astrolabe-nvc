@@ -25,6 +25,9 @@
 
     <!-- Monaco Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.47.0/min/vs/loader.js"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body>
@@ -65,38 +68,86 @@
 
         <div class="main-panels">
             <!-- Snippet Library Panel -->
-            <div class="panel snippet-panel" id="snippet-panel">
+            <div class="panel snippet-panel" id="snippet-panel" x-data="snippetList()">
                 <div class="panel-header">
                     Snippets
                 </div>
                 <div class="sort-controls">
                     <span class="sort-label">Sort by:</span>
-                    <button class="sort-btn active" data-sort="modified" title="Sort by last modified date">
+                    <button class="sort-btn"
+                            :class="{ 'active': sortBy === 'modified' }"
+                            @click="toggleSort('modified')"
+                            title="Sort by last modified date">
                         <span class="sort-text">Modified</span>
-                        <span class="sort-arrow">⬇</span>
+                        <span class="sort-arrow" x-text="sortBy === 'modified' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
                     </button>
-                    <button class="sort-btn" data-sort="created" title="Sort by creation date">
+                    <button class="sort-btn"
+                            :class="{ 'active': sortBy === 'created' }"
+                            @click="toggleSort('created')"
+                            title="Sort by creation date">
                         <span class="sort-text">Created</span>
-                        <span class="sort-arrow">⬇</span>
+                        <span class="sort-arrow" x-text="sortBy === 'created' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
                     </button>
-                    <button class="sort-btn" data-sort="name" title="Sort alphabetically by name">
+                    <button class="sort-btn"
+                            :class="{ 'active': sortBy === 'name' }"
+                            @click="toggleSort('name')"
+                            title="Sort alphabetically by name">
                         <span class="sort-text">Name</span>
-                        <span class="sort-arrow">⬇</span>
+                        <span class="sort-arrow" x-text="sortBy === 'name' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
                     </button>
-                    <button class="sort-btn" data-sort="size" title="Sort by snippet size">
+                    <button class="sort-btn"
+                            :class="{ 'active': sortBy === 'size' }"
+                            @click="toggleSort('size')"
+                            title="Sort by snippet size">
                         <span class="sort-text">Size</span>
-                        <span class="sort-arrow">⬇</span>
+                        <span class="sort-arrow" x-text="sortBy === 'size' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
                     </button>
                 </div>
                 <div class="search-controls">
-                    <input type="text" id="snippet-search" placeholder="Search snippets..." />
-                    <button class="btn btn-icon" id="search-clear" title="Clear search">×</button>
+                    <input type="text"
+                           id="snippet-search"
+                           x-model="searchQuery"
+                           placeholder="Search snippets..." />
+                    <button class="btn btn-icon"
+                            @click="clearSearch()"
+                            title="Clear search">×</button>
                 </div>
                 <div class="panel-content">
                     <ul class="snippet-list" id="snippet-list">
-                        <!-- Dynamically populated by renderSnippetList() -->
+                        <!-- Ghost card for creating new snippets -->
+                        <li class="snippet-item ghost-card"
+                            id="new-snippet-card"
+                            @click="createNewSnippet()">
+                            <div class="snippet-name">+ Create New Snippet</div>
+                            <div class="snippet-date">Click to create</div>
+                        </li>
+
+                        <!-- Snippet items -->
+                        <template x-for="snippet in filteredSnippets" :key="snippet.id">
+                            <li class="snippet-item"
+                                :data-item-id="snippet.id"
+                                :class="{ 'selected': $store.snippets.currentSnippetId === snippet.id }"
+                                @click="selectSnippet(snippet.id)">
+                                <div class="snippet-info">
+                                    <div class="snippet-name">
+                                        <span x-text="snippet.name"></span>
+                                        <span x-show="snippet.datasetRefs && snippet.datasetRefs.length > 0"
+                                              class="snippet-dataset-icon"
+                                              title="Uses external dataset">📁</span>
+                                    </div>
+                                    <div class="snippet-date" x-text="formatDate(snippet)"></div>
+                                </div>
+                                <span x-show="getSize(snippet) >= 1"
+                                      class="snippet-size"
+                                      x-text="getSize(snippet).toFixed(0) + ' KB'"></span>
+                                <div class="snippet-status"
+                                     :class="hasDraft(snippet) ? 'draft' : 'published'"></div>
+                            </li>
+                        </template>
                     </ul>
-                    <div class="placeholder">
+                    <div class="placeholder"
+                         x-show="filteredSnippets.length === 0"
+                         x-text="searchQuery.trim() ? 'No snippets match your search' : 'No snippets found'">
                         Click to select a snippet
                     </div>
                     <div class="snippet-meta" id="snippet-meta" style="display: none;">

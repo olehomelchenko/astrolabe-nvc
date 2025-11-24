@@ -34,12 +34,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize snippet storage and render list (async)
     initializeSnippetsStorage().then(() => {
-        // Initialize sort controls
+        // Initialize sort controls (now handled by Alpine)
         initializeSortControls();
 
-        // Initialize search controls
+        // Initialize search controls (now handled by Alpine)
         initializeSearchControls();
 
+        // Render snippet list (now handled reactively by Alpine)
         renderSnippetList();
 
         // Update storage monitor

@@ -1,5 +1,77 @@
 // Snippet management and localStorage functionality
 
+// Alpine.js Store for UI state only (selection tracking)
+// Business logic stays in SnippetStorage
+document.addEventListener('alpine:init', () => {
+    Alpine.store('snippets', {
+        currentSnippetId: null
+    });
+});
+
+// Alpine.js Component for snippet list
+// Thin wrapper around SnippetStorage - Alpine handles reactivity, storage handles logic
+function snippetList() {
+    return {
+        searchQuery: '',
+        sortBy: AppSettings.get('sortBy') || 'modified',
+        sortOrder: AppSettings.get('sortOrder') || 'desc',
+
+        // Computed property: calls SnippetStorage with current filters/sort
+        get filteredSnippets() {
+            return SnippetStorage.listSnippets(
+                this.sortBy,
+                this.sortOrder,
+                this.searchQuery
+            );
+        },
+
+        toggleSort(sortType) {
+            if (this.sortBy === sortType) {
+                // Toggle order
+                this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc';
+            } else {
+                // Switch to new sort type with desc order
+                this.sortBy = sortType;
+                this.sortOrder = 'desc';
+            }
+
+            // Save to settings
+            AppSettings.set('sortBy', this.sortBy);
+            AppSettings.set('sortOrder', this.sortOrder);
+        },
+
+        clearSearch() {
+            this.searchQuery = '';
+            const searchInput = document.getElementById('snippet-search');
+            if (searchInput) searchInput.focus();
+        },
+
+        // Helper methods for display
+        formatDate(snippet) {
+            const date = this.sortBy === 'created' ? snippet.created : snippet.modified;
+            return formatSnippetDate(date);
+        },
+
+        getSize(snippet) {
+            const snippetSize = new Blob([JSON.stringify(snippet)]).size;
+            return snippetSize / 1024; // KB
+        },
+
+        hasDraft(snippet) {
+            return JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
+        },
+
+        // Actions
+        selectSnippet(snippetId) {
+            window.selectSnippet(snippetId);
+        },
+
+        createNewSnippet() {
+            window.createNewSnippet();
+        }
+    };
+}
+
 // Storage limits (5MB in bytes)
 const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
 
@@ -322,209 +394,21 @@ function formatFullDate(isoString) {
 }
 
 // Render snippet list in the UI
+// With Alpine.js, the list is reactive - no manual rendering needed
+// This function kept as no-op for backwards compatibility
 function renderSnippetList(searchQuery = null) {
-    // Get search query from input if not provided
-    if (searchQuery === null) {
-        const searchInput = document.getElementById('snippet-search');
-        searchQuery = searchInput ? searchInput.value : '';
-    }
-
-    const snippets = SnippetStorage.listSnippets(null, null, searchQuery);
-    const placeholder = document.querySelector('.placeholder');
-
-    // Handle empty state with placeholder
-    if (snippets.length === 0) {
-        document.querySelector('.snippet-list').innerHTML = '';
-        placeholder.style.display = 'block';
-        placeholder.textContent = searchQuery && searchQuery.trim()
-            ? 'No snippets match your search'
-            : 'No snippets found';
-        return;
-    }
-
-    placeholder.style.display = 'none';
-
-    const currentSort = AppSettings.get('sortBy');
-
-    // Format individual snippet items
-    const formatSnippetItem = (snippet) => {
-        // Show appropriate date based on current sort
-        const dateText = currentSort === 'created'
-            ? formatSnippetDate(snippet.created)
-            : formatSnippetDate(snippet.modified);
-
-        // Calculate snippet size
-        const snippetSize = new Blob([JSON.stringify(snippet)]).size;
-        const sizeKB = snippetSize / 1024;
-        const sizeHTML = sizeKB >= 1 ? `<span class="snippet-size">${sizeKB.toFixed(0)} KB</span>` : '';
-
-        // Determine status: green if no draft changes, yellow if has draft
-        const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
-        const statusClass = hasDraft ? 'draft' : 'published';
-
-        // Check if snippet uses external datasets
-        const usesDatasets = snippet.datasetRefs && snippet.datasetRefs.length > 0;
-        const datasetIconHTML = usesDatasets ? '<span class="snippet-dataset-icon" title="Uses external dataset">📁</span>' : '';
-
-        return `
-            <li class="snippet-item" data-item-id="${snippet.id}">
-                <div class="snippet-info">
-                    <div class="snippet-name">${snippet.name}${datasetIconHTML}</div>
-                    <div class="snippet-date">${dateText}</div>
-                </div>
-                ${sizeHTML}
-                <div class="snippet-status ${statusClass}"></div>
-            </li>
-        `;
-    };
-
-    // Ghost card for creating new snippets
-    const ghostCard = `
-        <li class="snippet-item ghost-card" id="new-snippet-card">
-            <div class="snippet-name">+ Create New Snippet</div>
-            <div class="snippet-date">Click to create</div>
-        </li>
-    `;
-
-    // Use generic list renderer
-    renderGenericList('snippet-list', snippets, formatSnippetItem, selectSnippet, {
-        ghostCard: ghostCard,
-        onGhostCardClick: createNewSnippet,
-        itemSelector: '.snippet-item'
-    });
+    // Alpine.js handles rendering automatically via reactive bindings
 }
 
 // Initialize sort controls
+// NOTE: Alpine.js now handles all sort/search controls via directives
+// These functions kept as no-ops for backwards compatibility with app.js
 function initializeSortControls() {
-    const sortButtons = document.querySelectorAll('.sort-btn');
-    const currentSort = AppSettings.get('sortBy');
-    const currentOrder = AppSettings.get('sortOrder');
-
-    // Update active button and arrow based on settings
-    sortButtons.forEach(button => {
-        button.classList.remove('active');
-        if (button.dataset.sort === currentSort) {
-            button.classList.add('active');
-            updateSortArrow(button, currentOrder);
-        } else {
-            updateSortArrow(button, 'desc'); // Default to desc for inactive buttons
-        }
-
-        // Add click handler
-        button.addEventListener('click', function() {
-            const sortType = this.dataset.sort;
-            toggleSort(sortType);
-        });
-    });
+    // Alpine.js handles this
 }
 
-// Update sort arrow display
-function updateSortArrow(button, direction) {
-    const arrow = button.querySelector('.sort-arrow');
-    if (arrow) {
-        arrow.textContent = direction === 'desc' ? '⬇' : '⬆';
-    }
-}
-
-// Toggle sort method and direction
-function toggleSort(sortType) {
-    const currentSort = AppSettings.get('sortBy');
-    const currentOrder = AppSettings.get('sortOrder');
-
-    let newOrder;
-    if (currentSort === sortType) {
-        // Same button clicked - toggle direction
-        newOrder = currentOrder === 'desc' ? 'asc' : 'desc';
-    } else {
-        // Different button clicked - default to desc
-        newOrder = 'desc';
-    }
-
-    // Save to settings
-    AppSettings.set('sortBy', sortType);
-    AppSettings.set('sortOrder', newOrder);
-
-    // Update button states and arrows
-    document.querySelectorAll('.sort-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.sort === sortType) {
-            btn.classList.add('active');
-            updateSortArrow(btn, newOrder);
-        } else {
-            updateSortArrow(btn, 'desc'); // Default for inactive buttons
-        }
-    });
-
-    // Re-render list
-    renderSnippetList();
-
-    // Restore selection if there was one
-    restoreSnippetSelection();
-}
-
-// Initialize search controls
 function initializeSearchControls() {
-    const searchInput = document.getElementById('snippet-search');
-    const clearButton = document.getElementById('search-clear');
-
-    if (searchInput) {
-        // Debounced search on input
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch();
-            }, 300); // 300ms debounce
-        });
-
-        // Update clear button state
-        searchInput.addEventListener('input', updateClearButton);
-    }
-
-    if (clearButton) {
-        clearButton.addEventListener('click', clearSearch);
-        // Initialize clear button state
-        updateClearButton();
-    }
-}
-
-// Perform search and update display
-function performSearch() {
-    const searchInput = document.getElementById('snippet-search');
-    if (!searchInput) return;
-
-    renderSnippetList(searchInput.value);
-
-    // Clear selection if current snippet is no longer visible
-    if (window.currentSnippetId) {
-        const selectedItem = document.querySelector(`[data-item-id="${window.currentSnippetId}"]`);
-        if (!selectedItem) {
-            clearSelection();
-        } else {
-            selectedItem.classList.add('selected');
-        }
-    }
-}
-
-// Clear search
-function clearSearch() {
-    const searchInput = document.getElementById('snippet-search');
-    if (searchInput) {
-        searchInput.value = '';
-        performSearch();
-        updateClearButton();
-        searchInput.focus();
-    }
-}
-
-// Update clear button state
-function updateClearButton() {
-    const searchInput = document.getElementById('snippet-search');
-    const clearButton = document.getElementById('search-clear');
-
-    if (clearButton && searchInput) {
-        clearButton.disabled = !searchInput.value.trim();
-    }
+    // Alpine.js handles this
 }
 
 // Helper: Get currently selected snippet
@@ -573,13 +457,9 @@ function selectSnippet(snippetId, updateURL = true) {
     const snippet = SnippetStorage.getSnippet(snippetId);
     if (!snippet) return;
 
-    // Update visual selection
-    document.querySelectorAll('.snippet-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    const selectedItem = document.querySelector(`[data-item-id="${snippetId}"]`);
-    if (selectedItem) {
-        selectedItem.classList.add('selected');
+    // Update Alpine store selection for UI highlighting
+    if (typeof Alpine !== 'undefined' && Alpine.store('snippets')) {
+        Alpine.store('snippets').currentSnippetId = snippetId;
     }
 
     // Load spec based on current view mode
