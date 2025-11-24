@@ -34,12 +34,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize snippet storage and render list (async)
     initializeSnippetsStorage().then(() => {
-        // Initialize sort controls (now handled by Alpine)
-        initializeSortControls();
-
-        // Initialize search controls (now handled by Alpine)
-        initializeSearchControls();
-
         // Render snippet list (now handled reactively by Alpine)
         renderSnippetList();
 
@@ -211,8 +205,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Edit dataset button
     if (editDatasetBtn) {
         editDatasetBtn.addEventListener('click', async function() {
-            if (window.currentDatasetId) {
-                await showEditDatasetForm(window.currentDatasetId);
+            if (Alpine.store('datasets').currentDatasetId) {
+                await showEditDatasetForm(Alpine.store('datasets').currentDatasetId);
             }
         });
     }
@@ -260,8 +254,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const buildChartBtn = document.getElementById('build-chart-btn');
     if (buildChartBtn) {
         buildChartBtn.addEventListener('click', async () => {
-            if (window.currentDatasetId) {
-                openChartBuilder(window.currentDatasetId);
+            if (Alpine.store('datasets').currentDatasetId) {
+                openChartBuilder(Alpine.store('datasets').currentDatasetId);
             }
         });
     }
@@ -283,15 +277,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const previewTableBtn = document.getElementById('preview-table-btn');
     if (previewRawBtn) {
         previewRawBtn.addEventListener('click', function() {
-            if (window.currentDatasetData) {
-                showRawPreview(window.currentDatasetData);
+            if (Alpine.store('datasets').currentDatasetData) {
+                showRawPreview(Alpine.store('datasets').currentDatasetData);
             }
         });
     }
     if (previewTableBtn) {
         previewTableBtn.addEventListener('click', function() {
-            if (window.currentDatasetData) {
-                showTablePreview(window.currentDatasetData);
+            if (Alpine.store('datasets').currentDatasetData) {
+                showTablePreview(Alpine.store('datasets').currentDatasetData);
             }
         });
     }
@@ -419,7 +413,7 @@ const KeyboardActions = {
     },
 
     publishDraft: function() {
-        if (Alpine.store('snippets').viewMode === 'draft' && window.currentSnippetId) {
+        if (Alpine.store('snippets').viewMode === 'draft' && Alpine.store('snippets').currentSnippetId) {
             publishDraft();
         }
     },

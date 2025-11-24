@@ -434,26 +434,18 @@ function renderSnippetList(searchQuery = null) {
     // Alpine.js handles rendering automatically via reactive bindings
 }
 
-// Initialize sort controls
-// NOTE: Alpine.js now handles all sort/search controls via directives
-// These functions kept as no-ops for backwards compatibility with app.js
-function initializeSortControls() {
-    // Alpine.js handles this
-}
-
-function initializeSearchControls() {
-    // Alpine.js handles this
-}
+// NOTE: Sort and search controls are now handled by Alpine.js via directives
+// No initialization needed - Alpine components are automatically initialized
 
 // Helper: Get currently selected snippet
 function getCurrentSnippet() {
-    return window.currentSnippetId ? SnippetStorage.getSnippet(window.currentSnippetId) : null;
+    return Alpine.store('snippets').currentSnippetId ? SnippetStorage.getSnippet(Alpine.store('snippets').currentSnippetId) : null;
 }
 
 // Helper: Restore visual selection state for current snippet
 function restoreSnippetSelection() {
-    if (window.currentSnippetId) {
-        const item = document.querySelector(`[data-item-id="${window.currentSnippetId}"]`);
+    if (Alpine.store('snippets').currentSnippetId) {
+        const item = document.querySelector(`[data-item-id="${Alpine.store('snippets').currentSnippetId}"]`);
         if (item) {
             item.classList.add('selected');
             return item;
@@ -464,7 +456,7 @@ function restoreSnippetSelection() {
 
 // Clear current selection and hide meta panel
 function clearSelection() {
-    window.currentSnippetId = null;
+    Alpine.store('snippets').currentSnippetId = null;
     document.querySelectorAll('.snippet-item').forEach(item => {
         item.classList.remove('selected');
     });
@@ -531,8 +523,8 @@ function selectSnippet(snippetId, updateURL = true) {
         }
     }
 
-    // Store currently selected snippet ID globally
-    window.currentSnippetId = snippetId;
+    // Store currently selected snippet ID in Alpine store (redundant with Alpine.store update above)
+    // Alpine.store('snippets').currentSnippetId is already updated above
 
     // Update linked datasets display
     updateLinkedDatasets(snippet);
@@ -597,7 +589,7 @@ window.isUpdatingEditor = false; // Global flag to prevent auto-save/debounce du
 
 // Save current editor content as draft for the selected snippet
 function autoSaveDraft() {
-    if (!window.currentSnippetId || !editor) return;
+    if (!Alpine.store('snippets').currentSnippetId || !editor) return;
 
     // Only save to draft if we're in draft mode
     if (Alpine.store('snippets').viewMode !== 'draft') return;
@@ -660,16 +652,16 @@ function initializeAutoSave() {
 
     if (duplicateBtn) {
         duplicateBtn.addEventListener('click', () => {
-            if (window.currentSnippetId) {
-                duplicateSnippet(window.currentSnippetId);
+            if (Alpine.store('snippets').currentSnippetId) {
+                duplicateSnippet(Alpine.store('snippets').currentSnippetId);
             }
         });
     }
 
     if (deleteBtn) {
         deleteBtn.addEventListener('click', () => {
-            if (window.currentSnippetId) {
-                deleteSnippet(window.currentSnippetId);
+            if (Alpine.store('snippets').currentSnippetId) {
+                deleteSnippet(Alpine.store('snippets').currentSnippetId);
             }
         });
     }
@@ -910,7 +902,7 @@ function deleteSnippet(snippetId) {
         SnippetStorage.deleteSnippet(snippetId);
 
         // If we deleted the currently selected snippet, clear selection
-        if (window.currentSnippetId === snippetId) {
+        if (Alpine.store('snippets').currentSnippetId === snippetId) {
             clearSelection();
         }
 
@@ -949,13 +941,11 @@ function loadSnippetIntoEditor(snippet) {
 
 // Update view mode UI (buttons and editor state)
 function updateViewModeUI(snippet) {
-    const draftBtn = document.getElementById('view-draft');
-    const publishedBtn = document.getElementById('view-published');
     const publishBtn = document.getElementById('publish-btn');
     const revertBtn = document.getElementById('revert-btn');
 
-    // Update toggle button states (now handled by Alpine :class binding)
-    // But we still need to update the action buttons (publish/revert)
+    // Toggle button states are now handled by Alpine :class binding
+    // This function only updates the action buttons (publish/revert)
     const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
 
     if (Alpine.store('snippets').viewMode === 'draft') {

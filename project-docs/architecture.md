@@ -26,12 +26,110 @@ Astrolabe is a focused tool for managing, editing, and previewing Vega-Lite visu
 ## Technical Stack
 
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
+- **Reactivity**: Alpine.js v3.x (7KB, lightweight reactive framework)
 - **Editor**: Monaco Editor v0.47.0 (via CDN)
 - **Visualization**: Vega-Embed v6 (includes Vega v5 & Vega-Lite v5)
 - **Storage**: localStorage (snippets) + IndexedDB (datasets)
 - **Offline**: Service Worker API with Cache API for PWA functionality
 - **Architecture**: Modular script organization with logical file separation
 - **Backend**: None (frontend-only application)
+
+---
+
+## Alpine.js Integration
+
+Astrolabe uses Alpine.js for reactive UI management while maintaining vanilla JavaScript for business logic. This hybrid approach provides automatic DOM updates without complex state management overhead.
+
+### Architecture Pattern
+
+```
+┌─────────────────────┐
+│   Alpine.js (7KB)   │  ← Reactivity + UI bindings
+└──────────┬──────────┘
+           │ calls
+           ▼
+┌─────────────────────┐
+│  Storage Layer      │  ← All business logic
+│  - SnippetStorage   │    (filtering, sorting, CRUD)
+│  - DatasetStorage   │
+└─────────────────────┘
+```
+
+**Clean separation:**
+- **Alpine**: Handles reactivity, DOM updates, user interactions
+- **Storage**: Single source of truth for data logic
+
+### Alpine Stores
+
+Global reactive state managed through Alpine stores:
+
+**`Alpine.store('snippets')`**
+- `currentSnippetId` - Currently selected snippet
+- `viewMode` - 'draft' or 'published' view toggle
+
+**`Alpine.store('datasets')`**
+- `currentDatasetId` - Currently selected dataset
+- `currentDatasetData` - Currently loaded dataset data
+
+**`Alpine.store('panels')`**
+- `snippetVisible` - Snippet panel visibility
+- `editorVisible` - Editor panel visibility
+- `previewVisible` - Preview panel visibility
+
+**`Alpine.store('toasts')`**
+- `items` - Toast notification queue
+- `add(message, type)` - Add toast
+- `remove(id)` - Dismiss toast
+
+### Alpine Components
+
+**`snippetList()`** - Snippet panel management
+- `searchQuery` - Reactive search filter
+- `sortBy`, `sortOrder` - Sort state
+- `snippetName`, `snippetComment` - Meta field values
+- `filteredSnippets` - Computed property calling SnippetStorage
+- Auto-save with debouncing for meta fields
+
+**`datasetList()`** - Dataset list rendering
+- `datasets` - Dataset array from IndexedDB
+- Helper methods for formatting and usage counts
+
+**`settingsPanel()`** - Settings modal form
+- All form field values with `x-model` binding
+- `isDirty` - Computed property for Apply button state
+- Form validation and persistence
+
+### Key Patterns
+
+**Two-way binding with x-model:**
+```html
+<input type="text" x-model="snippetName" @input="saveMetaDebounced()">
+```
+
+**Conditional rendering with x-show:**
+```html
+<div x-show="isDirty">Unsaved changes</div>
+```
+
+**List rendering with x-for:**
+```html
+<template x-for="snippet in filteredSnippets" :key="snippet.id">
+  <div @click="selectSnippet(snippet.id)">...</div>
+</template>
+```
+
+**Dynamic classes with :class:**
+```html
+<button :class="{ 'active': $store.snippets.viewMode === 'draft' }">
+```
+
+### Migration Principles
+
+1. Alpine is view layer only - never holds authoritative data
+2. Storage layer remains unchanged - Alpine calls existing functions
+3. Components are thin wrappers around business logic
+4. Automatic reactivity eliminates manual DOM updates
+5. Alpine and vanilla JavaScript coexist harmoniously
 
 ---
 
@@ -176,22 +274,24 @@ web/
 ### Module Responsibilities
 
 **config.js** (~200 lines)
-- Global state variables (`currentSnippetId`, `currentViewMode`, etc.)
 - Settings API (load, save, get, set, validate)
-- Utility functions (date formatting, Toast notifications, URLState)
+- Utility functions (date formatting, URLState)
+- Toast notification system (Alpine store integration)
 - Sample data for first-time users
 
 **snippet-manager.js** (~1100 lines)
+- Alpine store and component for snippet list UI
 - SnippetStorage wrapper for localStorage operations
 - Full CRUD operations (create, read, update, delete, duplicate)
-- Search and multi-field sorting
+- Search and multi-field sorting with reactive bindings
 - Draft/published workflow logic
 - Dataset reference extraction (recursive)
 - Import/export functionality
 - Storage monitoring and size calculation
-- Auto-save system with debouncing
+- Auto-save system with debouncing for drafts and metadata
 
 **dataset-manager.js** (~1200 lines)
+- Alpine store and component for dataset list UI
 - DatasetStorage wrapper for IndexedDB operations
 - Full CRUD operations with async/Promise API
 - Format detection (JSON, CSV, TSV, TopoJSON)
@@ -214,8 +314,9 @@ web/
 - Snippet creation with auto-generated metadata
 
 **panel-manager.js** (~200 lines)
+- Alpine store for panel visibility state
 - Drag-to-resize implementation
-- Panel show/hide toggle logic
+- Panel show/hide toggle logic with reactive button states
 - Panel memory system (remembers sizes when hidden)
 - Proportional width redistribution
 - localStorage persistence for layout state
@@ -229,12 +330,13 @@ web/
 - Format-aware data injection (JSON/CSV/TSV/TopoJSON/URL)
 
 **user-settings.js** (~300 lines)
+- Alpine component for settings form with reactive bindings
 - Settings validation and defaults
 - Editor configuration management
 - Theme system (light/dark)
 - Date formatting engine
 - Performance tuning options
-- Settings modal UI logic
+- Form state tracking with computed isDirty property
 
 **app.js** (~270 lines)
 - Application initialization sequence

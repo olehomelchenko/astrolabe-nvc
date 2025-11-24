@@ -3,7 +3,8 @@
 // Alpine.js store for dataset UI state
 document.addEventListener('alpine:init', () => {
     Alpine.store('datasets', {
-        currentDatasetId: null
+        currentDatasetId: null,
+        currentDatasetData: null
     });
 });
 
@@ -313,7 +314,7 @@ const DatasetStorage = {
 
 // Helper: Get currently selected dataset
 async function getCurrentDataset() {
-    return window.currentDatasetId ? await DatasetStorage.getDataset(window.currentDatasetId) : null;
+    return Alpine.store('datasets').currentDatasetId ? await DatasetStorage.getDataset(Alpine.store('datasets').currentDatasetId) : null;
 }
 
 // Count how many snippets use a specific dataset
@@ -486,9 +487,9 @@ async function selectDataset(datasetId, updateURL = true) {
         showRawPreview(dataset);
     }
 
-    // Store current dataset ID and data
-    window.currentDatasetId = datasetId;
-    window.currentDatasetData = dataset;
+    // Store current dataset ID and data in Alpine store
+    Alpine.store('datasets').currentDatasetId = datasetId;
+    Alpine.store('datasets').currentDatasetData = dataset;
 
     // Update linked snippets display
     updateLinkedSnippets(dataset);
@@ -560,8 +561,8 @@ async function loadURLPreview(dataset) {
             source: 'inline' // Treat as inline for preview purposes
         };
 
-        // Update current dataset data for preview
-        window.currentDatasetData = previewDataset;
+        // Update current dataset data for preview in Alpine store
+        Alpine.store('datasets').currentDatasetData = previewDataset;
 
         // Show toggle buttons now that we have data
         const toggleGroup = document.getElementById('preview-toggle-group');
@@ -865,7 +866,7 @@ function openDatasetManager(updateURL = true) {
 function closeDatasetManager(updateURL = true) {
     const modal = document.getElementById('dataset-modal');
     modal.style.display = 'none';
-    window.currentDatasetId = null;
+    Alpine.store('datasets').currentDatasetId = null;
 
     // Hide dataset form if it's open (without updating URL to avoid double update)
     const formView = document.getElementById('dataset-form-view');
@@ -875,8 +876,8 @@ function closeDatasetManager(updateURL = true) {
 
     // Update URL state - restore snippet if one is selected
     if (updateURL) {
-        if (window.currentSnippetId) {
-            URLState.update({ view: 'snippets', snippetId: window.currentSnippetId, datasetId: null });
+        if (Alpine.store('snippets').currentSnippetId) {
+            URLState.update({ view: 'snippets', snippetId: Alpine.store('snippets').currentSnippetId, datasetId: null });
         } else {
             URLState.clear();
         }
@@ -1446,7 +1447,7 @@ async function saveNewDataset() {
             Toast.success('Dataset updated successfully');
 
             // Refresh visualization if a snippet is open
-            if (window.currentSnippetId && typeof renderVisualization === 'function') {
+            if (Alpine.store('snippets').currentSnippetId && typeof renderVisualization === 'function') {
                 await renderVisualization();
             }
 
@@ -1477,7 +1478,7 @@ async function saveNewDataset() {
             Toast.success('Dataset created successfully');
 
             // Refresh visualization if a snippet is open
-            if (window.currentSnippetId && typeof renderVisualization === 'function') {
+            if (Alpine.store('snippets').currentSnippetId && typeof renderVisualization === 'function') {
                 await renderVisualization();
             }
 
@@ -1503,7 +1504,7 @@ async function deleteCurrentDataset() {
     confirmGenericDeletion(dataset.name, warningMessage, async () => {
         await DatasetStorage.deleteDataset(dataset.id);
         document.getElementById('dataset-details').style.display = 'none';
-        window.currentDatasetId = null;
+        Alpine.store('datasets').currentDatasetId = null;
         await renderDatasetList();
 
         // Show success message
@@ -1547,7 +1548,7 @@ async function refreshDatasetMetadata() {
         await renderDatasetList();
 
         // Refresh visualization if a snippet is open
-        if (window.currentSnippetId && typeof renderVisualization === 'function') {
+        if (Alpine.store('snippets').currentSnippetId && typeof renderVisualization === 'function') {
             await renderVisualization();
         }
 
@@ -1860,7 +1861,7 @@ async function autoSaveDatasetMeta() {
     }
 
     // Refresh visualization if a snippet is open
-    if (window.currentSnippetId && typeof renderVisualization === 'function') {
+    if (Alpine.store('snippets').currentSnippetId && typeof renderVisualization === 'function') {
         await renderVisualization();
     }
 }

@@ -352,8 +352,8 @@ function settingsPanel() {
                 renderSnippetList();
 
                 // Update metadata display if a snippet is selected
-                if (window.currentSnippetId) {
-                    const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
+                if (Alpine.store('snippets').currentSnippetId) {
+                    const snippet = SnippetStorage.getSnippet(Alpine.store('snippets').currentSnippetId);
                     if (snippet) {
                         document.getElementById('snippet-created').textContent = formatDate(snippet.created, true);
                         document.getElementById('snippet-modified').textContent = formatDate(snippet.modified, true);
