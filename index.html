@@ -248,7 +248,7 @@
             </div>
             <div class="modal-body">
                 <!-- List View (default) -->
-                <div id="dataset-list-view" class="dataset-view">
+                <div id="dataset-list-view" class="dataset-view" x-data="datasetList()">
                     <div class="dataset-list-header">
                         <button class="btn btn-modal primary" id="new-dataset-btn" title="Create a new dataset">New Dataset</button>
                         <button class="btn btn-modal" id="import-dataset-btn" title="Import dataset from file">Import</button>
@@ -256,7 +256,26 @@
                     </div>
                     <div class="dataset-container">
                         <div class="dataset-list" id="dataset-list">
-                            <!-- Dynamically populated by renderDatasetList() -->
+                            <!-- Dataset items rendered by Alpine.js -->
+                            <template x-for="dataset in datasets" :key="dataset.id">
+                                <div class="dataset-item"
+                                     :data-item-id="dataset.id"
+                                     :class="{ 'selected': $store.datasets.currentDatasetId === dataset.id }"
+                                     @click="selectDataset(dataset.id)">
+                                    <div class="dataset-info">
+                                        <div class="dataset-name" x-text="dataset.name"></div>
+                                        <div class="dataset-meta" x-text="formatMeta(dataset)"></div>
+                                    </div>
+                                    <div class="dataset-usage-badge"
+                                         x-show="getUsageCount(dataset) > 0"
+                                         :title="getUsageCount(dataset) + ' snippet' + (getUsageCount(dataset) !== 1 ? 's' : '') + ' using this dataset'"
+                                         x-text="'📄 ' + getUsageCount(dataset)">
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="dataset-empty" x-show="datasets.length === 0">
+                                No datasets yet. Click "New Dataset" to create one.
+                            </div>
                         </div>
                         <div class="dataset-details" id="dataset-details" style="display: none;">
                             <div class="dataset-detail-section">

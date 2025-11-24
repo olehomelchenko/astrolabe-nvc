@@ -1,5 +1,50 @@
 // Dataset management with IndexedDB
 
+// Alpine.js store for dataset UI state
+document.addEventListener('alpine:init', () => {
+    Alpine.store('datasets', {
+        currentDatasetId: null
+    });
+});
+
+// Alpine.js component for dataset list - thin wrapper around existing logic
+function datasetList() {
+    return {
+        datasets: [],
+
+        async init() {
+            await this.loadDatasets();
+        },
+
+        async loadDatasets() {
+            this.datasets = await DatasetStorage.listDatasets();
+            // Sort by modified date (most recent first) - keeping existing behavior
+            this.datasets.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+        },
+
+        formatMeta(dataset) {
+            const formatLabel = dataset.format ? dataset.format.toUpperCase() : 'UNKNOWN';
+            if (dataset.source === 'url') {
+                if (dataset.rowCount !== null && dataset.size !== null) {
+                    return `URL • ${dataset.rowCount} rows • ${formatLabel} • ${formatBytes(dataset.size)}`;
+                } else {
+                    return `URL • ${formatLabel}`;
+                }
+            } else {
+                return `${dataset.rowCount} rows • ${formatLabel} • ${formatBytes(dataset.size)}`;
+            }
+        },
+
+        getUsageCount(dataset) {
+            return countSnippetUsage(dataset.name);
+        },
+
+        selectDataset(datasetId) {
+            window.selectDataset(datasetId);
+        }
+    };
+}
+
 const DB_NAME = 'astrolabe-datasets';
 const DB_VERSION = 1;
 const STORE_NAME = 'datasets';
@@ -348,55 +393,15 @@ async function fetchURLMetadata(url, format) {
 }
 
 // Render dataset list in modal
+// Alpine.js now handles rendering, this just triggers a refresh
 async function renderDatasetList() {
-    const datasets = await DatasetStorage.listDatasets();
-
-    if (datasets.length === 0) {
-        document.getElementById('dataset-list').innerHTML = '<div class="dataset-empty">No datasets yet. Click "New Dataset" to create one.</div>';
-        return;
-    }
-
-    // Sort by modified date (most recent first)
-    datasets.sort((a, b) => new Date(b.modified) - new Date(a.modified));
-
-    // Format individual dataset items
-    const formatDatasetItem = (dataset) => {
-        let metaText;
-        const formatLabel = dataset.format ? dataset.format.toUpperCase() : 'UNKNOWN';
-
-        if (dataset.source === 'url') {
-            // Show metadata if available, otherwise just URL and format
-            if (dataset.rowCount !== null && dataset.size !== null) {
-                metaText = `URL • ${dataset.rowCount} rows • ${formatLabel} • ${formatBytes(dataset.size)}`;
-            } else {
-                metaText = `URL • ${formatLabel}`;
-            }
-        } else {
-            metaText = `${dataset.rowCount} rows • ${formatLabel} • ${formatBytes(dataset.size)}`;
+    const listView = document.getElementById('dataset-list-view');
+    if (listView && listView.__x) {
+        const component = Alpine.$data(listView);
+        if (component && component.loadDatasets) {
+            await component.loadDatasets();
         }
-
-        // Count snippet usage and create badge
-        const usageCount = countSnippetUsage(dataset.name);
-        const usageBadge = usageCount > 0
-            ? `<div class="dataset-usage-badge" title="${usageCount} snippet${usageCount !== 1 ? 's' : ''} using this dataset">📄 ${usageCount}</div>`
-            : '';
-
-        return `
-            <div class="dataset-item" data-item-id="${dataset.id}">
-                <div class="dataset-info">
-                    <div class="dataset-name">${dataset.name}</div>
-                    <div class="dataset-meta">${metaText}</div>
-                </div>
-                ${usageBadge}
-            </div>
-        `;
-    };
-
-    // Use generic list renderer
-    renderGenericList('dataset-list', datasets, formatDatasetItem, selectDataset, {
-        emptyMessage: 'No datasets yet. Click "New Dataset" to create one.',
-        itemSelector: '.dataset-item'
-    });
+    }
 }
 
 // Select a dataset and show details
@@ -404,13 +409,9 @@ async function selectDataset(datasetId, updateURL = true) {
     const dataset = await DatasetStorage.getDataset(datasetId);
     if (!dataset) return;
 
-    // Update selection state
-    document.querySelectorAll('.dataset-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    const selectedItem = document.querySelector(`[data-item-id="${datasetId}"]`);
-    if (selectedItem) {
-        selectedItem.classList.add('selected');
+    // Update Alpine store selection (Alpine handles highlighting via :class binding)
+    if (typeof Alpine !== 'undefined' && Alpine.store('datasets')) {
+        Alpine.store('datasets').currentDatasetId = datasetId;
     }
 
     // Show details panel
