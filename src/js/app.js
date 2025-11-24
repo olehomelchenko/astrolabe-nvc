@@ -303,20 +303,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // View mode toggle buttons (now handled by Alpine.js in index.html)
-
-    // Preview fit mode buttons
-    document.getElementById('preview-fit-default').addEventListener('click', () => {
-        setPreviewFitMode('default');
-    });
-
-    document.getElementById('preview-fit-width').addEventListener('click', () => {
-        setPreviewFitMode('width');
-    });
-
-    document.getElementById('preview-fit-full').addEventListener('click', () => {
-        setPreviewFitMode('full');
-    });
 
     // Publish and Revert buttons
     document.getElementById('publish-btn').addEventListener('click', publishDraft);

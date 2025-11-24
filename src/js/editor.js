@@ -194,15 +194,14 @@ function updateRenderDebounce(newDebounce) {
 function setPreviewFitMode(mode) {
     previewFitMode = mode;
 
-    // Update button states
-    document.getElementById('preview-fit-default').classList.toggle('active', mode === 'default');
-    document.getElementById('preview-fit-width').classList.toggle('active', mode === 'width');
-    document.getElementById('preview-fit-full').classList.toggle('active', mode === 'full');
+
+    // Sync with Alpine store if available
+    if (typeof Alpine !== 'undefined' && Alpine.store('preview')) {
+        Alpine.store('preview').fitMode = mode;
+    }
 
     // Save to settings
-    if (typeof updateSetting === 'function') {
-        updateSetting('ui.previewFitMode', mode);
-    }
+    updateSetting('ui.previewFitMode', mode);
 
     // Re-render with new fit mode
     renderVisualization();

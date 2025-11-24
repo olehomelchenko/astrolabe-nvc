@@ -52,25 +52,19 @@
     <div class="app-container">
         <!-- Toggle Button Strip -->
         <div class="toggle-strip" x-data>
-            <button class="btn btn-icon xlarge"
-                    id="toggle-snippet-panel"
-                    :class="{ 'active': $store.panels.snippetVisible }"
-                    @click="togglePanel('snippet-panel')"
-                    title="Toggle Snippets Panel">
+            <button class="btn btn-icon xlarge" id="toggle-snippet-panel"
+                :class="{ 'active': $store.panels.snippetVisible }" @click="togglePanel('snippet-panel')"
+                title="Toggle Snippets Panel">
                 📄
             </button>
-            <button class="btn btn-icon xlarge"
-                    id="toggle-editor-panel"
-                    :class="{ 'active': $store.panels.editorVisible }"
-                    @click="togglePanel('editor-panel')"
-                    title="Toggle Editor Panel">
+            <button class="btn btn-icon xlarge" id="toggle-editor-panel"
+                :class="{ 'active': $store.panels.editorVisible }" @click="togglePanel('editor-panel')"
+                title="Toggle Editor Panel">
                 ✏️
             </button>
-            <button class="btn btn-icon xlarge"
-                    id="toggle-preview-panel"
-                    :class="{ 'active': $store.panels.previewVisible }"
-                    @click="togglePanel('preview-panel')"
-                    title="Toggle Preview Panel">
+            <button class="btn btn-icon xlarge" id="toggle-preview-panel"
+                :class="{ 'active': $store.panels.previewVisible }" @click="togglePanel('preview-panel')"
+                title="Toggle Preview Panel">
                 👁️
             </button>
             <button class="btn btn-icon xlarge" id="toggle-datasets" title="Datasets">
@@ -86,98 +80,72 @@
                 </div>
                 <div class="sort-controls">
                     <span class="sort-label">Sort by:</span>
-                    <button class="sort-btn"
-                            :class="{ 'active': sortBy === 'modified' }"
-                            @click="toggleSort('modified')"
-                            title="Sort by last modified date">
+                    <button class="sort-btn" :class="{ 'active': sortBy === 'modified' }"
+                        @click="toggleSort('modified')" title="Sort by last modified date">
                         <span class="sort-text">Modified</span>
-                        <span class="sort-arrow" x-text="sortBy === 'modified' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
+                        <span class="sort-arrow"
+                            x-text="sortBy === 'modified' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
                     </button>
-                    <button class="sort-btn"
-                            :class="{ 'active': sortBy === 'created' }"
-                            @click="toggleSort('created')"
-                            title="Sort by creation date">
+                    <button class="sort-btn" :class="{ 'active': sortBy === 'created' }" @click="toggleSort('created')"
+                        title="Sort by creation date">
                         <span class="sort-text">Created</span>
-                        <span class="sort-arrow" x-text="sortBy === 'created' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
+                        <span class="sort-arrow"
+                            x-text="sortBy === 'created' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
                     </button>
-                    <button class="sort-btn"
-                            :class="{ 'active': sortBy === 'name' }"
-                            @click="toggleSort('name')"
-                            title="Sort alphabetically by name">
+                    <button class="sort-btn" :class="{ 'active': sortBy === 'name' }" @click="toggleSort('name')"
+                        title="Sort alphabetically by name">
                         <span class="sort-text">Name</span>
                         <span class="sort-arrow" x-text="sortBy === 'name' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
                     </button>
-                    <button class="sort-btn"
-                            :class="{ 'active': sortBy === 'size' }"
-                            @click="toggleSort('size')"
-                            title="Sort by snippet size">
+                    <button class="sort-btn" :class="{ 'active': sortBy === 'size' }" @click="toggleSort('size')"
+                        title="Sort by snippet size">
                         <span class="sort-text">Size</span>
                         <span class="sort-arrow" x-text="sortBy === 'size' && sortOrder === 'desc' ? '⬇' : '⬆'">⬇</span>
                     </button>
                 </div>
                 <div class="search-controls">
-                    <input type="text"
-                           id="snippet-search"
-                           x-model="searchQuery"
-                           placeholder="Search snippets..." />
-                    <button class="btn btn-icon"
-                            @click="clearSearch()"
-                            title="Clear search">×</button>
+                    <input type="text" id="snippet-search" x-model="searchQuery" placeholder="Search snippets..." />
+                    <button class="btn btn-icon" @click="clearSearch()" title="Clear search">×</button>
                 </div>
                 <div class="panel-content">
                     <ul class="snippet-list" id="snippet-list">
                         <!-- Ghost card for creating new snippets -->
-                        <li class="snippet-item ghost-card"
-                            id="new-snippet-card"
-                            @click="createNewSnippet()">
+                        <li class="snippet-item ghost-card" id="new-snippet-card" @click="createNewSnippet()">
                             <div class="snippet-name">+ Create New Snippet</div>
                             <div class="snippet-date">Click to create</div>
                         </li>
 
                         <!-- Snippet items -->
                         <template x-for="snippet in filteredSnippets" :key="snippet.id">
-                            <li class="snippet-item"
-                                :data-item-id="snippet.id"
+                            <li class="snippet-item" :data-item-id="snippet.id"
                                 :class="{ 'selected': $store.snippets.currentSnippetId === snippet.id }"
                                 @click="selectSnippet(snippet.id)">
                                 <div class="snippet-info">
                                     <div class="snippet-name">
                                         <span x-text="snippet.name"></span>
                                         <span x-show="snippet.datasetRefs && snippet.datasetRefs.length > 0"
-                                              class="snippet-dataset-icon"
-                                              title="Uses external dataset">📁</span>
+                                            class="snippet-dataset-icon" title="Uses external dataset">📁</span>
                                     </div>
                                     <div class="snippet-date" x-text="formatDate(snippet)"></div>
                                 </div>
-                                <span x-show="getSize(snippet) >= 1"
-                                      class="snippet-size"
-                                      x-text="getSize(snippet).toFixed(0) + ' KB'"></span>
-                                <div class="snippet-status"
-                                     :class="hasDraft(snippet) ? 'draft' : 'published'"></div>
+                                <span x-show="getSize(snippet) >= 1" class="snippet-size"
+                                    x-text="getSize(snippet).toFixed(0) + ' KB'"></span>
+                                <div class="snippet-status" :class="hasDraft(snippet) ? 'draft' : 'published'"></div>
                             </li>
                         </template>
                     </ul>
-                    <div class="placeholder"
-                         x-show="filteredSnippets.length === 0"
-                         x-text="searchQuery.trim() ? 'No snippets match your search' : 'No snippets found'">
+                    <div class="placeholder" x-show="filteredSnippets.length === 0"
+                        x-text="searchQuery.trim() ? 'No snippets match your search' : 'No snippets found'">
                         Click to select a snippet
                     </div>
                     <div class="snippet-meta" id="snippet-meta" style="display: none;">
                         <div class="meta-header">Name</div>
-                        <input type="text"
-                               id="snippet-name"
-                               class="input small"
-                               placeholder="Snippet name..."
-                               x-model="snippetName"
-                               @input="saveMetaDebounced()" />
+                        <input type="text" id="snippet-name" class="input small" placeholder="Snippet name..."
+                            x-model="snippetName" @input="saveMetaDebounced()" />
 
                         <div class="meta-header">Comment</div>
-                        <textarea id="snippet-comment"
-                                  class="input textarea medium"
-                                  placeholder="Add a comment..."
-                                  rows="3"
-                                  x-model="snippetComment"
-                                  @input="saveMetaDebounced()"></textarea>
+                        <textarea id="snippet-comment" class="input textarea medium" placeholder="Add a comment..."
+                            rows="3" x-model="snippetComment" @input="saveMetaDebounced()"></textarea>
 
                         <div class="meta-info">
                             <div class="meta-info-item">
@@ -198,8 +166,10 @@
                         </div>
 
                         <div class="meta-actions">
-                            <button class="btn btn-standard flex" id="duplicate-btn" title="Create a copy of this snippet">Duplicate</button>
-                            <button class="btn btn-standard flex danger" id="delete-btn" title="Delete this snippet permanently">Delete</button>
+                            <button class="btn btn-standard flex" id="duplicate-btn"
+                                title="Create a copy of this snippet">Duplicate</button>
+                            <button class="btn btn-standard flex danger" id="delete-btn"
+                                title="Delete this snippet permanently">Delete</button>
                         </div>
                     </div>
                     <div class="storage-monitor" id="storage-monitor">
@@ -222,21 +192,22 @@
                 <div class="panel-header">
                     <span>Editor</span>
                     <div class="editor-controls">
-                        <button class="btn btn-action" id="extract-btn" style="display: none; background: #87CEEB;" title="Extract inline data to a reusable dataset">Extract to Dataset</button>
-                        <button class="btn btn-action publish" id="publish-btn" title="Publish draft changes (Cmd/Ctrl+S)">Publish</button>
-                        <button class="btn btn-action revert" id="revert-btn" title="Discard draft and revert to published version">Revert</button>
+                        <button class="btn btn-action" id="extract-btn" style="display: none; background: #87CEEB;"
+                            title="Extract inline data to a reusable dataset">Extract to Dataset</button>
+                        <button class="btn btn-action publish" id="publish-btn"
+                            title="Publish draft changes (Cmd/Ctrl+S)">Publish</button>
+                        <button class="btn btn-action revert" id="revert-btn"
+                            title="Discard draft and revert to published version">Revert</button>
                         <span class="view-label">View:</span>
                         <div class="view-toggle-group">
-                            <button class="btn btn-toggle"
-                                    id="view-draft"
-                                    :class="{ 'active': $store.snippets.viewMode === 'draft' }"
-                                    @click="$store.snippets.viewMode = 'draft'; switchViewMode('draft')"
-                                    title="View and edit draft version">Draft</button>
-                            <button class="btn btn-toggle"
-                                    id="view-published"
-                                    :class="{ 'active': $store.snippets.viewMode === 'published' }"
-                                    @click="$store.snippets.viewMode = 'published'; switchViewMode('published')"
-                                    title="View published version (read-only if draft exists)">Published</button>
+                            <button class="btn btn-toggle" id="view-draft"
+                                :class="{ 'active': $store.snippets.viewMode === 'draft' }"
+                                @click="$store.snippets.viewMode = 'draft'; switchViewMode('draft')"
+                                title="View and edit draft version">Draft</button>
+                            <button class="btn btn-toggle" id="view-published"
+                                :class="{ 'active': $store.snippets.viewMode === 'published' }"
+                                @click="$store.snippets.viewMode = 'published'; switchViewMode('published')"
+                                title="View published version (read-only if draft exists)">Published</button>
                         </div>
                     </div>
                 </div>
@@ -252,17 +223,27 @@
             <div class="panel preview-panel" id="preview-panel">
                 <div class="panel-header">
                     <span>Preview</span>
-                    <div class="preview-controls">
+                    <div class="preview-controls" x-data>
                         <span class="view-label">Fit:</span>
                         <div class="view-toggle-group">
-                            <button class="btn btn-toggle active" id="preview-fit-default" title="Display at original spec dimensions">Original</button>
-                            <button class="btn btn-toggle" id="preview-fit-width" title="Scale to fit preview pane width (⚠️ for faceted specs, applies to each facet)">Width</button>
-                            <button class="btn btn-toggle" id="preview-fit-full" title="Scale to fit entire preview pane (⚠️ for faceted specs, applies to each facet)">Full</button>
+                            <button class="btn btn-toggle" :class="{ 'active': $store.preview.fitMode === 'default' }"
+                                @click="$store.preview.fitMode = 'default'; setPreviewFitMode('default')"
+                                id="preview-fit-default" title="Display at original spec dimensions">Original</button>
+                            <button class="btn btn-toggle" :class="{ 'active': $store.preview.fitMode === 'width' }"
+                                @click="$store.preview.fitMode = 'width'; setPreviewFitMode('width')"
+                                id="preview-fit-width"
+                                title="Scale to fit preview pane width (⚠️ for faceted specs, applies to each facet)">Width</button>
+                            <button class="btn btn-toggle" :class="{ 'active': $store.preview.fitMode === 'full' }"
+                                @click="$store.preview.fitMode = 'full'; setPreviewFitMode('full')"
+                                id="preview-fit-full"
+                                title="Scale to fit entire preview pane (⚠️ for faceted specs, applies to each facet)">Full</button>
                         </div>
                     </div>
                 </div>
                 <div class="panel-content" style="position: relative;">
-                    <div id="vega-preview" style="height: 100%; width: 100%; overflow: auto; display: flex; align-items: center; justify-content: center;"></div>
+                    <div id="vega-preview"
+                        style="height: 100%; width: 100%; overflow: auto; display: flex; align-items: center; justify-content: center;">
+                    </div>
                     <div id="preview-overlay" class="preview-overlay" style="display: none;"></div>
                 </div>
             </div>
@@ -280,26 +261,27 @@
                 <!-- List View (default) -->
                 <div id="dataset-list-view" class="dataset-view" x-data="datasetList()">
                     <div class="dataset-list-header">
-                        <button class="btn btn-modal primary" id="new-dataset-btn" title="Create a new dataset">New Dataset</button>
-                        <button class="btn btn-modal" id="import-dataset-btn" title="Import dataset from file">Import</button>
-                        <input type="file" id="import-dataset-file" accept=".json,.csv,.tsv,.txt" style="display: none;" />
+                        <button class="btn btn-modal primary" id="new-dataset-btn" title="Create a new dataset">New
+                            Dataset</button>
+                        <button class="btn btn-modal" id="import-dataset-btn"
+                            title="Import dataset from file">Import</button>
+                        <input type="file" id="import-dataset-file" accept=".json,.csv,.tsv,.txt"
+                            style="display: none;" />
                     </div>
                     <div class="dataset-container">
                         <div class="dataset-list" id="dataset-list">
                             <!-- Dataset items rendered by Alpine.js -->
                             <template x-for="dataset in datasets" :key="dataset.id">
-                                <div class="dataset-item"
-                                     :data-item-id="dataset.id"
-                                     :class="{ 'selected': $store.datasets.currentDatasetId === dataset.id }"
-                                     @click="selectDataset(dataset.id)">
+                                <div class="dataset-item" :data-item-id="dataset.id"
+                                    :class="{ 'selected': $store.datasets.currentDatasetId === dataset.id }"
+                                    @click="selectDataset(dataset.id)">
                                     <div class="dataset-info">
                                         <div class="dataset-name" x-text="dataset.name"></div>
                                         <div class="dataset-meta" x-text="formatMeta(dataset)"></div>
                                     </div>
-                                    <div class="dataset-usage-badge"
-                                         x-show="getUsageCount(dataset) > 0"
-                                         :title="getUsageCount(dataset) + ' snippet' + (getUsageCount(dataset) !== 1 ? 's' : '') + ' using this dataset'"
-                                         x-text="'📄 ' + getUsageCount(dataset)">
+                                    <div class="dataset-usage-badge" x-show="getUsageCount(dataset) > 0"
+                                        :title="getUsageCount(dataset) + ' snippet' + (getUsageCount(dataset) !== 1 ? 's' : '') + ' using this dataset'"
+                                        x-text="'📄 ' + getUsageCount(dataset)">
                                     </div>
                                 </div>
                             </template>
@@ -310,23 +292,32 @@
                         <div class="dataset-details" id="dataset-details" style="display: none;">
                             <div class="dataset-detail-section">
                                 <div class="dataset-actions">
-                                    <button class="btn btn-modal primary" id="edit-dataset-btn" title="Edit this dataset contents">Edit Contents</button>
-                                    <button class="btn btn-modal primary" id="build-chart-btn" title="Build a chart using this dataset">Build Chart</button>
-                                    <button class="btn btn-modal primary" id="new-snippet-btn" title="Create a new snippet using this dataset">New Snippet</button>
-                                    <button class="btn btn-modal" id="export-dataset-btn" title="Export this dataset to file">Export</button>
-                                    <button class="btn btn-modal" id="copy-reference-btn" title="Copy dataset reference to clipboard">Copy Reference</button>
-                                    <button class="btn btn-modal danger" id="delete-dataset-btn" title="Delete this dataset permanently">Delete</button>
+                                    <button class="btn btn-modal primary" id="edit-dataset-btn"
+                                        title="Edit this dataset contents">Edit Contents</button>
+                                    <button class="btn btn-modal primary" id="build-chart-btn"
+                                        title="Build a chart using this dataset">Build Chart</button>
+                                    <button class="btn btn-modal primary" id="new-snippet-btn"
+                                        title="Create a new snippet using this dataset">New Snippet</button>
+                                    <button class="btn btn-modal" id="export-dataset-btn"
+                                        title="Export this dataset to file">Export</button>
+                                    <button class="btn btn-modal" id="copy-reference-btn"
+                                        title="Copy dataset reference to clipboard">Copy Reference</button>
+                                    <button class="btn btn-modal danger" id="delete-dataset-btn"
+                                        title="Delete this dataset permanently">Delete</button>
                                 </div>
 
                                 <div class="dataset-detail-header">Name</div>
-                                <input type="text" id="dataset-detail-name" class="input" placeholder="Dataset name..." />
+                                <input type="text" id="dataset-detail-name" class="input"
+                                    placeholder="Dataset name..." />
 
                                 <div class="dataset-detail-header">Comment</div>
-                                <textarea id="dataset-detail-comment" class="input textarea" placeholder="Add a comment..." rows="3"></textarea>
+                                <textarea id="dataset-detail-comment" class="input textarea"
+                                    placeholder="Add a comment..." rows="3"></textarea>
 
                                 <div class="dataset-detail-header-row">
                                     <span class="dataset-detail-header">Overview</span>
-                                    <button class="btn btn-icon large" id="refresh-metadata-btn" style="display: none;" title="Refresh metadata from URL">🔄</button>
+                                    <button class="btn btn-icon large" id="refresh-metadata-btn" style="display: none;"
+                                        title="Refresh metadata from URL">🔄</button>
                                 </div>
                                 <div class="dataset-overview-grid">
                                     <div class="overview-section">
@@ -372,12 +363,15 @@
                                 <div class="dataset-detail-header-row">
                                     <span class="dataset-detail-header">Preview</span>
                                     <div class="preview-toggle-group" id="preview-toggle-group" style="display: none;">
-                                        <button class="btn btn-toggle small active" id="preview-raw-btn" title="Show raw data preview">Raw</button>
-                                        <button class="btn btn-toggle small" id="preview-table-btn" title="Show data in table format with type detection">Table</button>
+                                        <button class="btn btn-toggle small active" id="preview-raw-btn"
+                                            title="Show raw data preview">Raw</button>
+                                        <button class="btn btn-toggle small" id="preview-table-btn"
+                                            title="Show data in table format with type detection">Table</button>
                                     </div>
                                 </div>
                                 <pre id="dataset-preview" class="preview-box large"></pre>
-                                <div id="dataset-preview-table" class="preview-table-container" style="display: none;"></div>
+                                <div id="dataset-preview-table" class="preview-table-container" style="display: none;">
+                                </div>
 
                                 <div id="dataset-snippets-section" style="display: none;">
                                     <div class="dataset-detail-header">Linked Snippets</div>
@@ -397,7 +391,8 @@
 
                         <div class="dataset-form-group">
                             <label class="dataset-form-label">Name *</label>
-                            <input type="text" id="dataset-form-name" class="input" placeholder="Enter dataset name..." />
+                            <input type="text" id="dataset-form-name" class="input"
+                                placeholder="Enter dataset name..." />
                         </div>
 
                         <div class="dataset-form-group">
@@ -405,7 +400,8 @@
                             <div class="dataset-format-hint">
                                 Paste your data (JSON, CSV, or TSV) or a URL. Format will be detected automatically.
                             </div>
-                            <textarea id="dataset-form-input" class="input textarea" placeholder="Paste data or URL here..." rows="12"></textarea>
+                            <textarea id="dataset-form-input" class="input textarea"
+                                placeholder="Paste data or URL here..." rows="12"></textarea>
                         </div>
 
                         <!-- Detection Confirmation UI -->
@@ -415,7 +411,8 @@
                                 <div class="detection-badges">
                                     <span class="detection-badge" id="detected-format">JSON</span>
                                     <span class="detection-badge" id="detected-source">Inline</span>
-                                    <span class="detected-confidence high" id="detected-confidence">high confidence</span>
+                                    <span class="detected-confidence high" id="detected-confidence">high
+                                        confidence</span>
                                 </div>
                             </div>
                             <div class="detection-preview-label">Preview:</div>
@@ -424,14 +421,17 @@
 
                         <div class="dataset-form-group">
                             <label class="dataset-form-label">Comment</label>
-                            <textarea id="dataset-form-comment" class="input textarea" placeholder="Optional description..." rows="3"></textarea>
+                            <textarea id="dataset-form-comment" class="input textarea"
+                                placeholder="Optional description..." rows="3"></textarea>
                         </div>
 
                         <div class="dataset-form-error" id="dataset-form-error"></div>
 
                         <div class="dataset-form-actions">
-                            <button class="btn btn-modal primary" id="save-dataset-btn" title="Save this dataset">Save Dataset</button>
-                            <button class="btn btn-modal" id="cancel-dataset-btn" title="Cancel and return to dataset list">Cancel</button>
+                            <button class="btn btn-modal primary" id="save-dataset-btn" title="Save this dataset">Save
+                                Dataset</button>
+                            <button class="btn btn-modal" id="cancel-dataset-btn"
+                                title="Cancel and return to dataset list">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -450,7 +450,8 @@
                 <div style="padding: 16px;">
                     <div class="dataset-form-group">
                         <label class="dataset-form-label">Dataset Name *</label>
-                        <input type="text" id="extract-dataset-name" class="input" placeholder="Enter dataset name..." />
+                        <input type="text" id="extract-dataset-name" class="input"
+                            placeholder="Enter dataset name..." />
                     </div>
 
                     <div class="dataset-form-group">
@@ -461,7 +462,8 @@
                     <div class="dataset-form-error" id="extract-form-error"></div>
 
                     <div class="dataset-form-actions">
-                        <button class="btn btn-modal primary" id="extract-create-btn" title="Create dataset and update snippet reference">Create Dataset</button>
+                        <button class="btn btn-modal primary" id="extract-create-btn"
+                            title="Create dataset and update snippet reference">Create Dataset</button>
                         <button class="btn btn-modal" id="extract-cancel-btn" title="Cancel extraction">Cancel</button>
                     </div>
                 </div>
@@ -474,7 +476,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <span class="modal-title">Build Chart</span>
-                <button class="btn btn-icon" id="chart-builder-modal-close" @click="$el.closest('#chart-builder-view')._x_dataStack[0].close()" title="Close chart builder (Escape)">×</button>
+                <button class="btn btn-icon" id="chart-builder-modal-close"
+                    @click="$el.closest('#chart-builder-view')._x_dataStack[0].close()"
+                    title="Close chart builder (Escape)">×</button>
             </div>
             <div class="modal-body">
                 <!-- Chart Builder View -->
@@ -483,18 +487,28 @@
                         <!-- Left Panel: Configuration -->
                         <div class="chart-builder-config">
                             <div class="chart-builder-header">
-                                <button class="btn btn-modal" id="chart-builder-back-btn" @click="close()" title="Back to dataset details">← Back to Dataset</button>
+                                <button class="btn btn-modal" id="chart-builder-back-btn" @click="close()"
+                                    title="Back to dataset details">← Back to Dataset</button>
                             </div>
 
                             <div class="chart-builder-section">
                                 <div class="mark-type-row">
                                     <label class="chart-builder-label">Mark Type*</label>
                                     <div class="mark-toggle-group">
-                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'bar' }" @click="setMarkType('bar')" data-mark="bar" title="Bar chart">Bar</button>
-                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'line' }" @click="setMarkType('line')" data-mark="line" title="Line chart">Line</button>
-                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'point' }" @click="setMarkType('point')" data-mark="point" title="Point chart">Point</button>
-                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'area' }" @click="setMarkType('area')" data-mark="area" title="Area chart">Area</button>
-                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'circle' }" @click="setMarkType('circle')" data-mark="circle" title="Circle chart">Circle</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'bar' }"
+                                            @click="setMarkType('bar')" data-mark="bar" title="Bar chart">Bar</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'line' }"
+                                            @click="setMarkType('line')" data-mark="line"
+                                            title="Line chart">Line</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'point' }"
+                                            @click="setMarkType('point')" data-mark="point"
+                                            title="Point chart">Point</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'area' }"
+                                            @click="setMarkType('area')" data-mark="area"
+                                            title="Area chart">Area</button>
+                                        <button class="btn btn-toggle small"
+                                            :class="{ 'active': markType === 'circle' }" @click="setMarkType('circle')"
+                                            data-mark="circle" title="Circle chart">Circle</button>
                                     </div>
                                 </div>
                             </div>
@@ -506,17 +520,30 @@
                                 <div class="encoding-group">
                                     <div class="encoding-row">
                                         <label class="encoding-header">X Axis</label>
-                                        <select id="encoding-x-field" class="input" x-model="encodings.x.field" @change="setEncodingField('x', $event.target.value)">
+                                        <select id="encoding-x-field" class="input" x-model="encodings.x.field"
+                                            @change="setEncodingField('x', $event.target.value)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
                                     <div class="encoding-type">
                                         <label class="encoding-type-label">Type</label>
                                         <div class="type-toggle-group">
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.x.type === 'quantitative' }" @click="setEncodingType('x', 'quantitative')" data-encoding="x" data-type="quantitative" title="Quantitative">Q</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.x.type === 'ordinal' }" @click="setEncodingType('x', 'ordinal')" data-encoding="x" data-type="ordinal" title="Ordinal">O</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.x.type === 'nominal' }" @click="setEncodingType('x', 'nominal')" data-encoding="x" data-type="nominal" title="Nominal">N</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.x.type === 'temporal' }" @click="setEncodingType('x', 'temporal')" data-encoding="x" data-type="temporal" title="Temporal">T</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.x.type === 'quantitative' }"
+                                                @click="setEncodingType('x', 'quantitative')" data-encoding="x"
+                                                data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.x.type === 'ordinal' }"
+                                                @click="setEncodingType('x', 'ordinal')" data-encoding="x"
+                                                data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.x.type === 'nominal' }"
+                                                @click="setEncodingType('x', 'nominal')" data-encoding="x"
+                                                data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.x.type === 'temporal' }"
+                                                @click="setEncodingType('x', 'temporal')" data-encoding="x"
+                                                data-type="temporal" title="Temporal">T</button>
                                         </div>
                                     </div>
                                 </div>
@@ -525,17 +552,30 @@
                                 <div class="encoding-group">
                                     <div class="encoding-row">
                                         <label class="encoding-header">Y Axis</label>
-                                        <select id="encoding-y-field" class="input" x-model="encodings.y.field" @change="setEncodingField('y', $event.target.value)">
+                                        <select id="encoding-y-field" class="input" x-model="encodings.y.field"
+                                            @change="setEncodingField('y', $event.target.value)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
                                     <div class="encoding-type">
                                         <label class="encoding-type-label">Type</label>
                                         <div class="type-toggle-group">
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.y.type === 'quantitative' }" @click="setEncodingType('y', 'quantitative')" data-encoding="y" data-type="quantitative" title="Quantitative">Q</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.y.type === 'ordinal' }" @click="setEncodingType('y', 'ordinal')" data-encoding="y" data-type="ordinal" title="Ordinal">O</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.y.type === 'nominal' }" @click="setEncodingType('y', 'nominal')" data-encoding="y" data-type="nominal" title="Nominal">N</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.y.type === 'temporal' }" @click="setEncodingType('y', 'temporal')" data-encoding="y" data-type="temporal" title="Temporal">T</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.y.type === 'quantitative' }"
+                                                @click="setEncodingType('y', 'quantitative')" data-encoding="y"
+                                                data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.y.type === 'ordinal' }"
+                                                @click="setEncodingType('y', 'ordinal')" data-encoding="y"
+                                                data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.y.type === 'nominal' }"
+                                                @click="setEncodingType('y', 'nominal')" data-encoding="y"
+                                                data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.y.type === 'temporal' }"
+                                                @click="setEncodingType('y', 'temporal')" data-encoding="y"
+                                                data-type="temporal" title="Temporal">T</button>
                                         </div>
                                     </div>
                                 </div>
@@ -544,17 +584,30 @@
                                 <div class="encoding-group">
                                     <div class="encoding-row">
                                         <label class="encoding-header">Color</label>
-                                        <select id="encoding-color-field" class="input" x-model="encodings.color.field" @change="setEncodingField('color', $event.target.value)">
+                                        <select id="encoding-color-field" class="input" x-model="encodings.color.field"
+                                            @change="setEncodingField('color', $event.target.value)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
                                     <div class="encoding-type">
                                         <label class="encoding-type-label">Type</label>
                                         <div class="type-toggle-group">
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.color.type === 'quantitative' }" @click="setEncodingType('color', 'quantitative')" data-encoding="color" data-type="quantitative" title="Quantitative">Q</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.color.type === 'ordinal' }" @click="setEncodingType('color', 'ordinal')" data-encoding="color" data-type="ordinal" title="Ordinal">O</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.color.type === 'nominal' }" @click="setEncodingType('color', 'nominal')" data-encoding="color" data-type="nominal" title="Nominal">N</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.color.type === 'temporal' }" @click="setEncodingType('color', 'temporal')" data-encoding="color" data-type="temporal" title="Temporal">T</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.color.type === 'quantitative' }"
+                                                @click="setEncodingType('color', 'quantitative')" data-encoding="color"
+                                                data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.color.type === 'ordinal' }"
+                                                @click="setEncodingType('color', 'ordinal')" data-encoding="color"
+                                                data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.color.type === 'nominal' }"
+                                                @click="setEncodingType('color', 'nominal')" data-encoding="color"
+                                                data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.color.type === 'temporal' }"
+                                                @click="setEncodingType('color', 'temporal')" data-encoding="color"
+                                                data-type="temporal" title="Temporal">T</button>
                                         </div>
                                     </div>
                                 </div>
@@ -563,17 +616,30 @@
                                 <div class="encoding-group">
                                     <div class="encoding-row">
                                         <label class="encoding-header">Size</label>
-                                        <select id="encoding-size-field" class="input" x-model="encodings.size.field" @change="setEncodingField('size', $event.target.value)">
+                                        <select id="encoding-size-field" class="input" x-model="encodings.size.field"
+                                            @change="setEncodingField('size', $event.target.value)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
                                     <div class="encoding-type">
                                         <label class="encoding-type-label">Type</label>
                                         <div class="type-toggle-group">
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.size.type === 'quantitative' }" @click="setEncodingType('size', 'quantitative')" data-encoding="size" data-type="quantitative" title="Quantitative">Q</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.size.type === 'ordinal' }" @click="setEncodingType('size', 'ordinal')" data-encoding="size" data-type="ordinal" title="Ordinal">O</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.size.type === 'nominal' }" @click="setEncodingType('size', 'nominal')" data-encoding="size" data-type="nominal" title="Nominal">N</button>
-                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.size.type === 'temporal' }" @click="setEncodingType('size', 'temporal')" data-encoding="size" data-type="temporal" title="Temporal">T</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.size.type === 'quantitative' }"
+                                                @click="setEncodingType('size', 'quantitative')" data-encoding="size"
+                                                data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.size.type === 'ordinal' }"
+                                                @click="setEncodingType('size', 'ordinal')" data-encoding="size"
+                                                data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.size.type === 'nominal' }"
+                                                @click="setEncodingType('size', 'nominal')" data-encoding="size"
+                                                data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small"
+                                                :class="{ 'active': encodings.size.type === 'temporal' }"
+                                                @click="setEncodingType('size', 'temporal')" data-encoding="size"
+                                                data-type="temporal" title="Temporal">T</button>
                                         </div>
                                     </div>
                                 </div>
@@ -584,11 +650,14 @@
                                 <div class="chart-dimensions-group">
                                     <div class="dimension-input-group">
                                         <label class="dimension-label">Width</label>
-                                        <input type="number" id="chart-width" class="input small" x-model.number="width" @input="updatePreview()" placeholder="auto" min="1" />
+                                        <input type="number" id="chart-width" class="input small" x-model.number="width"
+                                            @input="updatePreview()" placeholder="auto" min="1" />
                                     </div>
                                     <div class="dimension-input-group">
                                         <label class="dimension-label">Height</label>
-                                        <input type="number" id="chart-height" class="input small" x-model.number="height" @input="updatePreview()" placeholder="auto" min="1" />
+                                        <input type="number" id="chart-height" class="input small"
+                                            x-model.number="height" @input="updatePreview()" placeholder="auto"
+                                            min="1" />
                                     </div>
                                 </div>
                             </div>
@@ -596,8 +665,11 @@
                             <div class="chart-builder-error" id="chart-builder-error"></div>
 
                             <div class="chart-builder-actions">
-                                <button class="btn btn-modal primary" id="chart-builder-create-btn" @click="createSnippet()" :disabled="!isValid" title="Create snippet from chart">Create Snippet</button>
-                                <button class="btn btn-modal" id="chart-builder-cancel-btn" @click="close()" title="Cancel and close">Cancel</button>
+                                <button class="btn btn-modal primary" id="chart-builder-create-btn"
+                                    @click="createSnippet()" :disabled="!isValid"
+                                    title="Create snippet from chart">Create Snippet</button>
+                                <button class="btn btn-modal" id="chart-builder-cancel-btn" @click="close()"
+                                    title="Cancel and close">Cancel</button>
                             </div>
                         </div>
 
@@ -630,13 +702,16 @@
                         <h3 class="help-heading">About Astrolabe</h3>
                         <p class="help-text">
                             Astrolabe is a lightweight, browser-based snippet manager for Vega-Lite visualizations.
-                            It's designed to help you quickly create, organize, and iterate on visualization specs without
+                            It's designed to help you quickly create, organize, and iterate on visualization specs
+                            without
                             the overhead of a full development environment.
                         </p>
                         <p class="help-text">
                             Everything runs locally in your browser—no server, no signup, no data leaving your machine.
-                            Your snippets and datasets are stored using browser storage, so they persist across sessions.
-                            As a Progressive Web App, Astrolabe works fully offline after your first visit and can be installed
+                            Your snippets and datasets are stored using browser storage, so they persist across
+                            sessions.
+                            As a Progressive Web App, Astrolabe works fully offline after your first visit and can be
+                            installed
                             as a standalone application.
                         </p>
                     </section>
@@ -645,13 +720,19 @@
                     <section class="help-section">
                         <h3 class="help-heading">Key Features</h3>
                         <ul class="help-list">
-                            <li><strong>Three-panel workspace</strong> — Snippet library, Monaco code editor with Vega-Lite schema validation, and live preview</li>
-                            <li><strong>Draft/published workflow</strong> — Experiment safely without losing your working version</li>
-                            <li><strong>Dataset library</strong> — Store and reuse datasets across multiple visualizations (supports JSON, CSV, TSV, TopoJSON)</li>
-                            <li><strong>Offline-capable</strong> — Works without internet connection after first visit; install as standalone app</li>
+                            <li><strong>Three-panel workspace</strong> — Snippet library, Monaco code editor with
+                                Vega-Lite schema validation, and live preview</li>
+                            <li><strong>Draft/published workflow</strong> — Experiment safely without losing your
+                                working version</li>
+                            <li><strong>Dataset library</strong> — Store and reuse datasets across multiple
+                                visualizations (supports JSON, CSV, TSV, TopoJSON)</li>
+                            <li><strong>Offline-capable</strong> — Works without internet connection after first visit;
+                                install as standalone app</li>
                             <li><strong>Import/export</strong> — Back up your work or move it between browsers</li>
-                            <li><strong>Inline data extraction</strong> — Convert hardcoded data into reusable datasets</li>
-                            <li><strong>Search and sorting</strong> — Find snippets by name, comment, or spec content</li>
+                            <li><strong>Inline data extraction</strong> — Convert hardcoded data into reusable datasets
+                            </li>
+                            <li><strong>Search and sorting</strong> — Find snippets by name, comment, or spec content
+                            </li>
                         </ul>
                     </section>
 
@@ -661,19 +742,23 @@
                         <div class="help-workflow">
                             <div class="help-step">
                                 <strong>1. Create a snippet</strong>
-                                <p>Click the "Create New Snippet" ghost card at the top of the snippet list. A sample Vega-Lite spec loads automatically.</p>
+                                <p>Click the "Create New Snippet" ghost card at the top of the snippet list. A sample
+                                    Vega-Lite spec loads automatically.</p>
                             </div>
                             <div class="help-step">
                                 <strong>2. Edit in the Draft view</strong>
-                                <p>Changes auto-save as you type. The preview updates automatically. Your published version stays safe until you're ready.</p>
+                                <p>Changes auto-save as you type. The preview updates automatically. Your published
+                                    version stays safe until you're ready.</p>
                             </div>
                             <div class="help-step">
                                 <strong>3. Publish when ready</strong>
-                                <p>Click "Publish" (or Cmd/Ctrl+S) to save your draft as the official version. Use "Revert" if you want to discard changes.</p>
+                                <p>Click "Publish" (or Cmd/Ctrl+S) to save your draft as the official version. Use
+                                    "Revert" if you want to discard changes.</p>
                             </div>
                             <div class="help-step">
                                 <strong>4. Organize with datasets</strong>
-                                <p>Open the Dataset Manager to create reusable datasets. Reference them in your specs using <code>{"data": {"name": "dataset-name"}}</code>.</p>
+                                <p>Open the Dataset Manager to create reusable datasets. Reference them in your specs
+                                    using <code>{"data": {"name": "dataset-name"}}</code>.</p>
                             </div>
                         </div>
                     </section>
@@ -712,14 +797,19 @@
                         <h3 class="help-heading">Storage & Limits</h3>
 
                         <div class="help-warning">
-                            <strong>⚠️ Important:</strong> All data is stored in your browser's local storage. If you clear your browser cache or site data,
-                            your snippets and datasets will be permanently deleted. Regular exports are recommended as backups.
+                            <strong>⚠️ Important:</strong> All data is stored in your browser's local storage. If you
+                            clear your browser cache or site data,
+                            your snippets and datasets will be permanently deleted. Regular exports are recommended as
+                            backups.
                         </div>
 
                         <ul class="help-list">
-                            <li><strong>Snippets</strong> — Stored in localStorage with a 5 MB limit (shared across all snippets). The storage monitor shows current usage.</li>
-                            <li><strong>Datasets</strong> — Stored in IndexedDB with effectively unlimited space (browser-dependent, typically 50 MB+).</li>
-                            <li><strong>Backup</strong> — Use Import/Export to save your work as JSON files. Datasets can be exported individually from the Dataset Manager.</li>
+                            <li><strong>Snippets</strong> — Stored in localStorage with a 5 MB limit (shared across all
+                                snippets). The storage monitor shows current usage.</li>
+                            <li><strong>Datasets</strong> — Stored in IndexedDB with effectively unlimited space
+                                (browser-dependent, typically 50 MB+).</li>
+                            <li><strong>Backup</strong> — Use Import/Export to save your work as JSON files. Datasets
+                                can be exported individually from the Dataset Manager.</li>
                         </ul>
                     </section>
 
@@ -727,12 +817,18 @@
                     <section class="help-section">
                         <h3 class="help-heading">Tips & Tricks</h3>
                         <ul class="help-list">
-                            <li><strong>Sort snippets</strong> — Use the sort buttons to organize by Modified, Created, Name, or Size. Click a button twice to reverse the sort order (⬇ becomes ⬆).</li>
-                            <li><strong>Extract inline data</strong> — When editing a spec with inline data, click "Extract to Dataset" to create a reusable dataset automatically.</li>
-                            <li><strong>Dataset references</strong> — Astrolabe resolves dataset references at render time, so you can freely switch between inline and referenced data.</li>
-                            <li><strong>Search across specs</strong> — The search box looks inside snippet names, comments, and the spec content itself.</li>
-                            <li><strong>Linked datasets</strong> — The metadata panel shows which datasets a snippet uses, and the Dataset Manager shows which snippets reference each dataset.</li>
-                            <li><strong>URL datasets</strong> — Reference remote data by URL. Astrolabe fetches and caches it for preview, but the URL is what gets stored.</li>
+                            <li><strong>Sort snippets</strong> — Use the sort buttons to organize by Modified, Created,
+                                Name, or Size. Click a button twice to reverse the sort order (⬇ becomes ⬆).</li>
+                            <li><strong>Extract inline data</strong> — When editing a spec with inline data, click
+                                "Extract to Dataset" to create a reusable dataset automatically.</li>
+                            <li><strong>Dataset references</strong> — Astrolabe resolves dataset references at render
+                                time, so you can freely switch between inline and referenced data.</li>
+                            <li><strong>Search across specs</strong> — The search box looks inside snippet names,
+                                comments, and the spec content itself.</li>
+                            <li><strong>Linked datasets</strong> — The metadata panel shows which datasets a snippet
+                                uses, and the Dataset Manager shows which snippets reference each dataset.</li>
+                            <li><strong>URL datasets</strong> — Reference remote data by URL. Astrolabe fetches and
+                                caches it for preview, but the URL is what gets stored.</li>
                         </ul>
                     </section>
 
@@ -743,17 +839,28 @@
                             <strong>Your data stays yours.</strong> Astrolabe is built with privacy as a core principle:
                         </p>
                         <ul class="help-list">
-                            <li><strong>Local-first architecture</strong> — All snippets and datasets are stored in your browser (localStorage and IndexedDB). Nothing is sent to any server.</li>
-                            <li><strong>No accounts, no signup</strong> — There's no authentication system, no user profiles, no cloud sync. Your work exists only on your machine.</li>
-                            <li><strong>No cookies</strong> — Astrolabe doesn't use cookies or any persistent tracking identifiers.</li>
-                            <li><strong>Privacy-friendly analytics</strong> — We use GoatCounter (privacy-focused, GDPR-compliant) to track basic usage patterns like "snippet created" or "dataset exported." We collect <strong>zero personal information</strong>: no snippet names, no dataset content, no IP addresses, no user identifiers. Just aggregate counts to understand which features are used.</li>
-                            <li><strong>Data portability</strong> — Export all your snippets and datasets anytime as standard JSON/CSV/TSV files. No vendor lock-in.</li>
+                            <li><strong>Local-first architecture</strong> — All snippets and datasets are stored in your
+                                browser (localStorage and IndexedDB). Nothing is sent to any server.</li>
+                            <li><strong>No accounts, no signup</strong> — There's no authentication system, no user
+                                profiles, no cloud sync. Your work exists only on your machine.</li>
+                            <li><strong>No cookies</strong> — Astrolabe doesn't use cookies or any persistent tracking
+                                identifiers.</li>
+                            <li><strong>Privacy-friendly analytics</strong> — We use GoatCounter (privacy-focused,
+                                GDPR-compliant) to track basic usage patterns like "snippet created" or "dataset
+                                exported." We collect <strong>zero personal information</strong>: no snippet names, no
+                                dataset content, no IP addresses, no user identifiers. Just aggregate counts to
+                                understand which features are used.</li>
+                            <li><strong>Data portability</strong> — Export all your snippets and datasets anytime as
+                                standard JSON/CSV/TSV files. No vendor lock-in.</li>
                         </ul>
                         <p class="help-text">
-                            <strong>What analytics we collect:</strong> Action types (e.g., "snippet-create", "dataset-export"), generic metadata (e.g., format types like JSON/CSV, counts like "5 snippets"). That's it.
+                            <strong>What analytics we collect:</strong> Action types (e.g., "snippet-create",
+                            "dataset-export"), generic metadata (e.g., format types like JSON/CSV, counts like "5
+                            snippets"). That's it.
                         </p>
                         <p class="help-text">
-                            <strong>What we DON'T collect:</strong> Snippet names, dataset names, actual data content, URLs, email addresses, or any personally identifiable information.
+                            <strong>What we DON'T collect:</strong> Snippet names, dataset names, actual data content,
+                            URLs, email addresses, or any personally identifiable information.
                         </p>
                     </section>
                 </div>
@@ -773,15 +880,18 @@
                     <section class="help-section">
                         <h3 class="help-heading">Why Donate?</h3>
                         <p class="help-text">
-                            If you are reading this, you probably found Astrolabe to be useful enough to support its creators.
-                            It is a free open-source project built in Kyiv, Ukraine. 
+                            If you are reading this, you probably found Astrolabe to be useful enough to support its
+                            creators.
+                            It is a free open-source project built in Kyiv, Ukraine.
                             <br>
                             <br>
-                            This passion project of mine is possible because my relatives, friends, and colleagues took arms and joined Armed Forces
+                            This passion project of mine is possible because my relatives, friends, and colleagues took
+                            arms and joined Armed Forces
                             to defend their country and loved ones against Russian invasion.
                             <br>
                             <br>
-                            I feel deep gratitude to them, so I will humbly ask you to redirect your donations to the foundations - you'll find the links below.
+                            I feel deep gratitude to them, so I will humbly ask you to redirect your donations to the
+                            foundations - you'll find the links below.
                             <br>
                             <br>
                     </section>
@@ -789,31 +899,39 @@
                         <section class="help-section">
                             <h3 class="help-heading">Where to Donate</h3>
                             <p class="help-text">
-                                <ul class="help-list">
-                                    <li>
+                            <ul class="help-list">
+                                <li>
 
-                                <strong><a href="https://bank.gov.ua/en/news/all/natsionalniy-bank-vidkriv-spetsrahunok-dlya-zboru-koshtiv-na-potrebi-armiyi">
-                                    National Bank of Ukraine's special account for Ukraine's Armed Forces
-                                </a> - Direct government channel</strong>
-                                    </li>
-                                    <li>
-                                <strong><a href="https://savelife.in.ua/en/donate-en/#donate-army-card-once">
-                                    Come Back Alive Foundation</a></strong> - One of the biggest and most trusted. They've been around since 2014 and share <a href="https://savelife.in.ua/en/reporting-en/">detailed reports</a> of where money goes.
-                                    </li>
-                                    <li>
-                                <strong><a href="https://macpaw.foundation/">
-                                    MacPaw Foundation</a></strong> - Founded by MacPaw (where I work). Started in 2016, shifted focus in 2022 to support the Defence Forces.
-                                    </li>
-                                    <li>
-                                <strong><a href="https://foundation.kse.ua/en/humanitarian-projects/">
-                                    KSE Foundation</a></strong>. Kyiv School of Economics (where I teach). Focuses on both education and humanitarian support for people and defenders
-                                    </li>
-                                    <li>
-                                <strong><a href="https://standforukraine.com/">
-                                    Stand for Ukraine</a></strong> - Not a foundation, but an aggregator of reliable organizations.
-                                    The list of fundraisers goes beyond military and covers recovery of veterans & victims of war, shelter for the refugees and many more.
-                                    </li>
-                                </ul>
+                                    <strong><a
+                                            href="https://bank.gov.ua/en/news/all/natsionalniy-bank-vidkriv-spetsrahunok-dlya-zboru-koshtiv-na-potrebi-armiyi">
+                                            National Bank of Ukraine's special account for Ukraine's Armed Forces
+                                        </a> - Direct government channel</strong>
+                                </li>
+                                <li>
+                                    <strong><a href="https://savelife.in.ua/en/donate-en/#donate-army-card-once">
+                                            Come Back Alive Foundation</a></strong> - One of the biggest and most
+                                    trusted. They've been around since 2014 and share <a
+                                        href="https://savelife.in.ua/en/reporting-en/">detailed reports</a> of where
+                                    money goes.
+                                </li>
+                                <li>
+                                    <strong><a href="https://macpaw.foundation/">
+                                            MacPaw Foundation</a></strong> - Founded by MacPaw (where I work). Started
+                                    in 2016, shifted focus in 2022 to support the Defence Forces.
+                                </li>
+                                <li>
+                                    <strong><a href="https://foundation.kse.ua/en/humanitarian-projects/">
+                                            KSE Foundation</a></strong>. Kyiv School of Economics (where I teach).
+                                    Focuses on both education and humanitarian support for people and defenders
+                                </li>
+                                <li>
+                                    <strong><a href="https://standforukraine.com/">
+                                            Stand for Ukraine</a></strong> - Not a foundation, but an aggregator of
+                                    reliable organizations.
+                                    The list of fundraisers goes beyond military and covers recovery of veterans &
+                                    victims of war, shelter for the refugees and many more.
+                                </li>
+                            </ul>
                             </p>
                         </section>
 
@@ -875,8 +993,10 @@
                         <div class="settings-item">
                             <label class="settings-label" for="setting-font-size">Font Size</label>
                             <div class="settings-control">
-                                <input type="range" id="setting-font-size" min="10" max="18" step="1" class="settings-slider" x-model.number="fontSize" />
-                                <span class="settings-value" id="setting-font-size-value" x-text="fontSize + 'px'"></span>
+                                <input type="range" id="setting-font-size" min="10" max="18" step="1"
+                                    class="settings-slider" x-model.number="fontSize" />
+                                <span class="settings-value" id="setting-font-size-value"
+                                    x-text="fontSize + 'px'"></span>
                             </div>
                         </div>
 
@@ -904,21 +1024,24 @@
 
                         <div class="settings-item">
                             <label class="settings-label">
-                                <input type="checkbox" id="setting-minimap" class="settings-checkbox" x-model="minimap" />
+                                <input type="checkbox" id="setting-minimap" class="settings-checkbox"
+                                    x-model="minimap" />
                                 Show minimap
                             </label>
                         </div>
 
                         <div class="settings-item">
                             <label class="settings-label">
-                                <input type="checkbox" id="setting-word-wrap" class="settings-checkbox" x-model="wordWrap" />
+                                <input type="checkbox" id="setting-word-wrap" class="settings-checkbox"
+                                    x-model="wordWrap" />
                                 Enable word wrap
                             </label>
                         </div>
 
                         <div class="settings-item">
                             <label class="settings-label">
-                                <input type="checkbox" id="setting-line-numbers" class="settings-checkbox" x-model="lineNumbers" />
+                                <input type="checkbox" id="setting-line-numbers" class="settings-checkbox"
+                                    x-model="lineNumbers" />
                                 Show line numbers
                             </label>
                         </div>
@@ -931,8 +1054,10 @@
                         <div class="settings-item">
                             <label class="settings-label" for="setting-render-debounce">Render Delay</label>
                             <div class="settings-control">
-                                <input type="range" id="setting-render-debounce" min="300" max="3000" step="100" class="settings-slider" x-model.number="renderDebounce" />
-                                <span class="settings-value" id="setting-render-debounce-value" x-text="renderDebounce + 'ms'"></span>
+                                <input type="range" id="setting-render-debounce" min="300" max="3000" step="100"
+                                    class="settings-slider" x-model.number="renderDebounce" />
+                                <span class="settings-value" id="setting-render-debounce-value"
+                                    x-text="renderDebounce + 'ms'"></span>
                             </div>
                             <div class="settings-hint">Delay before visualization updates while typing</div>
                         </div>
@@ -957,29 +1082,24 @@
                         <div class="settings-item" id="custom-date-format-item" x-show="showCustomDateFormat">
                             <label class="settings-label" for="setting-custom-date-format">Custom Format</label>
                             <div class="settings-control">
-                                <input type="text" id="setting-custom-date-format" class="settings-input" placeholder="yyyy-MM-dd HH:mm" x-model="customDateFormat" />
+                                <input type="text" id="setting-custom-date-format" class="settings-input"
+                                    placeholder="yyyy-MM-dd HH:mm" x-model="customDateFormat" />
                             </div>
                             <div class="settings-hint">
-                                Tokens: yyyy (year), MM (month), dd (day), HH (24h), hh (12h), mm (min), ss (sec), a/A (am/pm)
+                                Tokens: yyyy (year), MM (month), dd (day), HH (24h), hh (12h), mm (min), ss (sec), a/A
+                                (am/pm)
                             </div>
                         </div>
                     </section>
 
                     <!-- Actions -->
                     <div class="settings-actions">
-                        <button class="btn btn-modal primary"
-                                id="settings-apply-btn"
-                                @click="apply()"
-                                :disabled="!isDirty"
-                                title="Apply and save settings">Apply</button>
-                        <button class="btn btn-modal"
-                                id="settings-reset-btn"
-                                @click="reset()"
-                                title="Reset to default settings">Reset to Defaults</button>
-                        <button class="btn btn-modal"
-                                id="settings-cancel-btn"
-                                @click="cancel()"
-                                title="Cancel without saving">Cancel</button>
+                        <button class="btn btn-modal primary" id="settings-apply-btn" @click="apply()"
+                            :disabled="!isDirty" title="Apply and save settings">Apply</button>
+                        <button class="btn btn-modal" id="settings-reset-btn" @click="reset()"
+                            title="Reset to default settings">Reset to Defaults</button>
+                        <button class="btn btn-modal" id="settings-cancel-btn" @click="cancel()"
+                            title="Cancel without saving">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -998,8 +1118,8 @@
     </div>
 
     <script src="src/js/user-settings.js"></script>
-    <script src="src/js/config.js"></script>
     <script src="src/js/generic-storage-ui.js"></script>
+    <script src="src/js/config.js"></script>
     <script src="src/js/snippet-manager.js"></script>
     <script src="src/js/dataset-manager.js"></script>
     <script src="src/js/chart-builder.js"></script>
@@ -1008,8 +1128,7 @@
     <script src="src/js/app.js"></script>
 
     <!-- GoatCounter Analytics -->
-    <script data-goatcounter="https://astrolabe.goatcounter.com/count"
-            async src="//gc.zgo.at/count.js"></script>
+    <script data-goatcounter="https://astrolabe.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 
 </html>

@@ -187,6 +187,11 @@ document.addEventListener('alpine:init', () => {
             return icons[type] || icons.info;
         }
     });
+
+    // Preview panel fit mode store
+    Alpine.store('preview', {
+        fitMode: 'default' // 'default' | 'width' | 'full'
+    });
 });
 
 // Toast Notification System (now backed by Alpine store)
@@ -327,4 +332,3 @@ const sampleSpec = {
         "y": { "field": "value", "type": "quantitative" }
     }
 };
-
