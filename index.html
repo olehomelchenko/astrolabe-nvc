@@ -474,27 +474,27 @@
         <div class="modal-content">
             <div class="modal-header">
                 <span class="modal-title">Build Chart</span>
-                <button class="btn btn-icon" id="chart-builder-modal-close" title="Close chart builder (Escape)">×</button>
+                <button class="btn btn-icon" id="chart-builder-modal-close" @click="$el.closest('#chart-builder-view')._x_dataStack[0].close()" title="Close chart builder (Escape)">×</button>
             </div>
             <div class="modal-body">
                 <!-- Chart Builder View -->
-                <div id="chart-builder-view" class="chart-builder-view">
+                <div id="chart-builder-view" class="chart-builder-view" x-data="chartBuilder()">
                     <div class="chart-builder-container">
                         <!-- Left Panel: Configuration -->
                         <div class="chart-builder-config">
                             <div class="chart-builder-header">
-                                <button class="btn btn-modal" id="chart-builder-back-btn" title="Back to dataset details">← Back to Dataset</button>
+                                <button class="btn btn-modal" id="chart-builder-back-btn" @click="close()" title="Back to dataset details">← Back to Dataset</button>
                             </div>
 
                             <div class="chart-builder-section">
                                 <div class="mark-type-row">
                                     <label class="chart-builder-label">Mark Type*</label>
                                     <div class="mark-toggle-group">
-                                        <button class="btn btn-toggle small active" data-mark="bar" title="Bar chart">Bar</button>
-                                        <button class="btn btn-toggle small" data-mark="line" title="Line chart">Line</button>
-                                        <button class="btn btn-toggle small" data-mark="point" title="Point chart">Point</button>
-                                        <button class="btn btn-toggle small" data-mark="area" title="Area chart">Area</button>
-                                        <button class="btn btn-toggle small" data-mark="circle" title="Circle chart">Circle</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'bar' }" @click="setMarkType('bar')" data-mark="bar" title="Bar chart">Bar</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'line' }" @click="setMarkType('line')" data-mark="line" title="Line chart">Line</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'point' }" @click="setMarkType('point')" data-mark="point" title="Point chart">Point</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'area' }" @click="setMarkType('area')" data-mark="area" title="Area chart">Area</button>
+                                        <button class="btn btn-toggle small" :class="{ 'active': markType === 'circle' }" @click="setMarkType('circle')" data-mark="circle" title="Circle chart">Circle</button>
                                     </div>
                                 </div>
                             </div>
@@ -506,17 +506,17 @@
                                 <div class="encoding-group">
                                     <div class="encoding-row">
                                         <label class="encoding-header">X Axis</label>
-                                        <select id="encoding-x-field" class="input">
+                                        <select id="encoding-x-field" class="input" x-model="encodings.x.field" @change="setEncodingField('x', $event.target.value)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
                                     <div class="encoding-type">
                                         <label class="encoding-type-label">Type</label>
                                         <div class="type-toggle-group">
-                                            <button class="btn btn-toggle small" data-encoding="x" data-type="quantitative" title="Quantitative">Q</button>
-                                            <button class="btn btn-toggle small" data-encoding="x" data-type="ordinal" title="Ordinal">O</button>
-                                            <button class="btn btn-toggle small" data-encoding="x" data-type="nominal" title="Nominal">N</button>
-                                            <button class="btn btn-toggle small" data-encoding="x" data-type="temporal" title="Temporal">T</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.x.type === 'quantitative' }" @click="setEncodingType('x', 'quantitative')" data-encoding="x" data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.x.type === 'ordinal' }" @click="setEncodingType('x', 'ordinal')" data-encoding="x" data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.x.type === 'nominal' }" @click="setEncodingType('x', 'nominal')" data-encoding="x" data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.x.type === 'temporal' }" @click="setEncodingType('x', 'temporal')" data-encoding="x" data-type="temporal" title="Temporal">T</button>
                                         </div>
                                     </div>
                                 </div>
@@ -525,17 +525,17 @@
                                 <div class="encoding-group">
                                     <div class="encoding-row">
                                         <label class="encoding-header">Y Axis</label>
-                                        <select id="encoding-y-field" class="input">
+                                        <select id="encoding-y-field" class="input" x-model="encodings.y.field" @change="setEncodingField('y', $event.target.value)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
                                     <div class="encoding-type">
                                         <label class="encoding-type-label">Type</label>
                                         <div class="type-toggle-group">
-                                            <button class="btn btn-toggle small" data-encoding="y" data-type="quantitative" title="Quantitative">Q</button>
-                                            <button class="btn btn-toggle small" data-encoding="y" data-type="ordinal" title="Ordinal">O</button>
-                                            <button class="btn btn-toggle small" data-encoding="y" data-type="nominal" title="Nominal">N</button>
-                                            <button class="btn btn-toggle small" data-encoding="y" data-type="temporal" title="Temporal">T</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.y.type === 'quantitative' }" @click="setEncodingType('y', 'quantitative')" data-encoding="y" data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.y.type === 'ordinal' }" @click="setEncodingType('y', 'ordinal')" data-encoding="y" data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.y.type === 'nominal' }" @click="setEncodingType('y', 'nominal')" data-encoding="y" data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.y.type === 'temporal' }" @click="setEncodingType('y', 'temporal')" data-encoding="y" data-type="temporal" title="Temporal">T</button>
                                         </div>
                                     </div>
                                 </div>
@@ -544,17 +544,17 @@
                                 <div class="encoding-group">
                                     <div class="encoding-row">
                                         <label class="encoding-header">Color</label>
-                                        <select id="encoding-color-field" class="input">
+                                        <select id="encoding-color-field" class="input" x-model="encodings.color.field" @change="setEncodingField('color', $event.target.value)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
                                     <div class="encoding-type">
                                         <label class="encoding-type-label">Type</label>
                                         <div class="type-toggle-group">
-                                            <button class="btn btn-toggle small" data-encoding="color" data-type="quantitative" title="Quantitative">Q</button>
-                                            <button class="btn btn-toggle small" data-encoding="color" data-type="ordinal" title="Ordinal">O</button>
-                                            <button class="btn btn-toggle small" data-encoding="color" data-type="nominal" title="Nominal">N</button>
-                                            <button class="btn btn-toggle small" data-encoding="color" data-type="temporal" title="Temporal">T</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.color.type === 'quantitative' }" @click="setEncodingType('color', 'quantitative')" data-encoding="color" data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.color.type === 'ordinal' }" @click="setEncodingType('color', 'ordinal')" data-encoding="color" data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.color.type === 'nominal' }" @click="setEncodingType('color', 'nominal')" data-encoding="color" data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.color.type === 'temporal' }" @click="setEncodingType('color', 'temporal')" data-encoding="color" data-type="temporal" title="Temporal">T</button>
                                         </div>
                                     </div>
                                 </div>
@@ -563,17 +563,17 @@
                                 <div class="encoding-group">
                                     <div class="encoding-row">
                                         <label class="encoding-header">Size</label>
-                                        <select id="encoding-size-field" class="input">
+                                        <select id="encoding-size-field" class="input" x-model="encodings.size.field" @change="setEncodingField('size', $event.target.value)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
                                     <div class="encoding-type">
                                         <label class="encoding-type-label">Type</label>
                                         <div class="type-toggle-group">
-                                            <button class="btn btn-toggle small" data-encoding="size" data-type="quantitative" title="Quantitative">Q</button>
-                                            <button class="btn btn-toggle small" data-encoding="size" data-type="ordinal" title="Ordinal">O</button>
-                                            <button class="btn btn-toggle small" data-encoding="size" data-type="nominal" title="Nominal">N</button>
-                                            <button class="btn btn-toggle small" data-encoding="size" data-type="temporal" title="Temporal">T</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.size.type === 'quantitative' }" @click="setEncodingType('size', 'quantitative')" data-encoding="size" data-type="quantitative" title="Quantitative">Q</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.size.type === 'ordinal' }" @click="setEncodingType('size', 'ordinal')" data-encoding="size" data-type="ordinal" title="Ordinal">O</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.size.type === 'nominal' }" @click="setEncodingType('size', 'nominal')" data-encoding="size" data-type="nominal" title="Nominal">N</button>
+                                            <button class="btn btn-toggle small" :class="{ 'active': encodings.size.type === 'temporal' }" @click="setEncodingType('size', 'temporal')" data-encoding="size" data-type="temporal" title="Temporal">T</button>
                                         </div>
                                     </div>
                                 </div>
@@ -584,11 +584,11 @@
                                 <div class="chart-dimensions-group">
                                     <div class="dimension-input-group">
                                         <label class="dimension-label">Width</label>
-                                        <input type="number" id="chart-width" class="input small" placeholder="auto" min="1" />
+                                        <input type="number" id="chart-width" class="input small" x-model.number="width" @input="updatePreview()" placeholder="auto" min="1" />
                                     </div>
                                     <div class="dimension-input-group">
                                         <label class="dimension-label">Height</label>
-                                        <input type="number" id="chart-height" class="input small" placeholder="auto" min="1" />
+                                        <input type="number" id="chart-height" class="input small" x-model.number="height" @input="updatePreview()" placeholder="auto" min="1" />
                                     </div>
                                 </div>
                             </div>
@@ -596,8 +596,8 @@
                             <div class="chart-builder-error" id="chart-builder-error"></div>
 
                             <div class="chart-builder-actions">
-                                <button class="btn btn-modal primary" id="chart-builder-create-btn" title="Create snippet from chart" disabled>Create Snippet</button>
-                                <button class="btn btn-modal" id="chart-builder-cancel-btn" title="Cancel and close">Cancel</button>
+                                <button class="btn btn-modal primary" id="chart-builder-create-btn" @click="createSnippet()" :disabled="!isValid" title="Create snippet from chart">Create Snippet</button>
+                                <button class="btn btn-modal" id="chart-builder-cancel-btn" @click="close()" title="Cancel and close">Cancel</button>
                             </div>
                         </div>
 

@@ -130,9 +130,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // Initialize auto-save functionality
         initializeAutoSave();
 
-        // Initialize chart builder
-        initializeChartBuilder();
-
         // Initialize URL state management AFTER editor is ready
         initializeURLStateManagement();
     });
@@ -204,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Edit dataset button
     if (editDatasetBtn) {
-        editDatasetBtn.addEventListener('click', async function() {
+        editDatasetBtn.addEventListener('click', async function () {
             if (Alpine.store('datasets').currentDatasetId) {
                 await showEditDatasetForm(Alpine.store('datasets').currentDatasetId);
             }
@@ -276,14 +273,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const previewRawBtn = document.getElementById('preview-raw-btn');
     const previewTableBtn = document.getElementById('preview-table-btn');
     if (previewRawBtn) {
-        previewRawBtn.addEventListener('click', function() {
+        previewRawBtn.addEventListener('click', function () {
             if (Alpine.store('datasets').currentDatasetData) {
                 showRawPreview(Alpine.store('datasets').currentDatasetData);
             }
         });
     }
     if (previewTableBtn) {
-        previewTableBtn.addEventListener('click', function() {
+        previewTableBtn.addEventListener('click', function () {
             if (Alpine.store('datasets').currentDatasetData) {
                 showTablePreview(Alpine.store('datasets').currentDatasetData);
             }
@@ -291,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Global modal event delegation - handles close buttons and overlay clicks
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         // Handle modal close buttons (×)
         if (e.target.id && e.target.id.endsWith('-modal-close')) {
             const modalId = e.target.id.replace('-close', '');
@@ -399,11 +396,11 @@ function initializeURLStateManagement() {
 
 // Keyboard shortcut action handlers (shared between Monaco and document)
 const KeyboardActions = {
-    createNewSnippet: function() {
+    createNewSnippet: function () {
         createNewSnippet();
     },
 
-    toggleDatasetManager: function() {
+    toggleDatasetManager: function () {
         const modal = document.getElementById('dataset-modal');
         if (modal && modal.style.display === 'flex') {
             closeDatasetManager();
@@ -412,13 +409,13 @@ const KeyboardActions = {
         }
     },
 
-    publishDraft: function() {
+    publishDraft: function () {
         if (Alpine.store('snippets').viewMode === 'draft' && Alpine.store('snippets').currentSnippetId) {
             publishDraft();
         }
     },
 
-    toggleSettings: function() {
+    toggleSettings: function () {
         if (ModalManager.isOpen('settings-modal')) {
             closeSettingsModal();
         } else {
@@ -426,7 +423,7 @@ const KeyboardActions = {
         }
     },
 
-    closeAnyModal: function() {
+    closeAnyModal: function () {
         // Try ModalManager first for standard modals
         if (ModalManager.closeAny()) {
             return true;
@@ -448,7 +445,7 @@ const KeyboardActions = {
 
 // Keyboard shortcuts handler (document-level)
 function initializeKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         // Escape: Close any open modal
         if (e.key === 'Escape') {
             if (KeyboardActions.closeAnyModal()) {
