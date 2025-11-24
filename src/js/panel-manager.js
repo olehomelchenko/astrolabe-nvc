@@ -1,3 +1,12 @@
+// Alpine.js Store for panel visibility state
+document.addEventListener('alpine:init', () => {
+    Alpine.store('panels', {
+        snippetVisible: true,
+        editorVisible: true,
+        previewVisible: true
+    });
+});
+
 // Panel toggle and expansion functions
 function updatePanelMemory() {
     const snippetPanel = document.getElementById('snippet-panel');
@@ -19,24 +28,32 @@ function updatePanelMemory() {
 
 function togglePanel(panelId) {
     const panel = document.getElementById(panelId);
-    const button = document.getElementById(`toggle-${panelId}`);
 
-    if (!panel || !button) return;
+    if (!panel) return;
 
-    if (panel.style.display === 'none') {
+    const isVisible = panel.style.display !== 'none';
+    const newVisibility = !isVisible;
+
+    // Update panel display
+    if (newVisibility) {
         // Show panel
         panel.style.display = 'flex';
-        button.classList.add('active');
-
-        // Restore from memory and redistribute
         redistributePanelWidths();
     } else {
         // Hide panel - DON'T update memory, just hide
         panel.style.display = 'none';
-        button.classList.remove('active');
-
-        // Redistribute remaining panels
         redistributePanelWidths();
+    }
+
+    // Update Alpine store for button states
+    if (Alpine.store('panels')) {
+        if (panelId === 'snippet-panel') {
+            Alpine.store('panels').snippetVisible = newVisibility;
+        } else if (panelId === 'editor-panel') {
+            Alpine.store('panels').editorVisible = newVisibility;
+        } else if (panelId === 'preview-panel') {
+            Alpine.store('panels').previewVisible = newVisibility;
+        }
     }
 
     saveLayoutToStorage();
@@ -113,10 +130,12 @@ function loadLayoutFromStorage() {
             editorPanel.style.display = layout.editorVisible !== false ? 'flex' : 'none';
             previewPanel.style.display = layout.previewVisible !== false ? 'flex' : 'none';
 
-            // Update toggle button states
-            document.getElementById('toggle-snippet-panel').classList.toggle('active', layout.snippetVisible !== false);
-            document.getElementById('toggle-editor-panel').classList.toggle('active', layout.editorVisible !== false);
-            document.getElementById('toggle-preview-panel').classList.toggle('active', layout.previewVisible !== false);
+            // Update Alpine store for button states
+            if (Alpine.store('panels')) {
+                Alpine.store('panels').snippetVisible = layout.snippetVisible !== false;
+                Alpine.store('panels').editorVisible = layout.editorVisible !== false;
+                Alpine.store('panels').previewVisible = layout.previewVisible !== false;
+            }
 
             // Restore widths and redistribute
             snippetPanel.style.width = layout.snippetWidth;

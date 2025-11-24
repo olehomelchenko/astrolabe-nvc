@@ -247,48 +247,81 @@ Chart builder form with dataset selection, chart type, and field mappings.
 
 ---
 
-## Phase 7: Panel Visibility Toggles
+## Phase 7: Panel Visibility Toggles ✅ COMPLETE
 
-**Status**: Planned
-**Files**: `index.html`, `src/js/panel-manager.js`
+**Status**: Done
+**Files**: `index.html`, `src/js/panel-manager.js`, `src/js/app.js`
 
-### What to Convert
+### What Was Converted
 
-Toggle buttons for showing/hiding panels.
+- Panel toggle buttons with `:class` binding and `@click` handlers
+- Button active state managed by Alpine store
+- Alpine store synced with vanilla layout management
 
 ### Implementation Approach
 
-1. Create Alpine store for UI state (panel visibility flags)
-2. Convert toggle buttons to use `:class` and `@click`
-3. Add `x-show` to panels with transitions
-4. Persist visibility state to localStorage
+1. Created Alpine store `panels` with `snippetVisible`, `editorVisible`, `previewVisible` flags
+2. Converted toggle buttons to use `:class="{ 'active': $store.panels.XXX }"` and `@click="togglePanel()"`
+3. Updated `togglePanel()` function to sync visibility changes with Alpine store
+4. Updated `loadLayoutFromStorage()` to initialize Alpine store from localStorage
+5. Removed vanilla event listener setup from app.js
 
 ### What Stays Vanilla
 
-- Panel resizing logic
+- Panel resizing logic (all width redistribution and drag-to-resize)
+- Layout persistence to localStorage
 - Keyboard shortcuts
+- The `togglePanel()` function itself (but now syncs with Alpine store)
+
+### Key Learnings
+
+- Alpine store provides reactive button states
+- Hybrid approach: Alpine handles UI reactivity, vanilla handles complex layout math
+- Store acts as single source of truth for visibility, synced bidirectionally
+- Kept existing layout management logic intact - Alpine only manages button states
+- Net code reduction: ~8 lines (removed event listener setup)
 
 ---
 
-## Phase 8: Toast Notifications (Optional)
+## Phase 8: Toast Notifications (Optional) ✅ COMPLETE
 
-**Status**: Planned
+**Status**: Done
 **Files**: `src/js/config.js`, `index.html`
 
-### What to Convert
+### What Was Converted
 
-Toast notification system with auto-dismiss.
+- Toast notification system with Alpine store and reactive rendering
+- Toast queue managed in Alpine store
+- Toasts rendered with `x-for` template
+- Toast transitions managed via Alpine reactivity
 
 ### Implementation Approach
 
-1. Create Alpine store for toast queue
-2. Render toasts with `x-for` and transitions
-3. Update `Toast` utility to add items to Alpine store
-4. Auto-dismiss with setTimeout
+1. Created Alpine store `toasts` with:
+   - `items` array to hold toast queue
+   - `add(message, type)` method to create new toasts
+   - `remove(id)` method to dismiss toasts
+   - `getIcon(type)` helper for icon lookup
+   - Auto-dismiss with setTimeout after 4 seconds
+2. Updated `Toast` utility object to call Alpine store methods instead of DOM manipulation
+3. Converted HTML to use `x-for` to render toasts from store
+4. Used `:class` binding for show/hide animation states
+5. Used `@click` for close button
 
 ### What Stays Vanilla
 
-- Toast message generation
+- Toast utility API (Toast.show, Toast.error, Toast.success, etc.)
+- Auto-dismiss timing logic (now in Alpine store)
+- Icon definitions
+
+### Key Learnings
+
+- Alpine `x-for` with templates provides clean list rendering
+- Store manages toast queue reactively
+- Visibility flag triggers CSS transitions
+- Toast API unchanged - all existing code continues to work
+- Net code reduction: ~30 lines of manual DOM manipulation removed
+- Cleaner separation: store handles state, CSS handles animations
 
 ---
 
@@ -299,9 +332,9 @@ Toast notification system with auto-dismiss.
 3. ✅ **Phase 3: View Mode Toggle** - DONE
 4. ✅ **Phase 4: Settings Modal** - DONE
 5. ✅ **Phase 6: Meta Fields** - DONE
-6. **Phase 7: Panel Toggles** - Quick win
-7. **Phase 5: Chart Builder** - More complex, save for when confident
-8. **Phase 8: Toast Notifications** - Optional polish
+6. ✅ **Phase 7: Panel Toggles** - DONE
+7. **Phase 5: Chart Builder** - More complex (SKIPPED - not essential for migration)
+8. ✅ **Phase 8: Toast Notifications** - DONE
 
 ---
 

@@ -143,13 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initializeURLStateManagement();
     });
 
-    // Toggle panel buttons
-    document.querySelectorAll('[id^="toggle-"][id$="-panel"]').forEach(button => {
-        button.addEventListener('click', function () {
-            const panelId = this.id.replace('toggle-', '');
-            togglePanel(panelId);
-        });
-    });
+    // Toggle panel buttons (now handled by Alpine.js in index.html)
 
     // Header links
     const importLink = document.getElementById('import-link');

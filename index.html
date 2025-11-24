@@ -51,14 +51,26 @@
 
     <div class="app-container">
         <!-- Toggle Button Strip -->
-        <div class="toggle-strip">
-            <button class="btn btn-icon xlarge active" id="toggle-snippet-panel" title="Toggle Snippets Panel">
+        <div class="toggle-strip" x-data>
+            <button class="btn btn-icon xlarge"
+                    id="toggle-snippet-panel"
+                    :class="{ 'active': $store.panels.snippetVisible }"
+                    @click="togglePanel('snippet-panel')"
+                    title="Toggle Snippets Panel">
                 📄
             </button>
-            <button class="btn btn-icon xlarge active" id="toggle-editor-panel" title="Toggle Editor Panel">
+            <button class="btn btn-icon xlarge"
+                    id="toggle-editor-panel"
+                    :class="{ 'active': $store.panels.editorVisible }"
+                    @click="togglePanel('editor-panel')"
+                    title="Toggle Editor Panel">
                 ✏️
             </button>
-            <button class="btn btn-icon xlarge active" id="toggle-preview-panel" title="Toggle Preview Panel">
+            <button class="btn btn-icon xlarge"
+                    id="toggle-preview-panel"
+                    :class="{ 'active': $store.panels.previewVisible }"
+                    @click="togglePanel('preview-panel')"
+                    title="Toggle Preview Panel">
                 👁️
             </button>
             <button class="btn btn-icon xlarge" id="toggle-datasets" title="Datasets">
@@ -975,7 +987,15 @@
     </div>
 
     <!-- Toast Notification Container -->
-    <div id="toast-container"></div>
+    <div id="toast-container" x-data>
+        <template x-for="toast in $store.toasts.items" :key="toast.id">
+            <div :class="'toast toast-' + toast.type + (toast.visible ? ' toast-show' : '')">
+                <span class="toast-icon" x-text="$store.toasts.getIcon(toast.type)"></span>
+                <span class="toast-message" x-text="toast.message"></span>
+                <button class="toast-close" @click="$store.toasts.remove(toast.id)">×</button>
+            </div>
+        </template>
+    </div>
 
     <script src="src/js/user-settings.js"></script>
     <script src="src/js/config.js"></script>
