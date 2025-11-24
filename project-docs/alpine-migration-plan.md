@@ -139,28 +139,50 @@ Incremental migration of Astrolabe from vanilla JavaScript to Alpine.js for reac
 
 ---
 
-## Phase 4: Settings Modal
+## Phase 4: Settings Modal ✅ COMPLETE
 
-**Status**: Planned
-**Files**: `src/js/app.js`, `index.html`
+**Status**: Done
+**Files**: `src/js/user-settings.js`, `index.html`, `src/js/app.js`
 
-### What to Convert
+### What Was Converted
 
-Settings form with multiple inputs and apply/reset functionality.
+- Settings modal form with all input controls using `x-model`
+- Apply/Reset/Cancel buttons with `@click` handlers
+- Computed `isDirty` property to enable/disable Apply button
+- Conditional custom date format field with `x-show`
+- Slider value displays with `x-text`
+- All form state management moved to Alpine component
 
 ### Implementation Approach
 
-1. Create `settingsPanel()` component with settings state tracking
-2. Use `x-model` for all form inputs (theme, editor settings, date format)
-3. Add computed `isDirty` property to enable/disable Apply button
-4. Use `x-show` for conditional fields (custom date format)
-5. Remove manual event listeners from app.js
+1. Created `settingsPanel()` component in `user-settings.js` with form state tracking
+2. Used `x-model` (with `.number` modifier where needed) for all form inputs:
+   - Theme selects
+   - Font size and render debounce sliders
+   - Tab size select
+   - Checkboxes (minimap, word wrap, line numbers)
+   - Date format and custom format input
+3. Added computed `isDirty` getter to compare current vs. original state
+4. Added computed `showCustomDateFormat` getter for conditional field visibility
+5. Moved all apply/reset/cancel logic into Alpine component methods
+6. Removed vanilla event listeners and old `loadSettingsIntoUI()` / `applySettings()` functions
 
 ### What Stays Vanilla
 
-- AppSettings storage layer
-- Editor option updates
-- Theme application logic
+- Settings storage layer (getSettings, updateSettings, etc.)
+- Settings validation logic (validateSetting)
+- Editor option updates (applied from within Alpine component)
+- Theme application logic (applied from within Alpine component)
+- Modal open/close functions (simple ModalManager calls)
+
+### Key Learnings
+
+- Alpine component handles all form state reactivity
+- `isDirty` computed property automatically enables/disables Apply button
+- `x-model.number` modifier ensures numeric values for sliders and selects
+- `x-show` provides clean conditional rendering for custom date format field
+- All business logic (validation, saving, applying) stays in existing functions
+- Net code reduction: ~150 lines of manual DOM manipulation removed
 
 ---
 
@@ -261,7 +283,7 @@ Toast notification system with auto-dismiss.
 1. ✅ **Phase 1: Snippet Panel** - DONE
 2. ✅ **Phase 2: Dataset Manager** - DONE
 3. ✅ **Phase 3: View Mode Toggle** - DONE
-4. **Phase 4: Settings Modal** - Another modal, builds confidence
+4. ✅ **Phase 4: Settings Modal** - DONE
 5. **Phase 6: Meta Fields** - Before Chart Builder (simpler)
 6. **Phase 7: Panel Toggles** - Quick win
 7. **Phase 5: Chart Builder** - More complex, save for when confident

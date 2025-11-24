@@ -823,7 +823,7 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settings-modal" class="modal" style="display: none;">
+    <div id="settings-modal" class="modal" style="display: none;" x-data="settingsPanel()">
         <div class="modal-content" style="max-width: 600px; height: auto; max-height: 85vh;">
             <div class="modal-header">
                 <span class="modal-title">Settings</span>
@@ -838,7 +838,7 @@
                         <div class="settings-item">
                             <label class="settings-label" for="setting-ui-theme">Theme</label>
                             <div class="settings-control">
-                                <select id="setting-ui-theme" class="settings-select">
+                                <select id="setting-ui-theme" class="settings-select" x-model="uiTheme">
                                     <option value="light">Light</option>
                                     <option value="experimental">Dark (Experimental)</option>
                                 </select>
@@ -853,15 +853,15 @@
                         <div class="settings-item">
                             <label class="settings-label" for="setting-font-size">Font Size</label>
                             <div class="settings-control">
-                                <input type="range" id="setting-font-size" min="10" max="18" step="1" value="12" class="settings-slider" />
-                                <span class="settings-value" id="setting-font-size-value">12px</span>
+                                <input type="range" id="setting-font-size" min="10" max="18" step="1" class="settings-slider" x-model.number="fontSize" />
+                                <span class="settings-value" id="setting-font-size-value" x-text="fontSize + 'px'"></span>
                             </div>
                         </div>
 
                         <div class="settings-item">
                             <label class="settings-label" for="setting-editor-theme">Editor Theme</label>
                             <div class="settings-control">
-                                <select id="setting-editor-theme" class="settings-select">
+                                <select id="setting-editor-theme" class="settings-select" x-model="editorTheme">
                                     <option value="vs-light">Light</option>
                                     <option value="vs-dark">Dark</option>
                                     <option value="hc-black">High Contrast</option>
@@ -872,7 +872,7 @@
                         <div class="settings-item">
                             <label class="settings-label" for="setting-tab-size">Tab Size</label>
                             <div class="settings-control">
-                                <select id="setting-tab-size" class="settings-select">
+                                <select id="setting-tab-size" class="settings-select" x-model.number="tabSize">
                                     <option value="2">2 spaces</option>
                                     <option value="4">4 spaces</option>
                                     <option value="8">8 spaces</option>
@@ -882,21 +882,21 @@
 
                         <div class="settings-item">
                             <label class="settings-label">
-                                <input type="checkbox" id="setting-minimap" class="settings-checkbox" />
+                                <input type="checkbox" id="setting-minimap" class="settings-checkbox" x-model="minimap" />
                                 Show minimap
                             </label>
                         </div>
 
                         <div class="settings-item">
                             <label class="settings-label">
-                                <input type="checkbox" id="setting-word-wrap" class="settings-checkbox" checked />
+                                <input type="checkbox" id="setting-word-wrap" class="settings-checkbox" x-model="wordWrap" />
                                 Enable word wrap
                             </label>
                         </div>
 
                         <div class="settings-item">
                             <label class="settings-label">
-                                <input type="checkbox" id="setting-line-numbers" class="settings-checkbox" checked />
+                                <input type="checkbox" id="setting-line-numbers" class="settings-checkbox" x-model="lineNumbers" />
                                 Show line numbers
                             </label>
                         </div>
@@ -909,8 +909,8 @@
                         <div class="settings-item">
                             <label class="settings-label" for="setting-render-debounce">Render Delay</label>
                             <div class="settings-control">
-                                <input type="range" id="setting-render-debounce" min="300" max="3000" step="100" value="1500" class="settings-slider" />
-                                <span class="settings-value" id="setting-render-debounce-value">1500ms</span>
+                                <input type="range" id="setting-render-debounce" min="300" max="3000" step="100" class="settings-slider" x-model.number="renderDebounce" />
+                                <span class="settings-value" id="setting-render-debounce-value" x-text="renderDebounce + 'ms'"></span>
                             </div>
                             <div class="settings-hint">Delay before visualization updates while typing</div>
                         </div>
@@ -923,7 +923,7 @@
                         <div class="settings-item">
                             <label class="settings-label" for="setting-date-format">Date Format</label>
                             <div class="settings-control">
-                                <select id="setting-date-format" class="settings-select">
+                                <select id="setting-date-format" class="settings-select" x-model="dateFormat">
                                     <option value="smart">Smart (relative times)</option>
                                     <option value="locale">Locale (browser default)</option>
                                     <option value="iso">ISO 8601</option>
@@ -932,10 +932,10 @@
                             </div>
                         </div>
 
-                        <div class="settings-item" id="custom-date-format-item" style="display: none;">
+                        <div class="settings-item" id="custom-date-format-item" x-show="showCustomDateFormat">
                             <label class="settings-label" for="setting-custom-date-format">Custom Format</label>
                             <div class="settings-control">
-                                <input type="text" id="setting-custom-date-format" class="settings-input" value="yyyy-MM-dd HH:mm" placeholder="yyyy-MM-dd HH:mm" />
+                                <input type="text" id="setting-custom-date-format" class="settings-input" placeholder="yyyy-MM-dd HH:mm" x-model="customDateFormat" />
                             </div>
                             <div class="settings-hint">
                                 Tokens: yyyy (year), MM (month), dd (day), HH (24h), hh (12h), mm (min), ss (sec), a/A (am/pm)
@@ -945,9 +945,19 @@
 
                     <!-- Actions -->
                     <div class="settings-actions">
-                        <button class="btn btn-modal primary" id="settings-apply-btn" title="Apply and save settings">Apply</button>
-                        <button class="btn btn-modal" id="settings-reset-btn" title="Reset to default settings">Reset to Defaults</button>
-                        <button class="btn btn-modal" id="settings-cancel-btn" title="Cancel without saving">Cancel</button>
+                        <button class="btn btn-modal primary"
+                                id="settings-apply-btn"
+                                @click="apply()"
+                                :disabled="!isDirty"
+                                title="Apply and save settings">Apply</button>
+                        <button class="btn btn-modal"
+                                id="settings-reset-btn"
+                                @click="reset()"
+                                title="Reset to default settings">Reset to Defaults</button>
+                        <button class="btn btn-modal"
+                                id="settings-cancel-btn"
+                                @click="cancel()"
+                                title="Cancel without saving">Cancel</button>
                     </div>
                 </div>
             </div>
