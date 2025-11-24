@@ -1,4 +1,5 @@
-const CACHE_NAME = 'astrolabe-v1.0.0';
+// IMPORTANT: Update this version with each release (must match APP_VERSION in config.js)
+const CACHE_NAME = 'astrolabe-v0.3.0';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',

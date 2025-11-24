@@ -18,9 +18,9 @@ Instructions for Claude Code when working on this project.
 
 ## Current Status
 
-**Version**: 1.0.0 (Feature-complete MVP)
+**Version**: 0.3.0 (Alpha - pre-1.0 development)
 **Deployment**: Live at astrolabe-viz.com
-**Mode**: Maintenance and iterative improvements
+**Mode**: Alpha testing and iterative improvements
 
 ### Core Capabilities
 - Snippet management with draft/published workflow
@@ -55,6 +55,9 @@ When implementing changes:
 - Update CHANGELOG.md for user-facing changes
 - Test thoroughly across different browsers when possible
 - Maintain backward compatibility with existing data
+
+### Release Process
+Astrolabe uses semantic versioning with alpha releases (`0.x.y`) until public launch. Each release requires version updates in four files: `config.js` (APP_VERSION), `sw.js` (CACHE_NAME), `CLAUDE.md`, and `CHANGELOG.md`. See `project-docs/release-checklist.md` for the complete workflow.
 
 ## Development Principles
 

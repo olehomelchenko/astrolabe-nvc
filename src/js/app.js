@@ -19,6 +19,12 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Display app version in header
+    const versionBadge = document.getElementById('app-version-badge');
+    if (versionBadge && typeof APP_VERSION !== 'undefined') {
+        versionBadge.textContent = `v${APP_VERSION}`;
+    }
+
     // Initialize user settings
     initSettings();
 

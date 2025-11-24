@@ -4,8 +4,25 @@ All notable changes to Astrolabe will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+**Note**: Astrolabe is currently in alpha (pre-1.0) development. Version numbers below 1.0.0 indicate active development status. A stable 1.0 release will occur after public launch and thorough testing.
+
 ---
-## [1.1.0] - 2025-11-17
+## [Unreleased]
+
+### Added
+- (New features currently in development)
+
+### Fixed
+- (Bugfixes will be listed here)
+
+### Changed
+- (Improvements and refinements will be listed here)
+
+### Removed
+- (Removed features will be listed here)
+
+---
+## [0.2.0] - 2025-11-17
 
 ### Added
 - **Visual Chart Builder**: Create Vega-Lite visualizations without writing JSON
@@ -20,12 +37,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - URL state support (`#datasets/dataset-123/build`)
   - Browser back/forward navigation integrated
   - Creates snippets with auto-generated names and dataset references
+- **Progressive Web App (PWA) Support**: Install Astrolabe as standalone app with offline functionality
+  - Service worker caches all application files and CDN dependencies
+  - Full offline access after initial load
+  - Install button in browser for desktop/mobile installation
+  - Runs in standalone window without browser chrome
+  - "Add to Home Screen" support on iOS/Android
+  - Automatic cache updates when app version changes
+  - Works seamlessly with existing IndexedDB and localStorage
 
-## [1.0.0] - 2025-10-15
+---
+## [0.1.0] - 2025-10-15
 
-### Initial Release
+### Added
 
-Complete feature set for lightweight Vega-Lite snippet management.
+Initial alpha release with complete feature set for lightweight Vega-Lite snippet management.
 
 #### Core Features
 - Three-panel resizable layout with drag handles and panel memory
@@ -97,36 +123,13 @@ Complete feature set for lightweight Vega-Lite snippet management.
 
 ---
 
-## [Unreleased]
-
-### Added
-- **Progressive Web App (PWA) Support**: Install Astrolabe as standalone app with offline functionality
-  - Service worker caches all application files and CDN dependencies
-  - Full offline access after initial load
-  - Install button in browser for desktop/mobile installation
-  - Runs in standalone window without browser chrome
-  - "Add to Home Screen" support on iOS/Android
-  - Automatic cache updates when app version changes
-  - Works seamlessly with existing IndexedDB and localStorage
-
-### Fixed
-- (Bugfixes will be listed here)
-
-### Changed
-- (Improvements and refinements will be listed here)
-
-### Removed
-- (Removed features will be listed here)
-
----
-
 ## Release Notes
 
-### v1.0.0 - Feature-Complete MVP
+### Alpha Development Status
 
-Astrolabe v1.0 represents a complete, production-ready implementation of a browser-based Vega-Lite snippet manager. The application is fully functional with no known critical bugs.
+Astrolabe is currently in alpha (pre-1.0) development. The application is feature-complete and functional, but has not been publicly released or extensively tested across all browsers and platforms.
 
-**Development Timeline**: October 2024 - October 2025
+**Development Timeline**: October 2024 - November 2025
 
 **Key Accomplishments**:
 - Zero external dependencies (beyond CDN libraries)
@@ -149,26 +152,9 @@ Astrolabe v1.0 represents a complete, production-ready implementation of a brows
 
 ---
 
-## Upgrade Guide
+## Data Compatibility
 
-### From Pre-Release to v1.0
-
-No migration required. All features are additive and backward-compatible with any data created during development.
-
-**Data Compatibility**:
-- Snippets in localStorage: No changes to schema
-- Datasets in IndexedDB: No changes to schema
-- Settings in localStorage: New settings added with defaults
-
-**New Settings** (automatically applied):
-- `editor.fontSize`: Default 14px
-- `editor.tabSize`: Default 2
-- `editor.minimap`: Default true
-- `editor.wordWrap`: Default 'on'
-- `editor.lineNumbers`: Default 'on'
-- `dateFormat`: Default 'smart'
-- `renderDebounceDelay`: Default 1500ms
-- `theme`: Default 'light'
+All alpha versions maintain backward compatibility. Snippets (localStorage), datasets (IndexedDB), and settings persist across updates with no migration required.
 
 ---
 
