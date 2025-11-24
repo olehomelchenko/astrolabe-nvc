@@ -152,10 +152,20 @@
                     </div>
                     <div class="snippet-meta" id="snippet-meta" style="display: none;">
                         <div class="meta-header">Name</div>
-                        <input type="text" id="snippet-name" class="input small" placeholder="Snippet name..." />
+                        <input type="text"
+                               id="snippet-name"
+                               class="input small"
+                               placeholder="Snippet name..."
+                               x-model="snippetName"
+                               @input="saveMetaDebounced()" />
 
                         <div class="meta-header">Comment</div>
-                        <textarea id="snippet-comment" class="input textarea medium" placeholder="Add a comment..." rows="3"></textarea>
+                        <textarea id="snippet-comment"
+                                  class="input textarea medium"
+                                  placeholder="Add a comment..."
+                                  rows="3"
+                                  x-model="snippetComment"
+                                  @input="saveMetaDebounced()"></textarea>
 
                         <div class="meta-info">
                             <div class="meta-info-item">

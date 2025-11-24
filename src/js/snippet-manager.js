@@ -17,6 +17,11 @@ function snippetList() {
         sortBy: AppSettings.get('sortBy') || 'modified',
         sortOrder: AppSettings.get('sortOrder') || 'desc',
 
+        // Meta fields for selected snippet
+        snippetName: '',
+        snippetComment: '',
+        metaSaveTimeout: null,
+
         // Computed property: calls SnippetStorage with current filters/sort
         get filteredSnippets() {
             return SnippetStorage.listSnippets(
@@ -60,6 +65,34 @@ function snippetList() {
 
         hasDraft(snippet) {
             return JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
+        },
+
+        // Load meta fields when a snippet is selected
+        loadMetadata(snippet) {
+            this.snippetName = snippet.name || '';
+            this.snippetComment = snippet.comment || '';
+        },
+
+        // Save meta fields with debouncing (called via x-model watchers)
+        saveMetaDebounced() {
+            clearTimeout(this.metaSaveTimeout);
+            this.metaSaveTimeout = setTimeout(() => this.saveMeta(), 1000);
+        },
+
+        // Save meta fields to storage
+        saveMeta() {
+            const snippet = getCurrentSnippet();
+            if (snippet) {
+                snippet.name = this.snippetName.trim() || generateSnippetName();
+                snippet.comment = this.snippetComment;
+                SnippetStorage.saveSnippet(snippet);
+
+                // Update the snippet list display to reflect the new name
+                renderSnippetList();
+
+                // Restore selection after re-render
+                restoreSnippetSelection();
+            }
         },
 
         // Actions
@@ -469,16 +502,21 @@ function selectSnippet(snippetId, updateURL = true) {
 
     // Show and populate meta fields
     const metaSection = document.getElementById('snippet-meta');
-    const nameField = document.getElementById('snippet-name');
-    const commentField = document.getElementById('snippet-comment');
     const createdField = document.getElementById('snippet-created');
     const modifiedField = document.getElementById('snippet-modified');
     const placeholder = document.querySelector('.placeholder');
 
-    if (metaSection && nameField && commentField) {
+    if (metaSection) {
         metaSection.style.display = 'block';
-        nameField.value = snippet.name || '';
-        commentField.value = snippet.comment || '';
+
+        // Load metadata into Alpine component
+        const snippetPanel = document.getElementById('snippet-panel');
+        if (snippetPanel && snippetPanel._x_dataStack) {
+            const alpineData = snippetPanel._x_dataStack[0];
+            if (alpineData && typeof alpineData.loadMetadata === 'function') {
+                alpineData.loadMetadata(snippet);
+            }
+        }
 
         // Format and display dates
         if (createdField) {
@@ -488,7 +526,9 @@ function selectSnippet(snippetId, updateURL = true) {
             modifiedField.textContent = formatFullDate(snippet.modified);
         }
 
-        placeholder.style.display = 'none';
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
     }
 
     // Store currently selected snippet ID globally
@@ -612,21 +652,7 @@ function debouncedAutoSave() {
 
 // Initialize auto-save on editor changes
 function initializeAutoSave() {
-    // Initialize meta fields auto-save
-    const nameField = document.getElementById('snippet-name');
-    const commentField = document.getElementById('snippet-comment');
-
-    if (nameField) {
-        nameField.addEventListener('input', () => {
-            debouncedAutoSaveMeta();
-        });
-    }
-
-    if (commentField) {
-        commentField.addEventListener('input', () => {
-            debouncedAutoSaveMeta();
-        });
-    }
+    // Meta fields auto-save now handled by Alpine.js in snippetList() component
 
     // Initialize button event listeners
     const duplicateBtn = document.getElementById('duplicate-btn');
@@ -647,33 +673,6 @@ function initializeAutoSave() {
             }
         });
     }
-}
-
-// Save meta fields (name and comment) for the selected snippet
-function autoSaveMeta() {
-    const nameField = document.getElementById('snippet-name');
-    const commentField = document.getElementById('snippet-comment');
-    if (!nameField || !commentField) return;
-
-    const snippet = getCurrentSnippet();
-    if (snippet) {
-        snippet.name = nameField.value.trim() || generateSnippetName();
-        snippet.comment = commentField.value;
-        SnippetStorage.saveSnippet(snippet);
-
-        // Update the snippet list display to reflect the new name
-        renderSnippetList();
-
-        // Restore selection after re-render
-        restoreSnippetSelection();
-    }
-}
-
-// Debounced meta auto-save
-let metaAutoSaveTimeout;
-function debouncedAutoSaveMeta() {
-    clearTimeout(metaAutoSaveTimeout);
-    metaAutoSaveTimeout = setTimeout(autoSaveMeta, 1000);
 }
 
 // CRUD Operations

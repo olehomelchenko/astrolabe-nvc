@@ -211,25 +211,39 @@ Chart builder form with dataset selection, chart type, and field mappings.
 
 ---
 
-## Phase 6: Meta Fields (Name, Comment)
+## Phase 6: Meta Fields (Name, Comment) ✅ COMPLETE
 
-**Status**: Planned
+**Status**: Done
 **Files**: `index.html`, `src/js/snippet-manager.js`
 
-### What to Convert
+### What Was Converted
 
-Name and comment fields with auto-save functionality.
+- Name and comment input fields with `x-model` bindings
+- Debounced auto-save functionality moved to Alpine component
+- Metadata loading when snippet is selected
 
 ### Implementation Approach
 
-1. Add `snippetName` and `snippetComment` to `snippetList()` component
-2. Use `x-model` with debounced input handlers
-3. Call `loadMetadata()` when snippet selected
-4. Auto-save on change with 500ms debounce
+1. Added `snippetName` and `snippetComment` properties to `snippetList()` component
+2. Added `loadMetadata()` method to load fields when snippet selected
+3. Added `saveMetaDebounced()` and `saveMeta()` methods for auto-saving
+4. Converted HTML inputs to use `x-model` with `@input="saveMetaDebounced()"`
+5. Updated `selectSnippet()` to call Alpine component's `loadMetadata()` via `_x_dataStack`
+6. Removed vanilla event listeners and old `autoSaveMeta()`/`debouncedAutoSaveMeta()` functions
 
 ### What Stays Vanilla
 
-- SnippetStorage save operations
+- SnippetStorage save operations (called from Alpine component)
+- Name generation logic (generateSnippetName)
+- Snippet list re-rendering after save
+
+### Key Learnings
+
+- Alpine's `x-model` provides two-way data binding for inputs
+- `@input` event handler triggers debounced save on every keystroke
+- Alpine component accessed via DOM element's `_x_dataStack[0]` property
+- Debounce timeout stored in component state for proper cleanup
+- Net code reduction: ~40 lines of manual event listener setup removed
 
 ---
 
@@ -284,7 +298,7 @@ Toast notification system with auto-dismiss.
 2. ✅ **Phase 2: Dataset Manager** - DONE
 3. ✅ **Phase 3: View Mode Toggle** - DONE
 4. ✅ **Phase 4: Settings Modal** - DONE
-5. **Phase 6: Meta Fields** - Before Chart Builder (simpler)
+5. ✅ **Phase 6: Meta Fields** - DONE
 6. **Phase 7: Panel Toggles** - Quick win
 7. **Phase 5: Chart Builder** - More complex, save for when confident
 8. **Phase 8: Toast Notifications** - Optional polish
