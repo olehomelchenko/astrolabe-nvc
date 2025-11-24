@@ -4,7 +4,6 @@ const APP_VERSION = '0.3.0';
 // Global variables and configuration
 let editor; // Global editor instance
 let renderTimeout; // For debouncing
-let currentViewMode = 'draft'; // Track current view mode: 'draft' or 'published'
 
 // Panel resizing variables
 let isResizing = false;

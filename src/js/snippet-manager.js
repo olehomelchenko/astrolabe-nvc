@@ -4,7 +4,8 @@
 // Business logic stays in SnippetStorage
 document.addEventListener('alpine:init', () => {
     Alpine.store('snippets', {
-        currentSnippetId: null
+        currentSnippetId: null,
+        viewMode: 'draft' // 'draft' or 'published'
     });
 });
 
@@ -559,7 +560,7 @@ function autoSaveDraft() {
     if (!window.currentSnippetId || !editor) return;
 
     // Only save to draft if we're in draft mode
-    if (currentViewMode !== 'draft') return;
+    if (Alpine.store('snippets').viewMode !== 'draft') return;
 
     try {
         const currentSpec = JSON.parse(editor.getValue());
@@ -592,13 +593,13 @@ function debouncedAutoSave() {
     if (window.isUpdatingEditor) return;
 
     // If viewing published and no draft exists, create draft automatically
-    if (currentViewMode === 'published') {
+    if (Alpine.store('snippets').viewMode === 'published') {
         const snippet = getCurrentSnippet();
         if (snippet) {
             const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
             if (!hasDraft) {
                 // No draft exists, automatically switch to draft mode
-                currentViewMode = 'draft';
+                Alpine.store('snippets').viewMode = 'draft';
                 updateViewModeUI(snippet);
                 editor.updateOptions({ readOnly: false });
             }
@@ -859,7 +860,7 @@ async function extractToDataset() {
         SnippetStorage.saveSnippet(snippet);
 
         // Update editor with new spec
-        if (editor && currentViewMode === 'draft') {
+        if (editor && Alpine.store('snippets').viewMode === 'draft') {
             window.isUpdatingEditor = true;
             editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
             window.isUpdatingEditor = false;
@@ -935,7 +936,7 @@ function loadSnippetIntoEditor(snippet) {
 
     const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
 
-    if (currentViewMode === 'draft') {
+    if (Alpine.store('snippets').viewMode === 'draft') {
         editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
         editor.updateOptions({ readOnly: false });
     } else {
@@ -954,19 +955,11 @@ function updateViewModeUI(snippet) {
     const publishBtn = document.getElementById('publish-btn');
     const revertBtn = document.getElementById('revert-btn');
 
-    // Update toggle button states
-    if (currentViewMode === 'draft') {
-        draftBtn.classList.add('active');
-        publishedBtn.classList.remove('active');
-    } else {
-        draftBtn.classList.remove('active');
-        publishedBtn.classList.add('active');
-    }
-
-    // Show/hide and enable/disable action buttons based on mode
+    // Update toggle button states (now handled by Alpine :class binding)
+    // But we still need to update the action buttons (publish/revert)
     const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
 
-    if (currentViewMode === 'draft') {
+    if (Alpine.store('snippets').viewMode === 'draft') {
         // In draft mode: show both buttons, enable based on draft existence
         publishBtn.classList.add('visible');
         revertBtn.classList.add('visible');
@@ -981,7 +974,7 @@ function updateViewModeUI(snippet) {
 
 // Switch view mode
 function switchViewMode(mode) {
-    currentViewMode = mode;
+    Alpine.store('snippets').viewMode = mode;
     const snippet = getCurrentSnippet();
     if (snippet) {
         loadSnippetIntoEditor(snippet);
@@ -1026,7 +1019,7 @@ function revertDraft() {
         SnippetStorage.saveSnippet(snippet);
 
         // Reload editor if in draft view
-        if (currentViewMode === 'draft') {
+        if (Alpine.store('snippets').viewMode === 'draft') {
             loadSnippetIntoEditor(snippet);
         }
 

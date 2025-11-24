@@ -367,14 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // View mode toggle buttons
-    document.getElementById('view-draft').addEventListener('click', () => {
-        switchViewMode('draft');
-    });
-
-    document.getElementById('view-published').addEventListener('click', () => {
-        switchViewMode('published');
-    });
+    // View mode toggle buttons (now handled by Alpine.js in index.html)
 
     // Preview fit mode buttons
     document.getElementById('preview-fit-default').addEventListener('click', () => {
@@ -481,7 +474,7 @@ const KeyboardActions = {
     },
 
     publishDraft: function() {
-        if (currentViewMode === 'draft' && window.currentSnippetId) {
+        if (Alpine.store('snippets').viewMode === 'draft' && window.currentSnippetId) {
             publishDraft();
         }
     },

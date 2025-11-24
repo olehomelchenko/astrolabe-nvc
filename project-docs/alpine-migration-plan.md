@@ -104,26 +104,38 @@ Incremental migration of Astrolabe from vanilla JavaScript to Alpine.js for reac
 
 ---
 
-## Phase 3: View Mode Toggle (Draft/Published)
+## Phase 3: View Mode Toggle (Draft/Published) ✅ COMPLETE
 
-**Status**: Planned
-**Files**: `index.html`, `src/js/snippet-manager.js`
+**Status**: Done
+**Files**: `index.html`, `src/js/snippet-manager.js`, `src/js/app.js`, `src/js/config.js`
 
-### What to Convert
+### What Was Converted
 
-View mode toggle buttons (Draft/Published) currently use manual class manipulation.
+- View mode toggle buttons (Draft/Published) with `:class` binding and `@click` handlers
+- All references to `currentViewMode` global variable now use Alpine store
+- Removed vanilla event listeners from app.js
+- Removed `currentViewMode` global variable from config.js
 
 ### Implementation Approach
 
-1. Add `viewMode` property to Alpine snippets store (default: 'draft')
-2. Convert button HTML to use `:class` binding and `@click` handlers
-3. Update `loadSnippetIntoEditor()` to read view mode from Alpine store
-4. Remove `updateViewModeUI()` function (no longer needed)
+1. Added `viewMode` property to Alpine snippets store (default: 'draft')
+2. Converted button HTML to use `:class` binding and `@click` handlers
+3. Updated all references to `currentViewMode` to use `Alpine.store('snippets').viewMode`
+4. Simplified `updateViewModeUI()` function (now only handles publish/revert button visibility)
+5. Removed vanilla event listeners from app.js
 
 ### What Stays Vanilla
 
 - Editor integration logic
 - Publish/discard actions
+- Publish/revert button visibility logic (handled by `updateViewModeUI`)
+
+### Key Learnings
+
+- Alpine store provides clean reactive state for view mode
+- Toggle button active states now automatically update via Alpine `:class` binding
+- All business logic references updated to use Alpine store instead of global variable
+- `updateViewModeUI` simplified but still needed for publish/revert button management
 
 ---
 
@@ -248,7 +260,7 @@ Toast notification system with auto-dismiss.
 
 1. ✅ **Phase 1: Snippet Panel** - DONE
 2. ✅ **Phase 2: Dataset Manager** - DONE
-3. **Phase 3: View Mode Toggle** - Quick win
+3. ✅ **Phase 3: View Mode Toggle** - DONE
 4. **Phase 4: Settings Modal** - Another modal, builds confidence
 5. **Phase 6: Meta Fields** - Before Chart Builder (simpler)
 6. **Phase 7: Panel Toggles** - Quick win
