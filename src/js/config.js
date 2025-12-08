@@ -1,5 +1,5 @@
 // Application version (update with each release)
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 
 // Global variables and configuration
 let editor; // Global editor instance
