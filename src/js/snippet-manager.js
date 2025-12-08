@@ -1,5 +1,111 @@
 // Snippet management and localStorage functionality
 
+// Alpine.js Store for UI state only (selection tracking)
+// Business logic stays in SnippetStorage
+document.addEventListener('alpine:init', () => {
+    Alpine.store('snippets', {
+        currentSnippetId: null,
+        viewMode: 'draft' // 'draft' or 'published'
+    });
+});
+
+// Alpine.js Component for snippet list
+// Thin wrapper around SnippetStorage - Alpine handles reactivity, storage handles logic
+function snippetList() {
+    return {
+        searchQuery: '',
+        sortBy: AppSettings.get('sortBy') || 'modified',
+        sortOrder: AppSettings.get('sortOrder') || 'desc',
+
+        // Meta fields for selected snippet
+        snippetName: '',
+        snippetComment: '',
+        metaSaveTimeout: null,
+
+        // Computed property: calls SnippetStorage with current filters/sort
+        get filteredSnippets() {
+            return SnippetStorage.listSnippets(
+                this.sortBy,
+                this.sortOrder,
+                this.searchQuery
+            );
+        },
+
+        toggleSort(sortType) {
+            if (this.sortBy === sortType) {
+                // Toggle order
+                this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc';
+            } else {
+                // Switch to new sort type with desc order
+                this.sortBy = sortType;
+                this.sortOrder = 'desc';
+            }
+
+            // Save to settings
+            AppSettings.set('sortBy', this.sortBy);
+            AppSettings.set('sortOrder', this.sortOrder);
+        },
+
+        clearSearch() {
+            this.searchQuery = '';
+            const searchInput = document.getElementById('snippet-search');
+            if (searchInput) searchInput.focus();
+        },
+
+        // Helper methods for display
+        formatDate(snippet) {
+            const date = this.sortBy === 'created' ? snippet.created : snippet.modified;
+            return formatSnippetDate(date);
+        },
+
+        getSize(snippet) {
+            const snippetSize = new Blob([JSON.stringify(snippet)]).size;
+            return snippetSize / 1024; // KB
+        },
+
+        hasDraft(snippet) {
+            return JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
+        },
+
+        // Load meta fields when a snippet is selected
+        loadMetadata(snippet) {
+            this.snippetName = snippet.name || '';
+            this.snippetComment = snippet.comment || '';
+        },
+
+        // Save meta fields with debouncing (called via x-model watchers)
+        saveMetaDebounced() {
+            clearTimeout(this.metaSaveTimeout);
+            this.metaSaveTimeout = setTimeout(() => this.saveMeta(), 1000);
+        },
+
+        // Save meta fields to storage
+        saveMeta() {
+            const snippet = getCurrentSnippet();
+            if (snippet) {
+                snippet.name = this.snippetName.trim() || generateSnippetName();
+                snippet.comment = this.snippetComment;
+                SnippetStorage.saveSnippet(snippet);
+
+                // Update the snippet list display to reflect the new name
+                renderSnippetList();
+
+                // Restore selection after re-render
+                restoreSnippetSelection();
+            }
+        },
+
+        // Actions
+        selectSnippet(snippetId) {
+            window.selectSnippet(snippetId);
+        },
+
+        createNewSnippet() {
+            window.createNewSnippet();
+        }
+    };
+}
+
 // Storage limits (5MB in bytes)
 const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
 
@@ -322,220 +428,24 @@ function formatFullDate(isoString) {
 }
 
 // Render snippet list in the UI
+// With Alpine.js, the list is reactive - no manual rendering needed
+// This function kept as no-op for backwards compatibility
 function renderSnippetList(searchQuery = null) {
-    // Get search query from input if not provided
-    if (searchQuery === null) {
-        const searchInput = document.getElementById('snippet-search');
-        searchQuery = searchInput ? searchInput.value : '';
-    }
-
-    const snippets = SnippetStorage.listSnippets(null, null, searchQuery);
-    const placeholder = document.querySelector('.placeholder');
-
-    // Handle empty state with placeholder
-    if (snippets.length === 0) {
-        document.querySelector('.snippet-list').innerHTML = '';
-        placeholder.style.display = 'block';
-        placeholder.textContent = searchQuery && searchQuery.trim()
-            ? 'No snippets match your search'
-            : 'No snippets found';
-        return;
-    }
-
-    placeholder.style.display = 'none';
-
-    const currentSort = AppSettings.get('sortBy');
-
-    // Format individual snippet items
-    const formatSnippetItem = (snippet) => {
-        // Show appropriate date based on current sort
-        const dateText = currentSort === 'created'
-            ? formatSnippetDate(snippet.created)
-            : formatSnippetDate(snippet.modified);
-
-        // Calculate snippet size
-        const snippetSize = new Blob([JSON.stringify(snippet)]).size;
-        const sizeKB = snippetSize / 1024;
-        const sizeHTML = sizeKB >= 1 ? `<span class="snippet-size">${sizeKB.toFixed(0)} KB</span>` : '';
-
-        // Determine status: green if no draft changes, yellow if has draft
-        const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
-        const statusClass = hasDraft ? 'draft' : 'published';
-
-        // Check if snippet uses external datasets
-        const usesDatasets = snippet.datasetRefs && snippet.datasetRefs.length > 0;
-        const datasetIconHTML = usesDatasets ? '<span class="snippet-dataset-icon" title="Uses external dataset">📁</span>' : '';
-
-        return `
-            <li class="snippet-item" data-item-id="${snippet.id}">
-                <div class="snippet-info">
-                    <div class="snippet-name">${snippet.name}${datasetIconHTML}</div>
-                    <div class="snippet-date">${dateText}</div>
-                </div>
-                ${sizeHTML}
-                <div class="snippet-status ${statusClass}"></div>
-            </li>
-        `;
-    };
-
-    // Ghost card for creating new snippets
-    const ghostCard = `
-        <li class="snippet-item ghost-card" id="new-snippet-card">
-            <div class="snippet-name">+ Create New Snippet</div>
-            <div class="snippet-date">Click to create</div>
-        </li>
-    `;
-
-    // Use generic list renderer
-    renderGenericList('snippet-list', snippets, formatSnippetItem, selectSnippet, {
-        ghostCard: ghostCard,
-        onGhostCardClick: createNewSnippet,
-        itemSelector: '.snippet-item'
-    });
+    // Alpine.js handles rendering automatically via reactive bindings
 }
 
-// Initialize sort controls
-function initializeSortControls() {
-    const sortButtons = document.querySelectorAll('.sort-btn');
-    const currentSort = AppSettings.get('sortBy');
-    const currentOrder = AppSettings.get('sortOrder');
-
-    // Update active button and arrow based on settings
-    sortButtons.forEach(button => {
-        button.classList.remove('active');
-        if (button.dataset.sort === currentSort) {
-            button.classList.add('active');
-            updateSortArrow(button, currentOrder);
-        } else {
-            updateSortArrow(button, 'desc'); // Default to desc for inactive buttons
-        }
-
-        // Add click handler
-        button.addEventListener('click', function() {
-            const sortType = this.dataset.sort;
-            toggleSort(sortType);
-        });
-    });
-}
-
-// Update sort arrow display
-function updateSortArrow(button, direction) {
-    const arrow = button.querySelector('.sort-arrow');
-    if (arrow) {
-        arrow.textContent = direction === 'desc' ? '⬇' : '⬆';
-    }
-}
-
-// Toggle sort method and direction
-function toggleSort(sortType) {
-    const currentSort = AppSettings.get('sortBy');
-    const currentOrder = AppSettings.get('sortOrder');
-
-    let newOrder;
-    if (currentSort === sortType) {
-        // Same button clicked - toggle direction
-        newOrder = currentOrder === 'desc' ? 'asc' : 'desc';
-    } else {
-        // Different button clicked - default to desc
-        newOrder = 'desc';
-    }
-
-    // Save to settings
-    AppSettings.set('sortBy', sortType);
-    AppSettings.set('sortOrder', newOrder);
-
-    // Update button states and arrows
-    document.querySelectorAll('.sort-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.sort === sortType) {
-            btn.classList.add('active');
-            updateSortArrow(btn, newOrder);
-        } else {
-            updateSortArrow(btn, 'desc'); // Default for inactive buttons
-        }
-    });
-
-    // Re-render list
-    renderSnippetList();
-
-    // Restore selection if there was one
-    restoreSnippetSelection();
-}
-
-// Initialize search controls
-function initializeSearchControls() {
-    const searchInput = document.getElementById('snippet-search');
-    const clearButton = document.getElementById('search-clear');
-
-    if (searchInput) {
-        // Debounced search on input
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch();
-            }, 300); // 300ms debounce
-        });
-
-        // Update clear button state
-        searchInput.addEventListener('input', updateClearButton);
-    }
-
-    if (clearButton) {
-        clearButton.addEventListener('click', clearSearch);
-        // Initialize clear button state
-        updateClearButton();
-    }
-}
-
-// Perform search and update display
-function performSearch() {
-    const searchInput = document.getElementById('snippet-search');
-    if (!searchInput) return;
-
-    renderSnippetList(searchInput.value);
-
-    // Clear selection if current snippet is no longer visible
-    if (window.currentSnippetId) {
-        const selectedItem = document.querySelector(`[data-item-id="${window.currentSnippetId}"]`);
-        if (!selectedItem) {
-            clearSelection();
-        } else {
-            selectedItem.classList.add('selected');
-        }
-    }
-}
-
-// Clear search
-function clearSearch() {
-    const searchInput = document.getElementById('snippet-search');
-    if (searchInput) {
-        searchInput.value = '';
-        performSearch();
-        updateClearButton();
-        searchInput.focus();
-    }
-}
-
-// Update clear button state
-function updateClearButton() {
-    const searchInput = document.getElementById('snippet-search');
-    const clearButton = document.getElementById('search-clear');
-
-    if (clearButton && searchInput) {
-        clearButton.disabled = !searchInput.value.trim();
-    }
-}
+// NOTE: Sort and search controls are now handled by Alpine.js via directives
+// No initialization needed - Alpine components are automatically initialized
 
 // Helper: Get currently selected snippet
 function getCurrentSnippet() {
-    return window.currentSnippetId ? SnippetStorage.getSnippet(window.currentSnippetId) : null;
+    return Alpine.store('snippets').currentSnippetId ? SnippetStorage.getSnippet(Alpine.store('snippets').currentSnippetId) : null;
 }
 
 // Helper: Restore visual selection state for current snippet
 function restoreSnippetSelection() {
-    if (window.currentSnippetId) {
-        const item = document.querySelector(`[data-item-id="${window.currentSnippetId}"]`);
+    if (Alpine.store('snippets').currentSnippetId) {
+        const item = document.querySelector(`[data-item-id="${Alpine.store('snippets').currentSnippetId}"]`);
         if (item) {
             item.classList.add('selected');
             return item;
@@ -546,7 +456,7 @@ function restoreSnippetSelection() {
 
 // Clear current selection and hide meta panel
 function clearSelection() {
-    window.currentSnippetId = null;
+    Alpine.store('snippets').currentSnippetId = null;
     document.querySelectorAll('.snippet-item').forEach(item => {
         item.classList.remove('selected');
     });
@@ -573,13 +483,9 @@ function selectSnippet(snippetId, updateURL = true) {
     const snippet = SnippetStorage.getSnippet(snippetId);
     if (!snippet) return;
 
-    // Update visual selection
-    document.querySelectorAll('.snippet-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    const selectedItem = document.querySelector(`[data-item-id="${snippetId}"]`);
-    if (selectedItem) {
-        selectedItem.classList.add('selected');
+    // Update Alpine store selection for UI highlighting
+    if (typeof Alpine !== 'undefined' && Alpine.store('snippets')) {
+        Alpine.store('snippets').currentSnippetId = snippetId;
     }
 
     // Load spec based on current view mode
@@ -588,16 +494,21 @@ function selectSnippet(snippetId, updateURL = true) {
 
     // Show and populate meta fields
     const metaSection = document.getElementById('snippet-meta');
-    const nameField = document.getElementById('snippet-name');
-    const commentField = document.getElementById('snippet-comment');
     const createdField = document.getElementById('snippet-created');
     const modifiedField = document.getElementById('snippet-modified');
     const placeholder = document.querySelector('.placeholder');
 
-    if (metaSection && nameField && commentField) {
+    if (metaSection) {
         metaSection.style.display = 'block';
-        nameField.value = snippet.name || '';
-        commentField.value = snippet.comment || '';
+
+        // Load metadata into Alpine component
+        const snippetPanel = document.getElementById('snippet-panel');
+        if (snippetPanel && snippetPanel._x_dataStack) {
+            const alpineData = snippetPanel._x_dataStack[0];
+            if (alpineData && typeof alpineData.loadMetadata === 'function') {
+                alpineData.loadMetadata(snippet);
+            }
+        }
 
         // Format and display dates
         if (createdField) {
@@ -607,11 +518,13 @@ function selectSnippet(snippetId, updateURL = true) {
             modifiedField.textContent = formatFullDate(snippet.modified);
         }
 
-        placeholder.style.display = 'none';
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
     }
 
-    // Store currently selected snippet ID globally
-    window.currentSnippetId = snippetId;
+    // Store currently selected snippet ID in Alpine store (redundant with Alpine.store update above)
+    // Alpine.store('snippets').currentSnippetId is already updated above
 
     // Update linked datasets display
     updateLinkedDatasets(snippet);
@@ -676,10 +589,10 @@ window.isUpdatingEditor = false; // Global flag to prevent auto-save/debounce du
 
 // Save current editor content as draft for the selected snippet
 function autoSaveDraft() {
-    if (!window.currentSnippetId || !editor) return;
+    if (!Alpine.store('snippets').currentSnippetId || !editor) return;
 
     // Only save to draft if we're in draft mode
-    if (currentViewMode !== 'draft') return;
+    if (Alpine.store('snippets').viewMode !== 'draft') return;
 
     try {
         const currentSpec = JSON.parse(editor.getValue());
@@ -712,13 +625,13 @@ function debouncedAutoSave() {
     if (window.isUpdatingEditor) return;
 
     // If viewing published and no draft exists, create draft automatically
-    if (currentViewMode === 'published') {
+    if (Alpine.store('snippets').viewMode === 'published') {
         const snippet = getCurrentSnippet();
         if (snippet) {
             const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
             if (!hasDraft) {
                 // No draft exists, automatically switch to draft mode
-                currentViewMode = 'draft';
+                Alpine.store('snippets').viewMode = 'draft';
                 updateViewModeUI(snippet);
                 editor.updateOptions({ readOnly: false });
             }
@@ -731,21 +644,7 @@ function debouncedAutoSave() {
 
 // Initialize auto-save on editor changes
 function initializeAutoSave() {
-    // Initialize meta fields auto-save
-    const nameField = document.getElementById('snippet-name');
-    const commentField = document.getElementById('snippet-comment');
-
-    if (nameField) {
-        nameField.addEventListener('input', () => {
-            debouncedAutoSaveMeta();
-        });
-    }
-
-    if (commentField) {
-        commentField.addEventListener('input', () => {
-            debouncedAutoSaveMeta();
-        });
-    }
+    // Meta fields auto-save now handled by Alpine.js in snippetList() component
 
     // Initialize button event listeners
     const duplicateBtn = document.getElementById('duplicate-btn');
@@ -753,46 +652,19 @@ function initializeAutoSave() {
 
     if (duplicateBtn) {
         duplicateBtn.addEventListener('click', () => {
-            if (window.currentSnippetId) {
-                duplicateSnippet(window.currentSnippetId);
+            if (Alpine.store('snippets').currentSnippetId) {
+                duplicateSnippet(Alpine.store('snippets').currentSnippetId);
             }
         });
     }
 
     if (deleteBtn) {
         deleteBtn.addEventListener('click', () => {
-            if (window.currentSnippetId) {
-                deleteSnippet(window.currentSnippetId);
+            if (Alpine.store('snippets').currentSnippetId) {
+                deleteSnippet(Alpine.store('snippets').currentSnippetId);
             }
         });
     }
-}
-
-// Save meta fields (name and comment) for the selected snippet
-function autoSaveMeta() {
-    const nameField = document.getElementById('snippet-name');
-    const commentField = document.getElementById('snippet-comment');
-    if (!nameField || !commentField) return;
-
-    const snippet = getCurrentSnippet();
-    if (snippet) {
-        snippet.name = nameField.value.trim() || generateSnippetName();
-        snippet.comment = commentField.value;
-        SnippetStorage.saveSnippet(snippet);
-
-        // Update the snippet list display to reflect the new name
-        renderSnippetList();
-
-        // Restore selection after re-render
-        restoreSnippetSelection();
-    }
-}
-
-// Debounced meta auto-save
-let metaAutoSaveTimeout;
-function debouncedAutoSaveMeta() {
-    clearTimeout(metaAutoSaveTimeout);
-    metaAutoSaveTimeout = setTimeout(autoSaveMeta, 1000);
 }
 
 // CRUD Operations
@@ -979,7 +851,7 @@ async function extractToDataset() {
         SnippetStorage.saveSnippet(snippet);
 
         // Update editor with new spec
-        if (editor && currentViewMode === 'draft') {
+        if (editor && Alpine.store('snippets').viewMode === 'draft') {
             window.isUpdatingEditor = true;
             editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
             window.isUpdatingEditor = false;
@@ -1030,7 +902,7 @@ function deleteSnippet(snippetId) {
         SnippetStorage.deleteSnippet(snippetId);
 
         // If we deleted the currently selected snippet, clear selection
-        if (window.currentSnippetId === snippetId) {
+        if (Alpine.store('snippets').currentSnippetId === snippetId) {
             clearSelection();
         }
 
@@ -1055,7 +927,7 @@ function loadSnippetIntoEditor(snippet) {
 
     const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
 
-    if (currentViewMode === 'draft') {
+    if (Alpine.store('snippets').viewMode === 'draft') {
         editor.setValue(JSON.stringify(snippet.draftSpec, null, 2));
         editor.updateOptions({ readOnly: false });
     } else {
@@ -1069,24 +941,14 @@ function loadSnippetIntoEditor(snippet) {
 
 // Update view mode UI (buttons and editor state)
 function updateViewModeUI(snippet) {
-    const draftBtn = document.getElementById('view-draft');
-    const publishedBtn = document.getElementById('view-published');
     const publishBtn = document.getElementById('publish-btn');
     const revertBtn = document.getElementById('revert-btn');
 
-    // Update toggle button states
-    if (currentViewMode === 'draft') {
-        draftBtn.classList.add('active');
-        publishedBtn.classList.remove('active');
-    } else {
-        draftBtn.classList.remove('active');
-        publishedBtn.classList.add('active');
-    }
-
-    // Show/hide and enable/disable action buttons based on mode
+    // Toggle button states are now handled by Alpine :class binding
+    // This function only updates the action buttons (publish/revert)
     const hasDraft = JSON.stringify(snippet.spec) !== JSON.stringify(snippet.draftSpec);
 
-    if (currentViewMode === 'draft') {
+    if (Alpine.store('snippets').viewMode === 'draft') {
         // In draft mode: show both buttons, enable based on draft existence
         publishBtn.classList.add('visible');
         revertBtn.classList.add('visible');
@@ -1101,7 +963,7 @@ function updateViewModeUI(snippet) {
 
 // Switch view mode
 function switchViewMode(mode) {
-    currentViewMode = mode;
+    Alpine.store('snippets').viewMode = mode;
     const snippet = getCurrentSnippet();
     if (snippet) {
         loadSnippetIntoEditor(snippet);
@@ -1146,7 +1008,7 @@ function revertDraft() {
         SnippetStorage.saveSnippet(snippet);
 
         // Reload editor if in draft view
-        if (currentViewMode === 'draft') {
+        if (Alpine.store('snippets').viewMode === 'draft') {
             loadSnippetIntoEditor(snippet);
         }
 

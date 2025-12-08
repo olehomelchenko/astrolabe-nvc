@@ -1,10 +1,9 @@
 // Application version (update with each release)
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 
 // Global variables and configuration
 let editor; // Global editor instance
 let renderTimeout; // For debouncing
-let currentViewMode = 'draft'; // Track current view mode: 'draft' or 'published'
 
 // Panel resizing variables
 let isResizing = false;
@@ -145,63 +144,73 @@ const AppSettings = {
     }
 };
 
-// Toast Notification System
+// Alpine.js Store for toast notifications
+document.addEventListener('alpine:init', () => {
+    Alpine.store('toasts', {
+        items: [],
+        counter: 0,
+        DURATION: 4000,
+
+        add(message, type = 'info') {
+            const id = ++this.counter;
+            const toast = { id, message, type, visible: false };
+            this.items.push(toast);
+
+            // Trigger show animation on next tick
+            setTimeout(() => {
+                const found = this.items.find(t => t.id === id);
+                if (found) found.visible = true;
+            }, 10);
+
+            // Auto-dismiss
+            setTimeout(() => this.remove(id), this.DURATION);
+        },
+
+        remove(id) {
+            const toast = this.items.find(t => t.id === id);
+            if (toast) {
+                toast.visible = false;
+                // Remove from array after animation
+                setTimeout(() => {
+                    this.items = this.items.filter(t => t.id !== id);
+                }, 300);
+            }
+        },
+
+        getIcon(type) {
+            const icons = {
+                error: '❌',
+                success: '✓',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            return icons[type] || icons.info;
+        }
+    });
+
+    // Preview panel fit mode store
+    Alpine.store('preview', {
+        fitMode: 'default' // 'default' | 'width' | 'full'
+    });
+});
+
+// Toast Notification System (now backed by Alpine store)
 const Toast = {
     // Auto-dismiss duration in milliseconds
     DURATION: 4000,
 
-    // Toast counter for unique IDs
-    toastCounter: 0,
-
     // Show toast notification
     show(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-
-        // Create toast element
-        const toast = document.createElement('div');
-        const toastId = `toast-${++this.toastCounter}`;
-        toast.id = toastId;
-        toast.className = `toast toast-${type}`;
-
-        // Toast icon based on type
-        const icons = {
-            error: '❌',
-            success: '✓',
-            warning: '⚠️',
-            info: 'ℹ️'
-        };
-
-        toast.innerHTML = `
-            <span class="toast-icon">${icons[type] || icons.info}</span>
-            <span class="toast-message">${message}</span>
-            <button class="toast-close" onclick="Toast.dismiss('${toastId}')">×</button>
-        `;
-
-        // Add to container
-        container.appendChild(toast);
-
-        // Trigger animation
-        setTimeout(() => toast.classList.add('toast-show'), 10);
-
-        // Auto-dismiss
-        setTimeout(() => this.dismiss(toastId), this.DURATION);
+        if (Alpine.store('toasts')) {
+            Alpine.store('toasts').add(message, type);
+        }
     },
 
     // Dismiss specific toast
     dismiss(toastId) {
-        const toast = document.getElementById(toastId);
-        if (!toast) return;
-
-        toast.classList.remove('toast-show');
-        toast.classList.add('toast-hide');
-
-        // Remove from DOM after animation
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300);
+        if (Alpine.store('toasts')) {
+            Alpine.store('toasts').remove(toastId);
+        }
     },
 
     // Convenience methods
@@ -323,4 +332,3 @@ const sampleSpec = {
         "y": { "field": "value", "type": "quantitative" }
     }
 };
-

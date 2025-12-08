@@ -22,6 +22,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - (Removed features will be listed here)
 
 ---
+## [0.4.0] - 2025-11-26
+
+### Changed
+- **Alpine.js Integration**: Migrated interactive UI components to Alpine.js framework for improved reactivity and maintainability
+  - Chart Builder controls now use Alpine.js reactive data binding
+  - Preview Panel fit mode controls migrated to Alpine stores
+  - Toast notification system backed by Alpine store with declarative rendering
+  - Simplified state management with reactive Alpine stores
+  - No user-facing behavior changes (internal architecture refactor)
+  - Improved code organization and reduced DOM manipulation complexity
+
+---
 ## [0.2.0] - 2025-11-17
 
 ### Added

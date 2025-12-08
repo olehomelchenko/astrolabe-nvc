@@ -34,12 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize snippet storage and render list (async)
     initializeSnippetsStorage().then(() => {
-        // Initialize sort controls
-        initializeSortControls();
-
-        // Initialize search controls
-        initializeSearchControls();
-
+        // Render snippet list (now handled reactively by Alpine)
         renderSnippetList();
 
         // Update storage monitor
@@ -135,20 +130,11 @@ document.addEventListener('DOMContentLoaded', function () {
         // Initialize auto-save functionality
         initializeAutoSave();
 
-        // Initialize chart builder
-        initializeChartBuilder();
-
         // Initialize URL state management AFTER editor is ready
         initializeURLStateManagement();
     });
 
-    // Toggle panel buttons
-    document.querySelectorAll('[id^="toggle-"][id$="-panel"]').forEach(button => {
-        button.addEventListener('click', function () {
-            const panelId = this.id.replace('toggle-', '');
-            togglePanel(panelId);
-        });
-    });
+    // Toggle panel buttons (now handled by Alpine.js in index.html)
 
     // Header links
     const importLink = document.getElementById('import-link');
@@ -183,61 +169,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Settings Modal
     const settingsLink = document.getElementById('settings-link');
-    const settingsApplyBtn = document.getElementById('settings-apply-btn');
-    const settingsResetBtn = document.getElementById('settings-reset-btn');
-    const settingsCancelBtn = document.getElementById('settings-cancel-btn');
 
     if (settingsLink) {
         settingsLink.addEventListener('click', openSettingsModal);
     }
 
-    if (settingsCancelBtn) {
-        settingsCancelBtn.addEventListener('click', closeSettingsModal);
-    }
-
-    if (settingsApplyBtn) {
-        settingsApplyBtn.addEventListener('click', applySettings);
-    }
-
-    if (settingsResetBtn) {
-        settingsResetBtn.addEventListener('click', function() {
-            if (confirm('Reset all settings to defaults? This cannot be undone.')) {
-                resetSettings();
-                loadSettingsIntoUI();
-                Toast.show('Settings reset to defaults', 'success');
-            }
-        });
-    }
-
-
-    // Settings UI interactions
-    const fontSizeSlider = document.getElementById('setting-font-size');
-    const fontSizeValue = document.getElementById('setting-font-size-value');
-    if (fontSizeSlider && fontSizeValue) {
-        fontSizeSlider.addEventListener('input', function() {
-            fontSizeValue.textContent = this.value + 'px';
-        });
-    }
-
-    const renderDebounceSlider = document.getElementById('setting-render-debounce');
-    const renderDebounceValue = document.getElementById('setting-render-debounce-value');
-    if (renderDebounceSlider && renderDebounceValue) {
-        renderDebounceSlider.addEventListener('input', function() {
-            renderDebounceValue.textContent = this.value + 'ms';
-        });
-    }
-
-    const dateFormatSelect = document.getElementById('setting-date-format');
-    const customDateFormatItem = document.getElementById('custom-date-format-item');
-    if (dateFormatSelect && customDateFormatItem) {
-        dateFormatSelect.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                customDateFormatItem.style.display = 'block';
-            } else {
-                customDateFormatItem.style.display = 'none';
-            }
-        });
-    }
+    // Settings buttons and UI interactions now handled by Alpine.js in settingsPanel() component
 
     // Dataset Manager
     const datasetsLink = document.getElementById('datasets-link');
@@ -264,9 +201,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Edit dataset button
     if (editDatasetBtn) {
-        editDatasetBtn.addEventListener('click', async function() {
-            if (window.currentDatasetId) {
-                await showEditDatasetForm(window.currentDatasetId);
+        editDatasetBtn.addEventListener('click', async function () {
+            if (Alpine.store('datasets').currentDatasetId) {
+                await showEditDatasetForm(Alpine.store('datasets').currentDatasetId);
             }
         });
     }
@@ -314,8 +251,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const buildChartBtn = document.getElementById('build-chart-btn');
     if (buildChartBtn) {
         buildChartBtn.addEventListener('click', async () => {
-            if (window.currentDatasetId) {
-                openChartBuilder(window.currentDatasetId);
+            if (Alpine.store('datasets').currentDatasetId) {
+                openChartBuilder(Alpine.store('datasets').currentDatasetId);
             }
         });
     }
@@ -336,22 +273,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const previewRawBtn = document.getElementById('preview-raw-btn');
     const previewTableBtn = document.getElementById('preview-table-btn');
     if (previewRawBtn) {
-        previewRawBtn.addEventListener('click', function() {
-            if (window.currentDatasetData) {
-                showRawPreview(window.currentDatasetData);
+        previewRawBtn.addEventListener('click', function () {
+            if (Alpine.store('datasets').currentDatasetData) {
+                showRawPreview(Alpine.store('datasets').currentDatasetData);
             }
         });
     }
     if (previewTableBtn) {
-        previewTableBtn.addEventListener('click', function() {
-            if (window.currentDatasetData) {
-                showTablePreview(window.currentDatasetData);
+        previewTableBtn.addEventListener('click', function () {
+            if (Alpine.store('datasets').currentDatasetData) {
+                showTablePreview(Alpine.store('datasets').currentDatasetData);
             }
         });
     }
 
     // Global modal event delegation - handles close buttons and overlay clicks
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         // Handle modal close buttons (×)
         if (e.target.id && e.target.id.endsWith('-modal-close')) {
             const modalId = e.target.id.replace('-close', '');
@@ -366,27 +303,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // View mode toggle buttons
-    document.getElementById('view-draft').addEventListener('click', () => {
-        switchViewMode('draft');
-    });
-
-    document.getElementById('view-published').addEventListener('click', () => {
-        switchViewMode('published');
-    });
-
-    // Preview fit mode buttons
-    document.getElementById('preview-fit-default').addEventListener('click', () => {
-        setPreviewFitMode('default');
-    });
-
-    document.getElementById('preview-fit-width').addEventListener('click', () => {
-        setPreviewFitMode('width');
-    });
-
-    document.getElementById('preview-fit-full').addEventListener('click', () => {
-        setPreviewFitMode('full');
-    });
 
     // Publish and Revert buttons
     document.getElementById('publish-btn').addEventListener('click', publishDraft);
@@ -466,11 +382,11 @@ function initializeURLStateManagement() {
 
 // Keyboard shortcut action handlers (shared between Monaco and document)
 const KeyboardActions = {
-    createNewSnippet: function() {
+    createNewSnippet: function () {
         createNewSnippet();
     },
 
-    toggleDatasetManager: function() {
+    toggleDatasetManager: function () {
         const modal = document.getElementById('dataset-modal');
         if (modal && modal.style.display === 'flex') {
             closeDatasetManager();
@@ -479,13 +395,13 @@ const KeyboardActions = {
         }
     },
 
-    publishDraft: function() {
-        if (currentViewMode === 'draft' && window.currentSnippetId) {
+    publishDraft: function () {
+        if (Alpine.store('snippets').viewMode === 'draft' && Alpine.store('snippets').currentSnippetId) {
             publishDraft();
         }
     },
 
-    toggleSettings: function() {
+    toggleSettings: function () {
         if (ModalManager.isOpen('settings-modal')) {
             closeSettingsModal();
         } else {
@@ -493,7 +409,7 @@ const KeyboardActions = {
         }
     },
 
-    closeAnyModal: function() {
+    closeAnyModal: function () {
         // Try ModalManager first for standard modals
         if (ModalManager.closeAny()) {
             return true;
@@ -515,7 +431,7 @@ const KeyboardActions = {
 
 // Keyboard shortcuts handler (document-level)
 function initializeKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         // Escape: Close any open modal
         if (e.key === 'Escape') {
             if (KeyboardActions.closeAnyModal()) {
@@ -573,160 +489,12 @@ function registerMonacoKeyboardShortcuts() {
         KeyboardActions.publishDraft);
 }
 
-// Settings modal functions (special handling for loading settings into UI)
+// Settings modal functions (simplified - most logic now in Alpine settingsPanel() component)
 function openSettingsModal() {
-    loadSettingsIntoUI();
     ModalManager.open('settings-modal');
+    // Settings will be loaded via Alpine's init() method
 }
 
 function closeSettingsModal() {
     ModalManager.close('settings-modal');
-}
-
-function loadSettingsIntoUI() {
-    const settings = getSettings();
-
-    // Appearance settings
-    const uiThemeSelect = document.getElementById('setting-ui-theme');
-    if (uiThemeSelect) {
-        uiThemeSelect.value = settings.ui.theme;
-    }
-
-    // Editor settings
-    const fontSizeSlider = document.getElementById('setting-font-size');
-    const fontSizeValue = document.getElementById('setting-font-size-value');
-    if (fontSizeSlider && fontSizeValue) {
-        fontSizeSlider.value = settings.editor.fontSize;
-        fontSizeValue.textContent = settings.editor.fontSize + 'px';
-    }
-
-    const editorThemeSelect = document.getElementById('setting-editor-theme');
-    if (editorThemeSelect) {
-        editorThemeSelect.value = settings.editor.theme;
-    }
-
-    const tabSizeSelect = document.getElementById('setting-tab-size');
-    if (tabSizeSelect) {
-        tabSizeSelect.value = settings.editor.tabSize;
-    }
-
-    const minimapCheckbox = document.getElementById('setting-minimap');
-    if (minimapCheckbox) {
-        minimapCheckbox.checked = settings.editor.minimap;
-    }
-
-    const wordWrapCheckbox = document.getElementById('setting-word-wrap');
-    if (wordWrapCheckbox) {
-        wordWrapCheckbox.checked = settings.editor.wordWrap === 'on';
-    }
-
-    const lineNumbersCheckbox = document.getElementById('setting-line-numbers');
-    if (lineNumbersCheckbox) {
-        lineNumbersCheckbox.checked = settings.editor.lineNumbers === 'on';
-    }
-
-    // Performance settings
-    const renderDebounceSlider = document.getElementById('setting-render-debounce');
-    const renderDebounceValue = document.getElementById('setting-render-debounce-value');
-    if (renderDebounceSlider && renderDebounceValue) {
-        renderDebounceSlider.value = settings.performance.renderDebounce;
-        renderDebounceValue.textContent = settings.performance.renderDebounce + 'ms';
-    }
-
-    // Formatting settings
-    const dateFormatSelect = document.getElementById('setting-date-format');
-    const customDateFormatItem = document.getElementById('custom-date-format-item');
-    if (dateFormatSelect) {
-        dateFormatSelect.value = settings.formatting.dateFormat;
-        if (customDateFormatItem) {
-            customDateFormatItem.style.display = settings.formatting.dateFormat === 'custom' ? 'block' : 'none';
-        }
-    }
-
-    const customDateFormatInput = document.getElementById('setting-custom-date-format');
-    if (customDateFormatInput) {
-        customDateFormatInput.value = settings.formatting.customDateFormat;
-    }
-}
-
-function applySettings() {
-    // Collect values from UI
-    const newSettings = {
-        'ui.theme': document.getElementById('setting-ui-theme').value,
-        'editor.fontSize': parseInt(document.getElementById('setting-font-size').value),
-        'editor.theme': document.getElementById('setting-editor-theme').value,
-        'editor.tabSize': parseInt(document.getElementById('setting-tab-size').value),
-        'editor.minimap': document.getElementById('setting-minimap').checked,
-        'editor.wordWrap': document.getElementById('setting-word-wrap').checked ? 'on' : 'off',
-        'editor.lineNumbers': document.getElementById('setting-line-numbers').checked ? 'on' : 'off',
-        'performance.renderDebounce': parseInt(document.getElementById('setting-render-debounce').value),
-        'formatting.dateFormat': document.getElementById('setting-date-format').value,
-        'formatting.customDateFormat': document.getElementById('setting-custom-date-format').value
-    };
-
-    // Validate settings
-    let hasErrors = false;
-    for (const [path, value] of Object.entries(newSettings)) {
-        const errors = validateSetting(path, value);
-        if (errors.length > 0) {
-            Toast.show(errors.join(', '), 'error');
-            hasErrors = true;
-            break;
-        }
-    }
-
-    if (hasErrors) {
-        return;
-    }
-
-    // Save settings
-    if (updateSettings(newSettings)) {
-        // Apply theme to document
-        const uiTheme = newSettings['ui.theme'];
-        document.documentElement.setAttribute('data-theme', uiTheme);
-
-        // Sync editor theme with UI theme
-        const editorTheme = uiTheme === 'experimental' ? 'vs-dark' : 'vs-light';
-        newSettings['editor.theme'] = editorTheme;
-
-        // Apply editor settings immediately
-        if (editor) {
-            editor.updateOptions({
-                fontSize: newSettings['editor.fontSize'],
-                theme: editorTheme,
-                tabSize: newSettings['editor.tabSize'],
-                minimap: { enabled: newSettings['editor.minimap'] },
-                wordWrap: newSettings['editor.wordWrap'],
-                lineNumbers: newSettings['editor.lineNumbers']
-            });
-        }
-
-        // Update the editor theme in settings
-        updateSetting('editor.theme', editorTheme);
-
-        // Update debounced render function
-        if (typeof updateRenderDebounce === 'function') {
-            updateRenderDebounce(newSettings['performance.renderDebounce']);
-        }
-
-        // Re-render snippet list to reflect date format changes
-        renderSnippetList();
-
-        // Update metadata display if a snippet is selected
-        if (window.currentSnippetId) {
-            const snippet = SnippetStorage.getSnippet(window.currentSnippetId);
-            if (snippet) {
-                document.getElementById('snippet-created').textContent = formatDate(snippet.created, true);
-                document.getElementById('snippet-modified').textContent = formatDate(snippet.modified, true);
-            }
-        }
-
-        Toast.show('Settings applied successfully', 'success');
-        closeSettingsModal();
-
-        // Track event
-        Analytics.track('settings-apply', 'Applied settings');
-    } else {
-        Toast.show('Failed to save settings', 'error');
-    }
 }

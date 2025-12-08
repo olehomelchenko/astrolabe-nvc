@@ -222,3 +222,166 @@ function validateSetting(path, value) {
 
     return rules[path] ? rules[path]() : [];
 }
+
+// Alpine.js Component for settings panel
+// Thin wrapper - Alpine handles form state and reactivity, user-settings.js handles storage
+function settingsPanel() {
+    return {
+        // Form state (loaded from settings on open)
+        uiTheme: 'light',
+        fontSize: 12,
+        editorTheme: 'vs-light',
+        tabSize: 2,
+        minimap: false,
+        wordWrap: true,
+        lineNumbers: true,
+        renderDebounce: 1500,
+        dateFormat: 'smart',
+        customDateFormat: 'yyyy-MM-dd HH:mm',
+
+        // Original values for dirty checking
+        originalSettings: null,
+
+        // Initialize component with current settings
+        init() {
+            this.loadSettings();
+        },
+
+        // Load settings from storage into form
+        loadSettings() {
+            const settings = getSettings();
+            this.uiTheme = settings.ui.theme;
+            this.fontSize = settings.editor.fontSize;
+            this.editorTheme = settings.editor.theme;
+            this.tabSize = settings.editor.tabSize;
+            this.minimap = settings.editor.minimap;
+            this.wordWrap = settings.editor.wordWrap === 'on';
+            this.lineNumbers = settings.editor.lineNumbers === 'on';
+            this.renderDebounce = settings.performance.renderDebounce;
+            this.dateFormat = settings.formatting.dateFormat;
+            this.customDateFormat = settings.formatting.customDateFormat;
+
+            // Store original values for dirty checking
+            this.originalSettings = JSON.stringify(this.getCurrentFormState());
+        },
+
+        // Get current form state as object
+        getCurrentFormState() {
+            return {
+                uiTheme: this.uiTheme,
+                fontSize: this.fontSize,
+                editorTheme: this.editorTheme,
+                tabSize: this.tabSize,
+                minimap: this.minimap,
+                wordWrap: this.wordWrap,
+                lineNumbers: this.lineNumbers,
+                renderDebounce: this.renderDebounce,
+                dateFormat: this.dateFormat,
+                customDateFormat: this.customDateFormat
+            };
+        },
+
+        // Check if settings have been modified
+        get isDirty() {
+            return this.originalSettings !== JSON.stringify(this.getCurrentFormState());
+        },
+
+        // Show custom date format field when 'custom' is selected
+        get showCustomDateFormat() {
+            return this.dateFormat === 'custom';
+        },
+
+        // Apply settings and save
+        apply() {
+            const newSettings = {
+                'ui.theme': this.uiTheme,
+                'editor.fontSize': parseInt(this.fontSize),
+                'editor.theme': this.editorTheme,
+                'editor.tabSize': parseInt(this.tabSize),
+                'editor.minimap': this.minimap,
+                'editor.wordWrap': this.wordWrap ? 'on' : 'off',
+                'editor.lineNumbers': this.lineNumbers ? 'on' : 'off',
+                'performance.renderDebounce': parseInt(this.renderDebounce),
+                'formatting.dateFormat': this.dateFormat,
+                'formatting.customDateFormat': this.customDateFormat
+            };
+
+            // Validate settings
+            let hasErrors = false;
+            for (const [path, value] of Object.entries(newSettings)) {
+                const errors = validateSetting(path, value);
+                if (errors.length > 0) {
+                    Toast.show(errors.join(', '), 'error');
+                    hasErrors = true;
+                    break;
+                }
+            }
+
+            if (hasErrors) return;
+
+            // Save settings
+            if (updateSettings(newSettings)) {
+                // Apply theme to document
+                document.documentElement.setAttribute('data-theme', this.uiTheme);
+
+                // Sync editor theme with UI theme
+                const editorTheme = this.uiTheme === 'experimental' ? 'vs-dark' : 'vs-light';
+                newSettings['editor.theme'] = editorTheme;
+
+                // Apply editor settings immediately
+                if (editor) {
+                    editor.updateOptions({
+                        fontSize: newSettings['editor.fontSize'],
+                        theme: editorTheme,
+                        tabSize: newSettings['editor.tabSize'],
+                        minimap: { enabled: newSettings['editor.minimap'] },
+                        wordWrap: newSettings['editor.wordWrap'],
+                        lineNumbers: newSettings['editor.lineNumbers']
+                    });
+                }
+
+                // Update the editor theme in settings
+                updateSetting('editor.theme', editorTheme);
+
+                // Update debounced render function
+                if (typeof updateRenderDebounce === 'function') {
+                    updateRenderDebounce(newSettings['performance.renderDebounce']);
+                }
+
+                // Re-render snippet list to reflect date format changes
+                renderSnippetList();
+
+                // Update metadata display if a snippet is selected
+                if (Alpine.store('snippets').currentSnippetId) {
+                    const snippet = SnippetStorage.getSnippet(Alpine.store('snippets').currentSnippetId);
+                    if (snippet) {
+                        document.getElementById('snippet-created').textContent = formatDate(snippet.created, true);
+                        document.getElementById('snippet-modified').textContent = formatDate(snippet.modified, true);
+                    }
+                }
+
+                Toast.success('Settings applied successfully');
+                closeSettingsModal();
+
+                // Track event
+                Analytics.track('settings-apply', 'Applied settings');
+            } else {
+                Toast.error('Failed to save settings');
+            }
+        },
+
+        // Reset to defaults
+        reset() {
+            if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+                resetSettings();
+                this.loadSettings();
+                Toast.success('Settings reset to defaults');
+            }
+        },
+
+        // Cancel changes and close modal
+        cancel() {
+            closeSettingsModal();
+        }
+    };
+}
