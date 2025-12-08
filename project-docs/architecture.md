@@ -81,6 +81,9 @@ Global reactive state managed through Alpine stores:
 - `add(message, type)` - Add toast
 - `remove(id)` - Dismiss toast
 
+**`Alpine.store('preview')`**
+- `fitMode` - Preview fit mode ('default' | 'width' | 'full')
+
 ### Alpine Components
 
 **`snippetList()`** - Snippet panel management
@@ -98,6 +101,12 @@ Global reactive state managed through Alpine stores:
 - All form field values with `x-model` binding
 - `isDirty` - Computed property for Apply button state
 - Form validation and persistence
+
+**`chartBuilder()`** - Chart Builder modal
+- Full reactive state for mark types, encodings, dimensions
+- `spec` - Computed Vega-Lite spec from current state
+- `isValid` - Computed validation for required encodings
+- Debounced preview rendering
 
 ### Key Patterns
 
@@ -130,6 +139,16 @@ Global reactive state managed through Alpine stores:
 3. Components are thin wrappers around business logic
 4. Automatic reactivity eliminates manual DOM updates
 5. Alpine and vanilla JavaScript coexist harmoniously
+
+### Migration History
+
+Alpine.js was incrementally adopted across 8 phases (2025-01), migrating UI components from vanilla JavaScript:
+- Snippet Panel, Dataset Manager, View Mode Toggle, Settings Modal (Phase 1-4)
+- **Chart Builder Modal** (Phase 5) - Largest migration, ~360 lines of event listeners removed
+- Meta Fields, Panel Visibility Toggles, Toast Notifications (Phase 6-7)
+- **Preview Panel Controls** (Phase 8) - Completed standardization of toggle groups
+
+**Total impact**: ~625 lines of vanilla JS removed, significantly improved maintainability and code readability. All migrations maintain full backward compatibility with Storage layer.
 
 ---
 
