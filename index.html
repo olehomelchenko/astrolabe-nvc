@@ -289,7 +289,7 @@
                                 No datasets yet. Click "New Dataset" to create one.
                             </div>
                         </div>
-                        <div class="dataset-details" id="dataset-details" style="display: none;">
+                        <div class="dataset-details" x-data="datasetDetails()" x-show="isVisible" id="dataset-details">
                             <div class="dataset-detail-section">
                                 <div class="dataset-actions">
                                     <button class="btn btn-modal primary" id="edit-dataset-btn"
@@ -308,15 +308,15 @@
 
                                 <div class="dataset-detail-header">Name</div>
                                 <input type="text" id="dataset-detail-name" class="input"
-                                    placeholder="Dataset name..." />
+                                    placeholder="Dataset name..." :value="dataset?.name" @input="handleNameChange" />
 
                                 <div class="dataset-detail-header">Comment</div>
                                 <textarea id="dataset-detail-comment" class="input textarea"
-                                    placeholder="Add a comment..." rows="3"></textarea>
+                                    placeholder="Add a comment..." rows="3" :value="dataset?.comment" @input="handleCommentChange"></textarea>
 
                                 <div class="dataset-detail-header-row">
                                     <span class="dataset-detail-header">Overview</span>
-                                    <button class="btn btn-icon large" id="refresh-metadata-btn" style="display: none;"
+                                    <button class="btn btn-icon large" id="refresh-metadata-btn" x-show="isURLDataset"
                                         title="Refresh metadata from URL">🔄</button>
                                 </div>
                                 <div class="dataset-overview-grid">
@@ -325,23 +325,29 @@
                                         <div class="stats-box">
                                             <div class="stat-item">
                                                 <span class="stat-label">Rows:</span>
-                                                <span id="dataset-detail-rows">0</span>
+                                                <span x-text="formatRowCount(dataset?.rowCount)">0</span>
                                             </div>
                                             <div class="stat-item">
                                                 <span class="stat-label">Columns:</span>
-                                                <span id="dataset-detail-columns">0</span>
+                                                <span x-text="formatColumnCount(dataset?.columnCount)">0</span>
                                             </div>
                                             <div class="stat-item">
                                                 <span class="stat-label">Size:</span>
-                                                <span id="dataset-detail-size">0 B</span>
+                                                <span x-text="formatBytes(dataset?.size)">0 B</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="overview-section" id="columns-section" style="display: none;">
+                                    <div class="overview-section" x-show="showColumnsSection">
                                         <div class="overview-section-title">Columns</div>
-                                        <div class="columns-list" id="dataset-detail-columns-list">
-                                            <!-- Dynamically populated with column names and types -->
+                                        <div class="columns-list">
+                                            <template x-for="col in dataset?.columnTypes" :key="col.name">
+                                                <div class="column-item">
+                                                    <span class="column-type-icon" x-html="getTypeIcon(col.type)"></span>
+                                                    <span class="column-name" x-text="col.name"></span>
+                                                    <span class="column-type" x-text="col.type"></span>
+                                                </div>
+                                            </template>
                                         </div>
                                     </div>
 
@@ -350,11 +356,11 @@
                                         <div class="stats-box">
                                             <div class="stat-item">
                                                 <span class="stat-label">Created:</span>
-                                                <span id="dataset-detail-created">-</span>
+                                                <span x-text="formatDate(dataset?.created)">-</span>
                                             </div>
                                             <div class="stat-item">
                                                 <span class="stat-label">Modified:</span>
-                                                <span id="dataset-detail-modified">-</span>
+                                                <span id="dataset-detail-modified" x-text="formatDate(dataset?.modified)">-</span>
                                             </div>
                                         </div>
                                     </div>
@@ -362,21 +368,35 @@
 
                                 <div class="dataset-detail-header-row">
                                     <span class="dataset-detail-header">Preview</span>
-                                    <div class="preview-toggle-group" id="preview-toggle-group" style="display: none;">
-                                        <button class="btn btn-toggle small active" id="preview-raw-btn"
+                                    <div class="preview-toggle-group" x-show="showPreviewToggle">
+                                        <button class="btn btn-toggle small"
+                                            :class="{ 'active': $store.datasets.previewMode === 'raw' }"
+                                            @click="setPreviewMode('raw')"
                                             title="Show raw data preview">Raw</button>
-                                        <button class="btn btn-toggle small" id="preview-table-btn"
+                                        <button class="btn btn-toggle small"
+                                            :class="{ 'active': $store.datasets.previewMode === 'table' }"
+                                            @click="setPreviewMode('table')"
                                             title="Show data in table format with type detection">Table</button>
                                     </div>
                                 </div>
-                                <pre id="dataset-preview" class="preview-box large"></pre>
-                                <div id="dataset-preview-table" class="preview-table-container" style="display: none;">
+                                <pre id="dataset-preview" class="preview-box large"
+                                    x-show="$store.datasets.previewMode === 'raw'"></pre>
+                                <div id="dataset-preview-table" class="preview-table-container"
+                                    x-show="$store.datasets.previewMode === 'table'">
                                 </div>
 
-                                <div id="dataset-snippets-section" style="display: none;">
+                                <div x-show="linkedSnippets.length > 0">
                                     <div class="dataset-detail-header">Linked Snippets</div>
-                                    <div class="stats-box" id="dataset-snippets">
-                                        <!-- Dynamically populated by updateLinkedSnippets() -->
+                                    <div class="stats-box">
+                                        <template x-for="snippet in linkedSnippets" :key="snippet.id">
+                                            <div class="stat-item">
+                                                <span class="stat-label">📄</span>
+                                                <span>
+                                                    <a href="#" @click.prevent="openLinkedSnippet(snippet.id)"
+                                                       class="snippet-link" x-text="snippet.name"></a>
+                                                </span>
+                                            </div>
+                                        </template>
                                     </div>
                                 </div>
                             </div>

@@ -4,7 +4,11 @@
 document.addEventListener('alpine:init', () => {
     Alpine.store('datasets', {
         currentDatasetId: null,
-        currentDatasetData: null
+        currentDatasetData: null,
+        previewMode: 'raw', // 'raw' or 'table'
+        formMode: null, // null, 'create', or 'edit'
+        editingDatasetId: null,
+        originalSchema: null
     });
 });
 
@@ -15,6 +19,11 @@ function datasetList() {
 
         async init() {
             await this.loadDatasets();
+
+            // Listen for refresh events (fallback for when Alpine.$data doesn't work)
+            this.$el.addEventListener('dataset-list-refresh', async () => {
+                await this.loadDatasets();
+            });
         },
 
         async loadDatasets() {
@@ -42,6 +51,93 @@ function datasetList() {
 
         selectDataset(datasetId) {
             window.selectDataset(datasetId);
+        }
+    };
+}
+
+// Alpine.js component for dataset details panel
+function datasetDetails() {
+    return {
+        get dataset() {
+            return this.$store.datasets.currentDatasetData;
+        },
+
+        get isVisible() {
+            return this.$store.datasets.currentDatasetId !== null && this.dataset !== null;
+        },
+
+        get isURLDataset() {
+            return this.dataset && this.dataset.source === 'url';
+        },
+
+        get showColumnsSection() {
+            return this.dataset && this.dataset.columnTypes && this.dataset.columnTypes.length > 0;
+        },
+
+        get canShowTable() {
+            if (!this.dataset) return false;
+            return ['json', 'csv', 'tsv'].includes(this.dataset.format);
+        },
+
+        get showPreviewToggle() {
+            if (!this.dataset) return false;
+            if (this.isURLDataset) {
+                return window.urlPreviewCache && window.urlPreviewCache[this.dataset.id] && this.canShowTable;
+            }
+            return this.canShowTable;
+        },
+
+        get hasURLPreview() {
+            return this.dataset && window.urlPreviewCache && window.urlPreviewCache[this.dataset.id];
+        },
+
+        get linkedSnippets() {
+            if (!this.dataset) return [];
+            const snippets = SnippetStorage.loadSnippets();
+            return snippets.filter(snippet =>
+                snippet.datasetRefs && snippet.datasetRefs.includes(this.dataset.name)
+            );
+        },
+
+        formatBytes(bytes) {
+            return formatBytes(bytes);
+        },
+
+        formatDate(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        },
+
+        formatRowCount(count) {
+            return count !== null ? count : 'N/A';
+        },
+
+        formatColumnCount(count) {
+            return count !== null ? count : 'N/A';
+        },
+
+        getTypeIcon(type) {
+            return getTypeIcon(type);
+        },
+
+        handleNameChange() {
+            debouncedAutoSaveDatasetMeta();
+        },
+
+        handleCommentChange() {
+            debouncedAutoSaveDatasetMeta();
+        },
+
+        setPreviewMode(mode) {
+            this.$store.datasets.previewMode = mode;
+            if (mode === 'raw') {
+                showRawPreview(this.dataset);
+            } else {
+                showTablePreview(this.dataset);
+            }
+        },
+
+        openLinkedSnippet(snippetId) {
+            openSnippetFromDataset(snippetId);
         }
     };
 }
@@ -396,11 +492,34 @@ async function fetchURLMetadata(url, format) {
 // Render dataset list in modal
 // Alpine.js now handles rendering, this just triggers a refresh
 async function renderDatasetList() {
+    // Wait a tick for Alpine to initialize if needed
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     const listView = document.getElementById('dataset-list-view');
-    if (listView && listView.__x) {
-        const component = Alpine.$data(listView);
-        if (component && component.loadDatasets) {
-            await component.loadDatasets();
+    let component = null;
+
+    // Try multiple methods to get the Alpine component
+    if (listView && typeof Alpine !== 'undefined') {
+        // Method 1: Try Alpine.$data (standard approach)
+        try {
+            component = Alpine.$data(listView);
+        } catch (e) {
+            // Method 2: Try accessing _x_dataStack (Alpine 3.x internal API)
+            if (listView._x_dataStack && listView._x_dataStack.length > 0) {
+                component = listView._x_dataStack[0];
+            }
+        }
+    }
+
+    if (component && component.loadDatasets) {
+        await component.loadDatasets();
+    } else {
+        // Fallback: Trigger refresh via custom event
+        if (typeof Alpine !== 'undefined' && listView) {
+            Alpine.nextTick(() => {
+                const evt = new CustomEvent('dataset-list-refresh');
+                listView.dispatchEvent(evt);
+            });
         }
     }
 }
@@ -410,92 +529,23 @@ async function selectDataset(datasetId, updateURL = true) {
     const dataset = await DatasetStorage.getDataset(datasetId);
     if (!dataset) return;
 
-    // Update Alpine store selection (Alpine handles highlighting via :class binding)
-    if (typeof Alpine !== 'undefined' && Alpine.store('datasets')) {
-        Alpine.store('datasets').currentDatasetId = datasetId;
-    }
+    // Update Alpine store - this triggers all reactive UI updates
+    Alpine.store('datasets').currentDatasetId = datasetId;
+    Alpine.store('datasets').currentDatasetData = dataset;
+    Alpine.store('datasets').previewMode = 'raw';
 
-    // Show details panel
-    const detailsPanel = document.getElementById('dataset-details');
-    detailsPanel.style.display = 'block';
-
-    // Show/hide refresh button for URL datasets
-    const refreshBtn = document.getElementById('refresh-metadata-btn');
-    if (dataset.source === 'url') {
-        refreshBtn.style.display = 'flex';
-    } else {
-        refreshBtn.style.display = 'none';
-    }
-
-    // Populate details
-    document.getElementById('dataset-detail-name').value = dataset.name;
-    document.getElementById('dataset-detail-comment').value = dataset.comment;
-    document.getElementById('dataset-detail-rows').textContent = dataset.rowCount !== null ? dataset.rowCount : 'N/A';
-    document.getElementById('dataset-detail-columns').textContent = dataset.columnCount !== null ? dataset.columnCount : 'N/A';
-    document.getElementById('dataset-detail-size').textContent = formatBytes(dataset.size);
-    document.getElementById('dataset-detail-created').textContent = new Date(dataset.created).toLocaleString();
-    document.getElementById('dataset-detail-modified').textContent = new Date(dataset.modified).toLocaleString();
-
-    // Populate columns list with types
-    const columnsSection = document.getElementById('columns-section');
-    const columnsList = document.getElementById('dataset-detail-columns-list');
-
-    if (dataset.columnTypes && dataset.columnTypes.length > 0) {
-        columnsSection.style.display = 'block';
-
-        const columnsHTML = dataset.columnTypes.map(col => {
-            const icon = getTypeIcon(col.type);
-            return `
-                <div class="column-item">
-                    <span class="column-type-icon">${icon}</span>
-                    <span class="column-name">${col.name}</span>
-                    <span class="column-type">${col.type}</span>
-                </div>
-            `;
-        }).join('');
-
-        columnsList.innerHTML = columnsHTML;
-    } else {
-        columnsSection.style.display = 'none';
-    }
-
-    // Show/hide preview toggle based on data type
-    const toggleGroup = document.getElementById('preview-toggle-group');
-    const canShowTable = (dataset.format === 'json' || dataset.format === 'csv' || dataset.format === 'tsv');
-
+    // Handle preview display
     if (dataset.source === 'url') {
         // For URL datasets, check if we have cached preview data
         if (window.urlPreviewCache && window.urlPreviewCache[dataset.id]) {
-            if (canShowTable) {
-                toggleGroup.style.display = 'flex';
-            } else {
-                toggleGroup.style.display = 'none';
-            }
             showRawPreview(dataset);
         } else {
-            // Show load preview option
-            toggleGroup.style.display = 'none';
             showURLPreviewPrompt(dataset);
         }
     } else {
-        // For inline datasets
-        if (canShowTable) {
-            toggleGroup.style.display = 'flex';
-        } else {
-            toggleGroup.style.display = 'none';
-        }
+        // For inline datasets, show preview immediately
         showRawPreview(dataset);
     }
-
-    // Store current dataset ID and data in Alpine store
-    Alpine.store('datasets').currentDatasetId = datasetId;
-    Alpine.store('datasets').currentDatasetData = dataset;
-
-    // Update linked snippets display
-    updateLinkedSnippets(dataset);
-
-    // Initialize auto-save for detail fields
-    initializeDatasetDetailAutoSave();
 
     // Update URL state (URLState.update will add 'dataset-' prefix)
     if (updateURL) {
@@ -594,20 +644,7 @@ async function loadURLPreview(dataset) {
 
 // Show raw preview
 function showRawPreview(dataset) {
-    const rawBtn = document.getElementById('preview-raw-btn');
-    const tableBtn = document.getElementById('preview-table-btn');
     const previewBox = document.getElementById('dataset-preview');
-    const tableContainer = document.getElementById('dataset-preview-table');
-
-    // Update button states
-    if (rawBtn && tableBtn) {
-        rawBtn.classList.add('active');
-        tableBtn.classList.remove('active');
-    }
-
-    // Show raw, hide table
-    previewBox.style.display = 'block';
-    tableContainer.style.display = 'none';
 
     // Generate preview text
     let previewText;
@@ -687,18 +724,7 @@ function getTypeIcon(type) {
 
 // Show table preview
 function showTablePreview(dataset) {
-    const rawBtn = document.getElementById('preview-raw-btn');
-    const tableBtn = document.getElementById('preview-table-btn');
-    const previewBox = document.getElementById('dataset-preview');
     const tableContainer = document.getElementById('dataset-preview-table');
-
-    // Update button states
-    rawBtn.classList.remove('active');
-    tableBtn.classList.add('active');
-
-    // Hide raw, show table
-    previewBox.style.display = 'none';
-    tableContainer.style.display = 'block';
 
     // Generate table HTML
     let tableHTML = '';
@@ -810,30 +836,11 @@ function showTablePreview(dataset) {
     tableContainer.innerHTML = tableHTML;
 }
 
-// Update linked snippets display in dataset details panel
-function updateLinkedSnippets(dataset) {
-    // Find all snippets that reference this dataset
-    const snippets = SnippetStorage.loadSnippets();
-    const linkedSnippets = snippets.filter(snippet =>
-        snippet.datasetRefs && snippet.datasetRefs.includes(dataset.name)
-    );
-
-    updateGenericLinkedItems(
-        linkedSnippets,
-        'dataset-snippets',
-        'dataset-snippets-section',
-        (snippet) => `
-            <div class="stat-item">
-                <span class="stat-label">📄</span>
-                <span>
-                    <a href="#snippet-${snippet.id}" class="snippet-link" data-linked-item-id="${snippet.id}">${snippet.name}</a>
-                </span>
-            </div>
-        `,
-        (snippetId) => {
-            openSnippetFromDataset(snippetId);
-        }
-    );
+// Update linked snippets display in dataset details panel (deprecated - now handled by Alpine)
+// This function is kept for backwards compatibility but is no longer used
+function updateLinkedSnippets() {
+    // Linked snippets are now displayed reactively via Alpine component
+    // See datasetDetails() component's linkedSnippets getter
 }
 
 // Close dataset manager and open snippet
@@ -1153,10 +1160,10 @@ function setupDatasetInputHandler() {
 
 // Show new dataset form
 function showNewDatasetForm(updateURL = true) {
-    // Set mode to create
-    window.datasetFormMode = 'create';
-    window.editingDatasetId = null;
-    window.originalSchema = null;
+    // Set mode to create in Alpine store
+    Alpine.store('datasets').formMode = 'create';
+    Alpine.store('datasets').editingDatasetId = null;
+    Alpine.store('datasets').originalSchema = null;
 
     document.getElementById('dataset-list-view').style.display = 'none';
     document.getElementById('dataset-form-view').style.display = 'block';
@@ -1188,12 +1195,12 @@ async function showEditDatasetForm(datasetId, updateURL = true) {
     const dataset = await DatasetStorage.getDataset(datasetId);
     if (!dataset) return;
 
-    // Set mode to edit
-    window.datasetFormMode = 'edit';
-    window.editingDatasetId = datasetId;
+    // Set mode to edit in Alpine store
+    Alpine.store('datasets').formMode = 'edit';
+    Alpine.store('datasets').editingDatasetId = datasetId;
 
     // Store original schema for comparison
-    window.originalSchema = dataset.columns ? [...dataset.columns] : [];
+    Alpine.store('datasets').originalSchema = dataset.columns ? [...dataset.columns] : [];
 
     document.getElementById('dataset-list-view').style.display = 'none';
     document.getElementById('dataset-form-view').style.display = 'block';
@@ -1280,7 +1287,7 @@ function showSchemaWarning(oldSchema, newSchema) {
 // Check for schema changes
 function checkSchemaChanges() {
     // Only check in edit mode
-    if (window.datasetFormMode !== 'edit' || !window.originalSchema) {
+    if (Alpine.store('datasets').formMode !== 'edit' || !Alpine.store('datasets').originalSchema) {
         return;
     }
 
@@ -1312,7 +1319,7 @@ function checkSchemaChanges() {
     }
 
     // Compare schemas
-    const originalSchema = window.originalSchema || [];
+    const originalSchema = Alpine.store('datasets').originalSchema || [];
 
     if (newSchema.length === 0 && originalSchema.length === 0) {
         hideSchemaWarning();
@@ -1336,9 +1343,9 @@ function checkSchemaChanges() {
 function hideNewDatasetForm(updateURL = true) {
     document.getElementById('dataset-list-view').style.display = 'block';
     document.getElementById('dataset-form-view').style.display = 'none';
-    window.datasetFormMode = null;
-    window.editingDatasetId = null;
-    window.originalSchema = null;
+    Alpine.store('datasets').formMode = null;
+    Alpine.store('datasets').editingDatasetId = null;
+    Alpine.store('datasets').originalSchema = null;
     hideSchemaWarning();
 
     // Update URL to dataset list view
@@ -1414,9 +1421,9 @@ async function saveNewDataset() {
     }
 
     try {
-        if (window.datasetFormMode === 'edit') {
+        if (Alpine.store('datasets').formMode === 'edit') {
             // Edit mode - update existing dataset
-            const datasetId = window.editingDatasetId;
+            const datasetId = Alpine.store('datasets').editingDatasetId;
 
             // Check if name already exists (excluding current dataset)
             if (await DatasetStorage.nameExists(name, datasetId)) {
@@ -1729,7 +1736,7 @@ async function importDatasetFromFile(fileInput) {
         }
 
         // Create dataset
-        await DatasetStorage.createDataset(
+        const dataset = await DatasetStorage.createDataset(
             datasetName,
             data,
             format,
@@ -1739,6 +1746,9 @@ async function importDatasetFromFile(fileInput) {
 
         // Refresh the list
         await renderDatasetList();
+
+        // Select the newly created dataset
+        await selectDataset(dataset.id);
 
         // Show success message with rename notification if applicable
         if (wasRenamed) {
@@ -1818,6 +1828,9 @@ async function autoSaveDatasetMeta() {
         comment: newComment
     });
 
+    // Update Alpine store with updated dataset
+    Alpine.store('datasets').currentDatasetData = updatedDataset;
+
     // If name changed, update all snippets that reference this dataset
     if (nameChanged && newName) {
         const snippets = SnippetStorage.loadSnippets();
@@ -1843,22 +1856,10 @@ async function autoSaveDatasetMeta() {
         if (affectedSnippets.length > 0) {
             Toast.success(`Updated ${affectedSnippets.length} snippet${affectedSnippets.length > 1 ? 's' : ''}`);
         }
-
-        // Refresh linked snippets display
-        updateLinkedSnippets(updatedDataset);
     }
-
-    // Update the modified timestamp in the UI
-    document.getElementById('dataset-detail-modified').textContent = new Date(updatedDataset.modified).toLocaleString();
 
     // Update the dataset list display to reflect the new name
     await renderDatasetList();
-
-    // Restore selection after re-render
-    const selectedItem = document.querySelector(`[data-item-id="${dataset.id}"]`);
-    if (selectedItem) {
-        selectedItem.classList.add('selected');
-    }
 
     // Refresh visualization if a snippet is open
     if (Alpine.store('snippets').currentSnippetId && typeof renderVisualization === 'function') {
@@ -1873,20 +1874,9 @@ function debouncedAutoSaveDatasetMeta() {
     datasetMetaAutoSaveTimeout = setTimeout(autoSaveDatasetMeta, 1000);
 }
 
-// Initialize auto-save for dataset detail fields
+// Initialize auto-save for dataset detail fields (deprecated - now handled by Alpine)
+// This function is kept for backwards compatibility but is no longer used
 function initializeDatasetDetailAutoSave() {
-    const nameField = document.getElementById('dataset-detail-name');
-    const commentField = document.getElementById('dataset-detail-comment');
-
-    if (nameField) {
-        // Remove any existing event listener to prevent duplicates
-        nameField.removeEventListener('input', debouncedAutoSaveDatasetMeta);
-        nameField.addEventListener('input', debouncedAutoSaveDatasetMeta);
-    }
-
-    if (commentField) {
-        // Remove any existing event listener to prevent duplicates
-        commentField.removeEventListener('input', debouncedAutoSaveDatasetMeta);
-        commentField.addEventListener('input', debouncedAutoSaveDatasetMeta);
-    }
+    // Auto-save is now handled directly by Alpine @input handlers
+    // See datasetDetails() component's handleNameChange and handleCommentChange methods
 }
