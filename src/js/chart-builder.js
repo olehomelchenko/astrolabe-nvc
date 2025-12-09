@@ -62,12 +62,12 @@ function chartBuilder() {
             return Object.values(this.encodings).some(enc => enc.field !== '');
         },
 
-        // Initialize component with dataset
-        async init(datasetId) {
+        // Load dataset and initialize chart builder
+        async loadDataset(datasetId) {
             try {
                 // Validate datasetId is provided
                 if (!datasetId || isNaN(datasetId)) {
-                    console.warn('Chart builder init called without valid datasetId');
+                    console.warn('Chart builder loadDataset called without valid datasetId');
                     return false;
                 }
 
@@ -214,7 +214,9 @@ function chartBuilder() {
             if (!this.isValid) return;
 
             try {
-                // Create snippet with auto-generated name
+                // Capture current state before closing (important: do this BEFORE close())
+                const specToSave = JSON.parse(JSON.stringify(this.spec));
+                const datasetNameToSave = this.datasetName;
                 const snippetName = generateSnippetName();
                 const now = new Date().toISOString();
 
@@ -223,11 +225,11 @@ function chartBuilder() {
                     name: snippetName,
                     created: now,
                     modified: now,
-                    spec: this.spec,
-                    draftSpec: null,
-                    comment: `Chart built from dataset: ${this.datasetName}`,
+                    spec: specToSave,
+                    draftSpec: specToSave, // Initialize draft with same spec
+                    comment: `Chart built from dataset: ${datasetNameToSave}`,
                     tags: [],
-                    datasetRefs: [this.datasetName],
+                    datasetRefs: [datasetNameToSave],
                     meta: {}
                 };
 
@@ -239,7 +241,8 @@ function chartBuilder() {
                 const datasetModal = document.getElementById('dataset-modal');
                 if (datasetModal) datasetModal.style.display = 'none';
 
-                // Select and open the new snippet
+                // Refresh snippet list and select the new snippet
+                renderSnippetList();
                 selectSnippet(snippet.id);
 
                 // Show success message
@@ -320,11 +323,11 @@ async function openChartBuilder(datasetId) {
         const modal = document.getElementById('chart-builder-modal');
         modal.style.display = 'flex';
 
-        // Get Alpine component instance and initialize it
+        // Get Alpine component instance and load dataset
         const chartBuilderView = document.getElementById('chart-builder-view');
         if (chartBuilderView && chartBuilderView._x_dataStack) {
             const component = chartBuilderView._x_dataStack[0];
-            const success = await component.init(datasetId);
+            const success = await component.loadDataset(datasetId);
 
             if (!success) {
                 modal.style.display = 'none';
@@ -344,8 +347,6 @@ async function openChartBuilder(datasetId) {
         Toast.error('Error opening chart builder');
     }
 }
-
-
 
 // Populate field dropdowns with dataset columns (utility function)
 function populateFieldDropdowns(dataset) {
@@ -369,7 +370,7 @@ function populateFieldDropdowns(dataset) {
     });
 }
 
-// closeChartBuilder - now calls Alpine component's close() method  
+// closeChartBuilder - now calls Alpine component's close() method
 function closeChartBuilder() {
     const chartBuilderView = document.getElementById('chart-builder-view');
     if (chartBuilderView && chartBuilderView._x_dataStack) {
@@ -377,3 +378,7 @@ function closeChartBuilder() {
         component.close();
     }
 }
+
+// Expose functions to global scope for Alpine access
+window.openChartBuilder = openChartBuilder;
+window.closeChartBuilder = closeChartBuilder;

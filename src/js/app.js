@@ -247,15 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshMetadataBtn.addEventListener('click', refreshDatasetMetadata);
     }
 
-    // Build chart from dataset button
-    const buildChartBtn = document.getElementById('build-chart-btn');
-    if (buildChartBtn) {
-        buildChartBtn.addEventListener('click', async () => {
-            if (Alpine.store('datasets').currentDatasetId) {
-                openChartBuilder(Alpine.store('datasets').currentDatasetId);
-            }
-        });
-    }
+    // Build chart from dataset button - now handled by Alpine @click in HTML
 
     // New snippet from dataset button
     const newSnippetBtn = document.getElementById('new-snippet-btn');

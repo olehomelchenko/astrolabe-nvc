@@ -295,6 +295,7 @@
                                     <button class="btn btn-modal primary" id="edit-dataset-btn"
                                         title="Edit this dataset contents">Edit Contents</button>
                                     <button class="btn btn-modal primary" id="build-chart-btn"
+                                        @click="openChartBuilder($store.datasets.currentDatasetId)"
                                         title="Build a chart using this dataset">Build Chart</button>
                                     <button class="btn btn-modal primary" id="new-snippet-btn"
                                         title="Create a new snippet using this dataset">New Snippet</button>
