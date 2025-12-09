@@ -1,56 +1,53 @@
 // Track preview fit mode
-let previewFitMode = 'default'; // 'default', 'width', or 'full'
+let previewFitMode = 'default'; // 'default', 'width', 'height', or 'full'
 
-// Apply fit mode to spec dimensions
+// Apply fit mode to spec dimensions using Vega-Lite's "container" keyword
 function applyPreviewFitMode(spec, fitMode) {
     if (!spec || typeof spec !== 'object') return spec;
 
     // Clone to avoid mutation
     const modifiedSpec = JSON.parse(JSON.stringify(spec));
 
-    if (fitMode === 'width' || fitMode === 'full') {
-        const previewPane = document.getElementById('vega-preview');
-        if (previewPane) {
-            const containerWidth = previewPane.offsetWidth - 10; // 10px padding for scroll
-            const containerHeight = previewPane.offsetHeight - 10; // 10px padding
+    // Apply dimensions recursively to handle nested specs
+    function applyDimensions(s) {
+        if (!s || typeof s !== 'object') return;
 
-            // Apply dimensions recursively to handle nested specs
-            function applyDimensions(s) {
-                if (!s || typeof s !== 'object') return;
+        // Apply dimensions based on fit mode
+        if (fitMode === 'width') {
+            s.width = 'container';
+            delete s.height; // Remove height to preserve aspect ratio
+        } else if (fitMode === 'height') {
+            s.height = 'container';
+            delete s.width; // Remove width to preserve aspect ratio
+        } else if (fitMode === 'full') {
+            s.width = 'container';
+            s.height = 'container';
+        }
+        // 'default' mode leaves original dimensions untouched
 
-                // Set dimensions at current level if this is a unit spec or has width/height
-                if (fitMode === 'width') {
-                    s.width = containerWidth;
-                    delete s.height; // Remove height to preserve aspect ratio
-                } else if (fitMode === 'full') {
-                    s.width = containerWidth;
-                    s.height = containerHeight;
-                }
-
-                // Recursively apply to nested specs
-                // For facet specs
-                if (s.spec) {
-                    applyDimensions(s.spec);
-                }
-                // For layer, concat, hconcat, vconcat
-                if (Array.isArray(s.layer)) {
-                    s.layer.forEach(applyDimensions);
-                }
-                if (Array.isArray(s.concat)) {
-                    s.concat.forEach(applyDimensions);
-                }
-                if (Array.isArray(s.hconcat)) {
-                    s.hconcat.forEach(applyDimensions);
-                }
-                if (Array.isArray(s.vconcat)) {
-                    s.vconcat.forEach(applyDimensions);
-                }
-            }
-
-            applyDimensions(modifiedSpec);
+        // Recursively apply to nested specs
+        // For facet specs
+        if (s.spec) {
+            applyDimensions(s.spec);
+        }
+        // For layer, concat, hconcat, vconcat
+        if (Array.isArray(s.layer)) {
+            s.layer.forEach(applyDimensions);
+        }
+        if (Array.isArray(s.concat)) {
+            s.concat.forEach(applyDimensions);
+        }
+        if (Array.isArray(s.hconcat)) {
+            s.hconcat.forEach(applyDimensions);
+        }
+        if (Array.isArray(s.vconcat)) {
+            s.vconcat.forEach(applyDimensions);
         }
     }
-    // 'default' mode leaves original dimensions untouched
+
+    if (fitMode !== 'default') {
+        applyDimensions(modifiedSpec);
+    }
 
     return modifiedSpec;
 }

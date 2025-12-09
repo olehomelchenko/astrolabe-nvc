@@ -233,6 +233,10 @@
                                 @click="$store.preview.fitMode = 'width'; setPreviewFitMode('width')"
                                 id="preview-fit-width"
                                 title="Scale to fit preview pane width (⚠️ for faceted specs, applies to each facet)">Width</button>
+                            <button class="btn btn-toggle" :class="{ 'active': $store.preview.fitMode === 'height' }"
+                                @click="$store.preview.fitMode = 'height'; setPreviewFitMode('height')"
+                                id="preview-fit-height"
+                                title="Scale to fit preview pane height (⚠️ for faceted specs, applies to each facet)">Height</button>
                             <button class="btn btn-toggle" :class="{ 'active': $store.preview.fitMode === 'full' }"
                                 @click="$store.preview.fitMode = 'full'; setPreviewFitMode('full')"
                                 id="preview-fit-full"
@@ -308,12 +312,13 @@
                                 </div>
 
                                 <div class="dataset-detail-header">Name</div>
-                                <input type="text" id="dataset-detail-name" class="input"
-                                    placeholder="Dataset name..." :value="dataset?.name" @input="handleNameChange" />
+                                <input type="text" id="dataset-detail-name" class="input" placeholder="Dataset name..."
+                                    :value="dataset?.name" @input="handleNameChange" />
 
                                 <div class="dataset-detail-header">Comment</div>
                                 <textarea id="dataset-detail-comment" class="input textarea"
-                                    placeholder="Add a comment..." rows="3" :value="dataset?.comment" @input="handleCommentChange"></textarea>
+                                    placeholder="Add a comment..." rows="3" :value="dataset?.comment"
+                                    @input="handleCommentChange"></textarea>
 
                                 <div class="dataset-detail-header-row">
                                     <span class="dataset-detail-header">Overview</span>
@@ -344,7 +349,8 @@
                                         <div class="columns-list">
                                             <template x-for="col in dataset?.columnTypes" :key="col.name">
                                                 <div class="column-item">
-                                                    <span class="column-type-icon" x-html="getTypeIcon(col.type)"></span>
+                                                    <span class="column-type-icon"
+                                                        x-html="getTypeIcon(col.type)"></span>
                                                     <span class="column-name" x-text="col.name"></span>
                                                     <span class="column-type" x-text="col.type"></span>
                                                 </div>
@@ -361,7 +367,8 @@
                                             </div>
                                             <div class="stat-item">
                                                 <span class="stat-label">Modified:</span>
-                                                <span id="dataset-detail-modified" x-text="formatDate(dataset?.modified)">-</span>
+                                                <span id="dataset-detail-modified"
+                                                    x-text="formatDate(dataset?.modified)">-</span>
                                             </div>
                                         </div>
                                     </div>
@@ -372,8 +379,7 @@
                                     <div class="preview-toggle-group" x-show="showPreviewToggle">
                                         <button class="btn btn-toggle small"
                                             :class="{ 'active': $store.datasets.previewMode === 'raw' }"
-                                            @click="setPreviewMode('raw')"
-                                            title="Show raw data preview">Raw</button>
+                                            @click="setPreviewMode('raw')" title="Show raw data preview">Raw</button>
                                         <button class="btn btn-toggle small"
                                             :class="{ 'active': $store.datasets.previewMode === 'table' }"
                                             @click="setPreviewMode('table')"
@@ -394,7 +400,7 @@
                                                 <span class="stat-label">📄</span>
                                                 <span>
                                                     <a href="#" @click.prevent="openLinkedSnippet(snippet.id)"
-                                                       class="snippet-link" x-text="snippet.name"></a>
+                                                        class="snippet-link" x-text="snippet.name"></a>
                                                 </span>
                                             </div>
                                         </template>

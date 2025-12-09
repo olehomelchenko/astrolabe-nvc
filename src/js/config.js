@@ -190,7 +190,7 @@ document.addEventListener('alpine:init', () => {
 
     // Preview panel fit mode store
     Alpine.store('preview', {
-        fitMode: 'default' // 'default' | 'width' | 'full'
+        fitMode: 'default' // 'default' | 'width' | 'height' | 'full'
     });
 });
 
